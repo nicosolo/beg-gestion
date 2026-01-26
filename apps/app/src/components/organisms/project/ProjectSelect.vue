@@ -5,14 +5,28 @@
         :items="projects"
         :loading="loading"
         :fetch-function="fetchProjects"
-        :display-field="formatProjectDisplay"
+        :display-field="formatProjectLabel"
         :placeholder="placeholder || $t('common.select')"
         :disabled="disabled"
         :required="required"
         :class-name="className"
         :min-search-length="1"
         @update:model-value="$emit('update:modelValue', $event)"
-    />
+    >
+        <template #item="{ item }">
+            <div class="font-medium flex items-center gap-2">
+                <Badge v-if="item.isDraft" variant="warning" size="sm">
+                    {{ $t("projects.draft") }}
+                </Badge>
+                <Badge v-if="item.ended" variant="muted" size="sm">
+                    {{ $t("projects.ended") }}
+                </Badge>
+                <span :class="{ 'text-gray-500': item.isDraft || item.ended }">{{
+                    formatProjectLabel(item)
+                }}</span>
+            </div>
+        </template>
+    </AutocompleteSelect>
 </template>
 
 <script setup lang="ts">
@@ -20,6 +34,7 @@ import { ref, watch } from "vue"
 import { useI18n } from "vue-i18n"
 import { useFetchProjectList, useFetchProject } from "@/composables/api/useProject"
 import AutocompleteSelect from "@/components/atoms/AutocompleteSelect.vue"
+import Badge from "@/components/atoms/Badge.vue"
 import type { ProjectResponse } from "@beg/validations"
 
 interface ProjectSelectProps {
@@ -29,12 +44,10 @@ interface ProjectSelectProps {
     required?: boolean
     className?: string
     includeArchived?: boolean
-    includeEnded?: boolean
 }
 
 const props = withDefaults(defineProps<ProjectSelectProps>(), {
     includeArchived: false,
-    includeEnded: false,
 })
 
 defineEmits<{
@@ -46,15 +59,13 @@ const { loading, data, get } = useFetchProjectList()
 const { get: fetchSingleProject } = useFetchProject()
 const projects = ref<ProjectResponse[]>([])
 
-// Format project display
-const formatProjectDisplay = (project: ProjectResponse): string => {
-    const draftPrefix = project.isDraft ? "[BROUILLON] " : ""
+// Format project label (without badges, for dropdown items)
+const formatProjectLabel = (project: ProjectResponse): string => {
     const projectNumber = project.projectNumber || "Sans numéro"
-
     if (project.subProjectName) {
-        return `${draftPrefix}${projectNumber} ${project.subProjectName} - ${project.name}`
+        return `${projectNumber} ${project.subProjectName} - ${project.name}`
     }
-    return `${draftPrefix}${projectNumber} - ${project.name}`
+    return `${projectNumber} - ${project.name}`
 }
 
 // Fetch selected item when modelValue changes
@@ -100,7 +111,6 @@ const fetchProjects = async (searchText: string) => {
         query: {
             name: searchText,
             includeArchived: props.includeArchived,
-            includeEnded: props.includeEnded,
             limit: 50, // Reasonable limit for dropdown
             includeDraft: false,
             sortBy: "projectNumber",

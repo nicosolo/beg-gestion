@@ -78,7 +78,7 @@ export const projectRoutes = new Hono<{ Variables: Variables }>()
                 maxLng !== undefined
 
             // Default limit is 1000, can be overridden
-            const limit = requestedLimit ?? 1000
+            const limit = requestedLimit ?? 100
 
             // Get all projects with applied filters, sorted by most recent activity
             const result = await projectRepository.findAll({
@@ -116,6 +116,7 @@ export const projectRoutes = new Hono<{ Variables: Variables }>()
                     clientName: project.client?.name ?? null,
                     locationName: project.location?.name ?? null,
                     lastActivityDate: project.lastActivityDate,
+                    ended: project.ended ?? false,
                 }))
 
             // Apply limit (show most recent first)

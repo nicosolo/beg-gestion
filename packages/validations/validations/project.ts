@@ -42,7 +42,6 @@ const projectBaseFilterSchema = z.object({
     sortOrder: z.enum(["asc", "desc"]).optional().default("asc"),
     hasUnbilledTime: booleanSchema.optional().default(false),
     includeArchived: booleanSchema.optional().default(false),
-    includeEnded: booleanSchema.optional().default(false),
     includeDraft: booleanSchema.optional().default(false),
 })
 

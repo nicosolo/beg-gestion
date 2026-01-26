@@ -13,7 +13,7 @@
 
 <script setup lang="ts">
 const props = defineProps<{
-    variant?: "success" | "error" | "warning" | "info" | "amber" | "indigo" | "blue"
+    variant?: "success" | "error" | "warning" | "info" | "amber" | "indigo" | "blue" | "muted"
     size?: "sm" | "md"
     className?: string
 }>()
@@ -46,6 +46,8 @@ const variantClasses = (() => {
             return "bg-indigo-100 text-indigo-800"
         case "blue":
             return "bg-blue-100 text-blue-800"
+        case "muted":
+            return "bg-gray-200 text-gray-500"
         default:
             return "bg-gray-100 text-gray-800"
     }

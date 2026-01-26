@@ -17,7 +17,7 @@
                         <Badge v-if="projectData?.archived" variant="error" size="md">
                             {{ $t("projects.markAsArchived") }}
                         </Badge>
-                        <Badge v-else-if="projectData?.ended" variant="warning" size="md">
+                        <Badge v-else-if="projectData?.ended" variant="muted" size="md">
                             {{ $t("projects.markAsEnded") }}
                         </Badge>
                         <Badge v-else-if="projectData?.isDraft" variant="amber" size="md">
@@ -67,7 +67,7 @@
 
         <!-- Tabs Navigation -->
         <div class="border-b border-gray-200">
-            <nav class="flex flex-wrap gap-2 -mb-px px-4 sm:px-6 overflow-x-auto">
+            <nav class="flex flex-wrap gap-2 -mb-px overflow-x-auto">
                 <button
                     @click="activeTab = 'overview'"
                     :class="[
@@ -114,7 +114,7 @@
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <!-- Project Details -->
                         <div class="lg:col-span-2">
-                            <div class="bg-gray-50 rounded-lg p-6">
+                            <div class="bg-gray-50 rounded-lg border-1 p-4 border-gray-300">
                                 <h2 class="text-lg font-semibold mb-4">
                                     {{ $t("projects.details") }}
                                 </h2>
@@ -299,7 +299,7 @@
 
                         <!-- Project Statistics -->
                         <div>
-                            <div class="bg-gray-50 rounded-lg p-6">
+                            <div class="bg-gray-50 rounded-lg border-1 p-4 border-gray-300">
                                 <h2 class="text-lg font-semibold mb-4">
                                     {{ $t("projects.statistics") }}
                                 </h2>

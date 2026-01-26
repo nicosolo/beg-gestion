@@ -159,9 +159,12 @@ const createMarkers = async () => {
         const projectEntries = group
             .map((project) => {
                 const label = getProjectLabel(project)
+                const endedBadge = project.ended
+                    ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-semibold bg-gray-200 text-gray-500 ml-1">Terminé</span>'
+                    : ""
                 return `
                 <div class="flex items-center justify-between gap-3 py-1">
-                    <span class="font-medium text-sm">${label} - ${project.name}</span>
+                    <span class="font-medium text-sm">${label}${endedBadge} - ${project.name}</span>
                     <button
                         onclick="window.dispatchEvent(new CustomEvent('navigate-to-project', { detail: ${project.id} }))"
                         class="shrink-0 rounded-md font-medium focus:outline-none cursor-pointer text-indigo-600 hover:text-indigo-800 text-sm px-1"

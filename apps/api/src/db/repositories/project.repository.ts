@@ -51,7 +51,6 @@ export const projectRepository = {
             sortBy = "name",
             sortOrder = "asc",
             hasUnbilledTime = undefined,
-            includeEnded = false,
             includeDraft = false,
         } = filters || {}
         const offset = (page - 1) * limit
@@ -120,9 +119,6 @@ export const projectRepository = {
             whereConditions.push(eq(projects.archived, false))
         }
 
-        if (!includeEnded) {
-            whereConditions.push(eq(projects.ended, false))
-        }
         if (hasUnbilledTime === true) {
             whereConditions.push(gt(projects.unBilledDuration, 0))
         }

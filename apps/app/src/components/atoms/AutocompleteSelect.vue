@@ -70,9 +70,11 @@
                     focusedIndex === index ? 'bg-gray-100' : 'hover:bg-gray-100',
                 ]"
             >
-                <div class="font-medium">
-                    {{ displayField(item) }}
-                </div>
+                <slot name="item" :item="item">
+                    <div class="font-medium">
+                        {{ displayField(item) }}
+                    </div>
+                </slot>
             </button>
         </div>
     </div>

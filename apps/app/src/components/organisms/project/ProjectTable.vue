@@ -10,17 +10,16 @@
     >
         <template #cell:name="{ item }">
             <div>
-                <span
-                    v-if="item.isDraft"
-                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 mr-2"
-                >
+                <Badge v-if="item.isDraft" variant="warning" class="mr-2">
                     {{ $t("projects.draft") }}
-                </span>
+                </Badge>
                 <span class="text-md font-medium mr-2"
                     >{{ item.projectNumber
                     }}{{ item.subProjectName ? ` ${item.subProjectName}` : "" }}</span
                 >
-
+                <Badge v-if="item.ended" variant="muted" class="mr-2">
+                    {{ $t("projects.ended") }}
+                </Badge>
                 <span class="text-sm text-gray-600">{{ item.name }}</span>
                 <a
                     v-if="getMapUrl(item)"
@@ -114,6 +113,7 @@
 <script setup lang="ts">
 import DataTable from "@/components/molecules/DataTable.vue"
 import Button from "@/components/atoms/Button.vue"
+import Badge from "@/components/atoms/Badge.vue"
 import { useI18n } from "vue-i18n"
 import { useFormat } from "@/composables/utils/useFormat"
 import { ref } from "vue"
@@ -131,6 +131,9 @@ const emit = defineEmits<{
 }>()
 
 const getRowClass = (item: ProjectResponse) => {
+    if (item.ended) {
+        return "bg-gray-100"
+    }
     if (item.lastActivityDate) {
         const lastActivityDate = new Date(item.lastActivityDate)
         if (

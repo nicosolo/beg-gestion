@@ -27,7 +27,6 @@ export const projectMapFilterSchema = z.object({
     toDate: z.coerce.date().optional(),
     hasUnbilledTime: booleanSchema.optional().default(false),
     includeArchived: booleanSchema.optional().default(false),
-    includeEnded: booleanSchema.optional().default(false),
     includeDraft: booleanSchema.optional().default(false),
     // Bounds filtering for viewport
     minLat: z.coerce.number().optional(),
@@ -52,6 +51,7 @@ export const projectMapItemResponseSchema = z.object({
     clientName: z.string().nullable(),
     locationName: z.string().nullable(),
     lastActivityDate: dateSchema.nullable(),
+    ended: z.boolean().optional(),
 })
 
 // Array response for map endpoint

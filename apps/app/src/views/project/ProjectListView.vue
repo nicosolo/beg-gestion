@@ -120,7 +120,6 @@ const authStore = useAuthStore()
 const filter = ref<ProjectFilterModel>({
     name: "",
     includeArchived: false,
-    includeEnded: false,
     includeDraft: false,
     sortBy: "lastActivityDate",
     sortOrder: "desc",
