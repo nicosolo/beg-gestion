@@ -1,3 +1,4 @@
+import { z } from "zod"
 import {
     idParamSchema,
     projectFilterSchema,
@@ -81,5 +82,19 @@ export function useProjectFolder() {
         }
     >("project/:id/folder", {
         params: idParamSchema,
+    })
+}
+
+// Add a user as a member to a project
+const addProjectMemberParamsSchema = z.object({ id: z.coerce.number(), userId: z.coerce.number() })
+
+export function useAddProjectMember() {
+    return usePost<
+        { success: boolean; message: string },
+        {
+            params: typeof addProjectMemberParamsSchema
+        }
+    >("project/:id/members/:userId", {
+        params: addProjectMemberParamsSchema,
     })
 }

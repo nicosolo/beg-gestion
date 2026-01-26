@@ -820,4 +820,30 @@ export const projectRepository = {
 
         return id
     },
+
+    // Add a user as a member to a project (if not already a member)
+    addMember: async (projectId: number, userId: number) => {
+        // Check if user is already a member or manager
+        const existing = await db
+            .select()
+            .from(projectUsers)
+            .where(and(eq(projectUsers.projectId, projectId), eq(projectUsers.userId, userId)))
+            .limit(1)
+
+        if (existing.length > 0) {
+            // User already has a role in this project
+            return false
+        }
+
+        // Add as member
+        await db.insert(projectUsers).values({
+            projectId,
+            userId,
+            role: "member",
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        })
+
+        return true
+    },
 }

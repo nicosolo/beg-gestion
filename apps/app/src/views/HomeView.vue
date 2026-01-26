@@ -33,6 +33,11 @@
                 </div>
             </form>
         </div>
+        <!-- Alert for orphaned activities (only for managers) -->
+        <div class="max-w-4xl mx-auto">
+            <OrphanedActivitiesAlert />
+        </div>
+
         <div>
             <TimeEntriesManager
                 :show-project-filter="false"
@@ -56,6 +61,7 @@ import { useRouter } from "vue-router"
 import { useI18n } from "vue-i18n"
 import ProjectSelect from "@/components/organisms/project/ProjectSelect.vue"
 import TimeEntriesManager from "@/components/organisms/time/TimeEntriesManager.vue"
+import OrphanedActivitiesAlert from "@/components/organisms/activity/OrphanedActivitiesAlert.vue"
 import { useAuthStore } from "@/stores/auth"
 import { getTodayRange } from "@/composables/utils/useDateRangePresets"
 

@@ -84,6 +84,13 @@ export default {
         searchPlaceholder: "Rechercher par numéro ou nom de mandat",
         searchHint: "Sélectionnez un mandat pour ouvrir sa fiche détaillée.",
         documentTitle: "BEG - Accueil",
+        orphanedActivities: {
+            title: "Heures sans collaborateur",
+            description: "Ces utilisateurs ne sont pas collaborateurs sur ces mandats.",
+            addToProject: "Ajouter au mandat",
+            addedSuccess: "{user} a été ajouté au mandat {project}",
+            addedError: "Erreur lors de l'ajout du membre",
+        },
     },
     auth: {
         login: "Connexion",

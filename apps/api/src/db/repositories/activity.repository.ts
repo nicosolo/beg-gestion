@@ -99,7 +99,7 @@ const createBaseQuery = (user: Variables["user"]) => {
 
 const accessControlCondition = (user: Variables["user"]) => {
     if (hasRole(user.role, "admin")) return undefined
-    return sql`EXISTS (SELECT 1 FROM project_users WHERE projectId = ${activities.projectId} AND userId = ${user.id})`
+    return sql`(EXISTS (SELECT 1 FROM project_users WHERE projectId = ${activities.projectId} AND userId = ${user.id}) OR ${activities.userId} = ${user.id})`
 }
 
 const buildFilterComponents = (filter: ActivityFilter, user?: Variables["user"]) => {
@@ -428,5 +428,45 @@ export const activityRepository = {
         }
 
         return ids.length
+    },
+
+    // Find activities where the creator is not a member of the project
+    // Only returns activities for projects where the requesting user is a manager
+    findOrphanedActivities: async (user: Variables["user"]) => {
+        return await db
+            .selectDistinct({
+                project: {
+                    id: projects.id,
+                    projectNumber: projects.projectNumber,
+                    name: projects.name,
+                },
+                user: {
+                    id: users.id,
+                    firstName: users.firstName,
+                    lastName: users.lastName,
+                    initials: users.initials,
+                },
+            })
+            .from(activities)
+            .innerJoin(projects, eq(activities.projectId, projects.id))
+            .innerJoin(users, eq(activities.userId, users.id))
+            .where(
+                and(
+                    // Activity creator is not a project member
+                    sql`NOT EXISTS (
+                        SELECT 1 FROM project_users
+                        WHERE project_users.projectId = ${activities.projectId}
+                        AND project_users.userId = ${activities.userId}
+                    )`,
+                    // Current user is a manager of the project
+                    sql`EXISTS (
+                        SELECT 1 FROM project_users
+                        WHERE project_users.projectId = ${activities.projectId}
+                        AND project_users.userId = ${user.id}
+                        AND project_users.role = 'manager'
+                    )`
+                )
+            )
+            .orderBy(projects.projectNumber)
     },
 }

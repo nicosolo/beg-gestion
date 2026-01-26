@@ -125,3 +125,23 @@ export const activityListResponse = createPageResponseSchema(activityResponseSch
 })
 
 export type ActivityListResponse = z.infer<typeof activityListResponse>
+
+// Orphaned activities schema (activities where creator is not a project member)
+export const orphanedActivityGroupSchema = z.object({
+    project: z.object({
+        id: z.number(),
+        projectNumber: z.string().nullable(),
+        name: z.string(),
+    }),
+    user: z.object({
+        id: z.number(),
+        firstName: z.string(),
+        lastName: z.string(),
+        initials: z.string(),
+    }),
+})
+
+export const orphanedActivitiesResponseSchema = z.array(orphanedActivityGroupSchema)
+
+export type OrphanedActivityGroup = z.infer<typeof orphanedActivityGroupSchema>
+export type OrphanedActivitiesResponse = z.infer<typeof orphanedActivitiesResponseSchema>

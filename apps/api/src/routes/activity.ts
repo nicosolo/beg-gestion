@@ -11,6 +11,7 @@ import {
     activityBulkUpdateResponseSchema,
     idParamSchema,
     activityListResponse,
+    orphanedActivitiesResponseSchema,
 } from "@beg/validations"
 import { activityRepository } from "../db/repositories/activity.repository"
 import { projectRepository } from "../db/repositories/project.repository"
@@ -64,6 +65,18 @@ export const activityRoutes = new Hono<{ Variables: Variables }>()
             headers,
         })
     })
+    // Get activities where creator is not a project member (for project managers)
+    .get(
+        "/orphaned",
+        responseValidator({
+            200: orphanedActivitiesResponseSchema,
+        }),
+        async (c) => {
+            const user = c.get("user")
+            const orphanedActivities = await activityRepository.findOrphanedActivities(user)
+            return c.render(orphanedActivities, 200)
+        }
+    )
     .get(
         "/:id",
         responseValidator({

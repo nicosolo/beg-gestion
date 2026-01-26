@@ -6,6 +6,7 @@ import {
     activityUpdateSchema,
     type ActivityListResponse,
     type ActivityResponse,
+    type OrphanedActivitiesResponse,
 } from "@beg/validations"
 import { useGet, usePost, usePut, useDelete, useGetBinary } from "./useAPI"
 
@@ -72,4 +73,8 @@ export function useDeleteActivity() {
     >("activity/:id", {
         params: idParamSchema,
     })
+}
+
+export function useFetchOrphanedActivities() {
+    return useGet<OrphanedActivitiesResponse>("activity/orphaned")
 }

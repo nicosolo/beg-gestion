@@ -12,6 +12,7 @@ import {
     type ProjectListResponse,
     type ProjectResponse,
     type ProjectMapArrayResponse,
+    successSchema,
 } from "@beg/validations"
 import { projectRepository } from "../db/repositories/project.repository"
 import { authMiddleware } from "@src/tools/auth-middleware"
@@ -247,5 +248,34 @@ export const projectRoutes = new Hono<{ Variables: Variables }>()
                 throw throwNotFound("Project not found")
             }
             return c.render(project as ProjectResponse, 200)
+        }
+    )
+    // Add a member to a project (for project managers to add users who have activities)
+    .post(
+        "/:id/members/:userId",
+        responseValidator({
+            200: successSchema,
+        }),
+        async (c) => {
+            const projectId = parseInt(c.req.param("id"))
+            const userId = parseInt(c.req.param("userId"))
+            const user = c.get("user")
+
+            if (isNaN(projectId) || isNaN(userId)) {
+                throw throwNotFound("Invalid project or user ID")
+            }
+
+            // Check if user is admin or project manager
+            const isAdmin = hasRole(user.role, "admin")
+            const isManager = await projectRepository.isProjectManager(projectId, user.id)
+
+            if (!isAdmin && !isManager) {
+                throw throwForbidden("You do not have permission to add members to this project")
+            }
+
+            // Add user as member
+            await projectRepository.addMember(projectId, userId)
+
+            return c.render({ success: true }, 200)
         }
     )
