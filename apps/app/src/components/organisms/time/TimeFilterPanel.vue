@@ -24,11 +24,11 @@
 
                     <!-- User Filter -->
                     <div class="form-group" v-if="isRole('admin') || showUserFilter">
-                        <Label>{{ $t("shared.selectReferentUser") }}</Label>
+                        <Label>{{ $t("shared.collaborator") }}</Label>
                         <UserSelect
                             :only-show="availableUsers"
                             v-model="localFilter.userId"
-                            :placeholder="$t('shared.selectReferentUser')"
+                            :placeholder="$t('shared.collaborator')"
                             @update:modelValue="handleFilterChange"
                         />
                     </div>
@@ -41,6 +41,7 @@
                                 v-model="localFilter.sortBy"
                                 :options="[
                                     { label: $t('time.columns.date'), value: 'date' },
+                                    { label: $t('time.columns.user'), value: 'userId' },
                                     { label: $t('time.columns.project'), value: 'projectId' },
                                     { label: $t('time.columns.durationLong'), value: 'duration' },
                                     { label: $t('time.columns.kilometers'), value: 'kilometers' },

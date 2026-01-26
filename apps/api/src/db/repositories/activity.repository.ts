@@ -165,6 +165,8 @@ const buildFilterComponents = (filter: ActivityFilter, user?: Variables["user"])
                 return activities.rate
             case "projectId":
                 return projects.projectNumber
+            case "userId":
+                return users.initials
             default:
                 return activities.date
         }

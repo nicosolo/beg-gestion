@@ -10,7 +10,7 @@ const activityBaseFilterSchema = z.object({
     fromDate: z.coerce.date().optional(),
     toDate: z.coerce.date().optional(),
     sortBy: z
-        .enum(["date", "duration", "kilometers", "expenses", "rate", "projectId"])
+        .enum(["date", "duration", "kilometers", "expenses", "rate", "projectId", "userId"])
         .optional()
         .default("date"),
     sortOrder: z.enum(["asc", "desc"]).default("asc").optional(),

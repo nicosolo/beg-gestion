@@ -230,7 +230,7 @@ const dataTableRef = ref<any>(null)
 
 const defaultColumns: Column[] = [
     { key: "date", label: t("time.columns.date"), sortKey: "date", width: "7rem" },
-    { key: "user", label: t("time.columns.user"), width: "3rem" },
+    { key: "user", label: t("time.columns.user"), sortKey: "userId", width: "3rem" },
     { key: "rateClass", label: t("time.columns.rateClass"), width: "3rem" },
     { key: "project", label: t("time.columns.project"), sortKey: "projectId", width: "11rem" },
     { key: "activityType", label: t("time.columns.activityType"), width: "4rem" },

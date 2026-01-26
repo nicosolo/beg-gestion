@@ -100,6 +100,7 @@ export default {
         loginError: "Une erreur est survenue lors de la connexion",
     },
     shared: {
+        collaborator: "Collaborateur",
         selectReferentUser: "Responsable",
     },
     projects: {
