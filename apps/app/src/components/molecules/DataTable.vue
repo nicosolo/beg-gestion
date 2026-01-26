@@ -5,7 +5,10 @@
         </div>
         <div v-else>
             <!-- Header row (visible only on desktop) -->
-            <div class="hidden md:grid border-b border-gray-200" :style="{ gridTemplateColumns }">
+            <div
+                class="hidden md:grid border-b border-gray-200 sticky top-12 bg-white z-[5]"
+                :style="{ gridTemplateColumns }"
+            >
                 <div
                     v-for="column in columns"
                     :key="column.key"
@@ -15,12 +18,17 @@
                     ]"
                     @click="handleSort(column)"
                 >
-                    <div class="flex items-center space-x-2 min-w-0">
-                        <div class="truncate">{{ column.label }}</div>
-                        <span v-if="column.sortKey" class="ml-auto flex-shrink-0">
-                            <SortIcon :direction="getSortDirection(column)" />
-                        </span>
-                    </div>
+                    <TruncateWithTooltip
+                        :content="column.label"
+                        placement="bottom"
+                    >
+                        <div class="flex items-center space-x-2 min-w-0">
+                            <span class="truncate">{{ column.label }}</span>
+                            <span v-if="column.sortKey" class="ml-auto flex-shrink-0">
+                                <SortIcon :direction="getSortDirection(column)" />
+                            </span>
+                        </div>
+                    </TruncateWithTooltip>
                 </div>
             </div>
 

@@ -230,7 +230,7 @@ html {
 </style>
 
 <template>
-    <div class="flex flex-col min-h-screen overflow-x-hidden">
+    <div class="flex flex-col min-h-screen">
         <!-- Header for all viewports with toggle button - hidden on login page -->
         <header
             v-if="!isLoginPage"
@@ -313,10 +313,10 @@ html {
             </div>
         </header>
 
-        <div class="flex flex-1 relative pt-12 min-h-0">
+        <div class="flex flex-1 relative pt-12">
             <!-- Main content - no margin adjustment, sidebar will overlay -->
-            <main class="flex-1 p-4 w-full min-h-0 flex flex-col">
-                <div class="container mx-auto md:max-w-full flex-1 min-h-0">
+            <main class="flex-1 p-4 w-full">
+                <div class="container mx-auto md:max-w-full">
                     <RouterView v-slot="{ Component }">
                         <KeepAlive
                             :include="[
@@ -421,7 +421,9 @@ html {
                             @click="toggleSidebar"
                         >
                             <ArrowDownTrayIcon class="h-4 w-4 mr-2" />
-                            {{ t("downloadApp.updateAvailable") }} (v{{ desktopVersionConfig.version }})
+                            {{ t("downloadApp.updateAvailable") }} (v{{
+                                desktopVersionConfig.version
+                            }})
                         </RouterLink>
                     </div>
                     <!-- Download app link - only visible in web (not Tauri) -->
