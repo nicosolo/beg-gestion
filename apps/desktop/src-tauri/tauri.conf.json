@@ -1,6 +1,6 @@
 {
     "productName": "BEG Gestion",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "identifier": "com.beg.gestion",
     "build": {
         "beforeDevCommand": "",
@@ -60,7 +60,9 @@
     "plugins": {
         "deep-link": {
             "desktop": {
-                "schemes": ["beg-gestion"]
+                "schemes": [
+                    "beg-gestion"
+                ]
             }
         }
     }

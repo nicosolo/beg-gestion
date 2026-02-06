@@ -1,9 +1,9 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use tauri::Manager;
-use std::path::PathBuf;
 use std::fs;
+use std::path::PathBuf;
+use tauri::Manager;
 
 #[tauri::command]
 fn open_project_folder(absolute_path: String) -> Result<String, String> {
@@ -99,7 +99,7 @@ fn check_path_exists(path: String) -> Result<bool, String> {
 
     match path_buf.try_exists() {
         Ok(exists) => Ok(exists),
-        Err(e) => Err(format!("Failed to check path: {}", e))
+        Err(e) => Err(format!("Failed to check path: {}", e)),
     }
 }
 
@@ -154,21 +154,20 @@ fn list_directories(path: String) -> Result<Vec<String>, String> {
 
             Ok(directories)
         }
-        Err(e) => Err(format!("Failed to read directory: {}", e))
+        Err(e) => Err(format!("Failed to read directory: {}", e)),
     }
 }
 
 #[tauri::command]
 fn get_project_base_path() -> String {
-    std::env::var("HOST_PROJECT_FOLDER")
-        .unwrap_or_else(|_| {
-            // Use platform-appropriate separators
-            if cfg!(target_os = "windows") {
-                "N:\\Mandats".to_string()
-            } else {
-                "N://Mandats".to_string()
-            }
-        })
+    std::env::var("HOST_PROJECT_FOLDER").unwrap_or_else(|_| {
+        // Use platform-appropriate separators
+        if cfg!(target_os = "windows") {
+            "N:\\Mandats".to_string()
+        } else {
+            "N://Mandats".to_string()
+        }
+    })
 }
 
 fn main() {
@@ -185,10 +184,14 @@ fn main() {
     #[cfg(target_os = "windows")]
     {
         // For Windows, we'll handle SSL errors in the webview
-        std::env::set_var("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", "--ignore-certificate-errors");
+        std::env::set_var(
+            "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS",
+            "--ignore-certificate-errors",
+        );
     }
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
@@ -203,5 +206,3 @@ fn main() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
-
-

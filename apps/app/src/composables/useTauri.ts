@@ -134,7 +134,6 @@ export function useTauri() {
 
         try {
             const { getCurrent, onOpenUrl } = await import("@tauri-apps/plugin-deep-link")
-            const { listen } = await import("@tauri-apps/api/event")
 
             // Check for deep link URLs on startup
             const startUrls = await getCurrent()
@@ -142,14 +141,9 @@ export function useTauri() {
                 handleDeepLinkUrls(startUrls)
             }
 
-            // Listen for subsequent deep link events (new instance)
+            // Listen for subsequent deep link events
             await onOpenUrl((urls) => {
                 handleDeepLinkUrls(urls)
-            })
-
-            // Listen for deep links from single-instance plugin (existing instance)
-            await listen<string[]>("deep-link-open", (event) => {
-                handleDeepLinkUrls(event.payload)
             })
         } catch (error) {
             console.error("Failed to setup deep link listener:", error)
