@@ -384,7 +384,7 @@ export const invoiceFilterSchema = z
         visaByUserId: z.coerce.number().optional(),
         fromDate: z.coerce.date().optional(),
         toDate: z.coerce.date().optional(),
-        sortBy: z.enum(["date", "reference", "total", "status"]).optional().default("date"),
+        sortBy: z.enum(["date", "reference", "total", "status", "inChargeUser"]).optional().default("date"),
         sortOrder: z.enum(["asc", "desc"]).optional().default("desc"),
     })
     .merge(paginationSchema)

@@ -102,6 +102,9 @@ export const invoiceRepository = {
             case "status":
                 orderBy = filter.sortOrder === "asc" ? invoices.status : desc(invoices.status)
                 break
+            case "inChargeUser":
+                orderBy = filter.sortOrder === "asc" ? invoices.inChargeUserId : desc(invoices.inChargeUserId)
+                break
             case "date":
             default:
                 orderBy = filter.sortOrder === "asc" ? invoices.issueDate : desc(invoices.issueDate)

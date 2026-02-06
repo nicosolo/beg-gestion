@@ -157,6 +157,7 @@ const sortByToKey = (sortBy: InvoiceSortBy): string => {
         reference: "invoiceNumber",
         total: "totalTTC",
         status: "status",
+        inChargeUser: "inChargeUser",
     }
     return map[sortBy]
 }
@@ -168,6 +169,7 @@ const keyToSortBy = (key: string): InvoiceSortBy => {
         invoiceNumber: "reference",
         totalTTC: "total",
         status: "status",
+        inChargeUser: "inChargeUser",
     }
     return map[key] || "date"
 }
@@ -211,7 +213,7 @@ const allColumns = [
     },
     { key: "totalTTC", label: t("invoice.totalTTC"), size: "amount" as const, sortKey: "totalTTC" },
     { key: "status", label: t("invoice.status.title"), size: "status" as const, sortKey: "status" },
-    { key: "inChargeUser", label: t("invoice.inChargeUser"), size: "2xs" as const },
+    { key: "inChargeUser", label: t("invoice.inChargeUser"), size: "2xs" as const, sortKey: "inChargeUser" },
     { key: "actions", label: t("common.actions"), size: "action" as const },
 ]
 
