@@ -404,7 +404,7 @@ const SUB_PROJECT_NAMES = [
     "SGV",
     "SURV",
     "ZP",
-]
+].sort()
 
 const route = useRoute()
 const router = useRouter()
