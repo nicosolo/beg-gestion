@@ -55,6 +55,25 @@
             @add-hours="openTimeEntryModal"
         />
 
+        <div class="flex flex-wrap gap-4 text-xs text-gray-600 my-2 px-2">
+            <span class="flex items-center gap-1.5">
+                <span class="inline-block w-5 h-5 rounded bg-red-100 border border-red-200"></span>
+                {{ $t("projects.legend.red") }}
+            </span>
+            <span class="flex items-center gap-1.5">
+                <span
+                    class="inline-block w-5 h-5 rounded bg-purple-100 border border-purple-200"
+                ></span>
+                {{ $t("projects.legend.purple") }}
+            </span>
+            <span class="flex items-center gap-1.5">
+                <span
+                    class="inline-block w-5 h-5 rounded bg-amber-100/50 border border-amber-200"
+                ></span>
+                {{ $t("projects.legend.amber") }}
+            </span>
+        </div>
+
         <Pagination
             v-if="projects.length > 0 || totalItems > 0"
             :current-page="currentPage"

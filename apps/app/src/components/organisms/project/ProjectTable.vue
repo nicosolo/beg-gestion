@@ -132,17 +132,18 @@ const emit = defineEmits<{
 
 const getRowClass = (item: ProjectResponse) => {
     if (item.ended) {
-        return "bg-gray-100"
+        return "bg-amber-100/50"
     }
     if (item.lastActivityDate) {
         const lastActivityDate = new Date(item.lastActivityDate)
-        if (
-            lastActivityDate.getTime() < Date.now() - 14 * 24 * 60 * 60 * 1000 &&
-            item.unBilledDuration &&
-            item.unBilledDuration > 0
-        ) {
-            return "bg-red-100"
-        } // 1 week ago
+        if (item.unBilledDuration && item.unBilledDuration > 0) {
+            if (lastActivityDate.getTime() < Date.now() - 180 * 24 * 60 * 60 * 1000) {
+                return "bg-purple-100"
+            }
+            if (lastActivityDate.getTime() < Date.now() - 60 * 24 * 60 * 60 * 1000) {
+                return "bg-red-100"
+            }
+        }
     }
     return "bg-white"
 }

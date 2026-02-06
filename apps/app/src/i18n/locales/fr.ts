@@ -135,6 +135,11 @@ export default {
             noProjects: "Aucun mandat avec coordonnées à afficher",
             filterInfo: "Limité à 100 mandats les plus récents",
         },
+        legend: {
+            red: "Heures non facturées, dernière activité > 60 jours",
+            purple: "Heures non facturées, dernière activité > 6 mois",
+            amber: "Mandat terminé",
+        },
         name: "Nom du mandat",
         mandat: "Numéro mandat",
         mandatPlaceholder: 'Numéro de mandat (optionnel pour "Nº à attribuer")',
