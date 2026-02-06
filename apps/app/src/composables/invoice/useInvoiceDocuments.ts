@@ -1,8 +1,7 @@
 import { useAuthStore } from "@/stores/auth"
-import { useAppSettingsStore } from "@/stores/appSettings"
 import { useAlert } from "@/composables/utils/useAlert"
 import { useI18n } from "vue-i18n"
-import { useTauri } from "@/composables/useTauri"
+import { useFileDownload } from "@/composables/utils/useFileDownload"
 
 const normalizeFileName = (filePath?: string | null) => {
     if (!filePath) return ""
@@ -14,10 +13,9 @@ const normalizeFileName = (filePath?: string | null) => {
 
 export function useInvoiceDocuments() {
     const authStore = useAuthStore()
-    const appSettingsStore = useAppSettingsStore()
     const { errorAlert } = useAlert()
     const { t } = useI18n()
-    const { isTauri, openFile } = useTauri()
+    const { openBlob, downloadBlob } = useFileDownload()
 
     const buildFileUrl = (invoiceId: number, filePath?: string | null) => {
         if (!filePath) return null
@@ -33,14 +31,6 @@ export function useInvoiceDocuments() {
     ) => {
         if (!filePath) return
 
-        // In Tauri, open file directly from host machine path
-        if (isTauri.value) {
-            const absolutePath = appSettingsStore.getAbsolutePath(filePath.replace("/mandats", ""))
-            console.log("absolutePath", absolutePath)
-            await openFile(absolutePath)
-            return
-        }
-
         const url = buildFileUrl(invoiceId, filePath)
         if (!url) return
         const fileName = normalizeFileName(filePath)
@@ -52,18 +42,12 @@ export function useInvoiceDocuments() {
                 throw new Error(`HTTP ${response.status}`)
             }
             const blob = await response.blob()
-            const objectUrl = URL.createObjectURL(blob)
 
             if (mode === "open") {
-                window.open(objectUrl, "_blank")
+                await openBlob(blob, fileName)
             } else {
-                const link = document.createElement("a")
-                link.href = objectUrl
-                link.download = fileName
-                link.click()
+                await downloadBlob(blob, fileName)
             }
-
-            setTimeout(() => URL.revokeObjectURL(objectUrl), 1000)
         } catch (error) {
             console.error("Failed to download invoice document", error)
             errorAlert(t("common.errorOccurred"))
