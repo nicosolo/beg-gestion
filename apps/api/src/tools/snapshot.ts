@@ -1,6 +1,8 @@
-import { copyFile, mkdir, readdir, unlink, stat } from "node:fs/promises"
+import { mkdir, readdir, unlink, stat, readFile, writeFile } from "node:fs/promises"
 import { join, dirname } from "node:path"
+import { gzipSync } from "node:zlib"
 import { DB_FILE_PATH } from "@src/config"
+import { sqlite } from "@src/db"
 
 const SNAPSHOT_DIR = join(dirname(DB_FILE_PATH), "snapshots")
 const MAX_SNAPSHOTS = 48 // Keep 48 hours of snapshots
@@ -16,7 +18,7 @@ async function ensureSnapshotDir(): Promise<void> {
 
 async function cleanOldSnapshots(): Promise<void> {
     const files = await readdir(SNAPSHOT_DIR)
-    const snapshots = files.filter((f) => f.endsWith(".sqlite"))
+    const snapshots = files.filter((f) => f.endsWith(".sqlite.gz") || f.endsWith(".sqlite"))
 
     if (snapshots.length <= MAX_SNAPSHOTS) return
 
@@ -43,9 +45,15 @@ export async function createSnapshot(): Promise<string> {
     await ensureSnapshotDir()
 
     const timestamp = formatTimestamp()
-    const snapshotPath = join(SNAPSHOT_DIR, `db-${timestamp}.sqlite`)
+    const tempPath = join(SNAPSHOT_DIR, `db-${timestamp}.sqlite`)
+    const snapshotPath = `${tempPath}.gz`
 
-    await copyFile(DB_FILE_PATH, snapshotPath)
+    // VACUUM INTO creates a consistent copy safe for live DBs
+    sqlite.exec(`VACUUM INTO '${tempPath}'`)
+    const dbBuffer = await readFile(tempPath)
+    const compressed = gzipSync(dbBuffer)
+    await writeFile(snapshotPath, compressed)
+    await unlink(tempPath)
     console.log(`📸 Database snapshot created: ${snapshotPath}`)
 
     await cleanOldSnapshots()

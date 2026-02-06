@@ -20,4 +20,5 @@ sqlite.exec("PRAGMA busy_timeout = 5000") // Wait up to 5 seconds for locks
 sqlite.exec("PRAGMA temp_store = memory") // Store temporary tables in memory
 sqlite.exec("PRAGMA mmap_size = 134217728") // Enable memory mapping (128MB)
 
+export { sqlite }
 export const db = drizzle(sqlite, { schema })
