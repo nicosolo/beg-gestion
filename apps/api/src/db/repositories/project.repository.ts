@@ -123,14 +123,12 @@ export const projectRepository = {
         // Project type filter - filter projects that have at least one of the specified types
         if (projectTypeIds && projectTypeIds.length > 0) {
             whereConditions.push(
-                sql`EXISTS (
-                    SELECT 1 FROM ${projectProjectTypes} ppt
+                sql`(SELECT COUNT(DISTINCT ppt.projectTypeId) FROM ${projectProjectTypes} ppt
                     WHERE ppt.projectId = ${projects.id}
                     AND ppt.projectTypeId IN (${sql.join(
                         projectTypeIds.map((id) => sql`${id}`),
                         sql`, `
-                    )})
-                )`
+                    )})) = ${projectTypeIds.length}`
             )
         }
 
