@@ -81,15 +81,14 @@
                         </template>
                     </FormField>
                     <FormField
-                        v-if="projectMode === 'sub' || (!isNewProject && form.subProjectName)"
+                        v-if="projectMode === 'sub' || !isNewProject"
                         :label="$t('projects.subProjectName')"
                         :error="errors.subProjectName"
                     >
                         <template #input>
-                            <Input
-                                type="text"
+                            <Select
                                 v-model="form.subProjectName"
-                                :placeholder="$t('projects.subProjectNamePlaceholder')"
+                                :options="subProjectNameOptions"
                             />
                         </template>
                     </FormField>
@@ -114,7 +113,9 @@
                             <ToggleGroup
                                 :model-value="form.status"
                                 :options="statusOptions"
-                                @update:model-value="form.status = ($event as typeof form.status) || 'active'"
+                                @update:model-value="
+                                    form.status = ($event as typeof form.status) || 'active'
+                                "
                             />
                         </template>
                     </FormField>
@@ -321,6 +322,7 @@ import CompanySelect from "@/components/organisms/company/CompanySelect.vue"
 import MultiProjectTypeSelect from "@/components/organisms/projectType/MultiProjectTypeSelect.vue"
 import UserSelect from "@/components/organisms/user/UserSelect.vue"
 import LocationPicker from "@/components/molecules/LocationPicker.vue"
+import Select from "@/components/atoms/Select.vue"
 import ToggleGroup from "@/components/atoms/ToggleGroup.vue"
 
 // API Composables
@@ -370,6 +372,39 @@ const statusOptions = computed(() => [
         activeClass: "bg-emerald-600 text-white border-emerald-600",
     },
 ])
+
+const SUB_PROJECT_NAMES = [
+    "AMI",
+    "ASS",
+    "CAM",
+    "CDN",
+    "CFF",
+    "DN",
+    "EBR",
+    "EIE",
+    "ENV",
+    "GEOL",
+    "GEOPHY",
+    "GEOTH",
+    "GT",
+    "HYD",
+    "INF",
+    "MAE",
+    "MAJ",
+    "MAT",
+    "ME",
+    "MEP",
+    "NIE",
+    "OFEV",
+    "PAC",
+    "POL",
+    "REG",
+    "RIE",
+    "RPT",
+    "SGV",
+    "SURV",
+    "ZP",
+]
 
 const route = useRoute()
 const router = useRouter()
@@ -446,6 +481,16 @@ const form = ref<ProjectFormState>({
 // Note: AutocompleteSelect now uses the raw data directly with displayField prop
 
 // Handle date formatting
+const subProjectNameOptions = computed(() => {
+    const options = SUB_PROJECT_NAMES.map((name) => ({ label: name, value: name }))
+    const current = form.value.subProjectName?.trim()
+    if (current && !SUB_PROJECT_NAMES.includes(current)) {
+        options.unshift({ label: current, value: current })
+    }
+    options.unshift({ label: "-", value: "" })
+    return options
+})
+
 const formattedDate = computed({
     get: () => {
         if (!form.value.startDate) return ""
