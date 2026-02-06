@@ -44,7 +44,14 @@ export async function storeFileFromPath(
     sourcePath: string,
     entityType: "invoice",
     folderId: string
-): Promise<string> {
+): Promise<string | null> {
+    try {
+        await stat(sourcePath)
+    } catch {
+        console.warn(`File not found, skipping: ${sourcePath}`)
+        return null
+    }
+
     const fileName = sanitizeFileName(path.basename(sourcePath))
     const dirPath = path.join(FILE_STORAGE, entityType, folderId)
     const filePath = path.join(dirPath, fileName)
