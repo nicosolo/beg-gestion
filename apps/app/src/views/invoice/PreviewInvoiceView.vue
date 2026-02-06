@@ -57,7 +57,7 @@
                         :loading="visaLoading"
                         @click="openVisaDialog"
                     >
-                        Vise
+                        Visa
                     </Button>
                 </div>
             </div>

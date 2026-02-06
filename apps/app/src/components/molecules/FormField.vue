@@ -1,6 +1,9 @@
 <template>
     <div class="form-group">
-        <Label :className="labelClassName" v-if="label">{{ label }}</Label>
+        <Label :className="labelClassName" v-if="label">
+            {{ label }}
+            <span v-if="required" class="text-red-500 ml-0.5">*</span>
+        </Label>
         <slot name="input"> </slot>
         <slot name="help">
             <p class="text-sm text-gray-500 mt-1">
@@ -20,9 +23,10 @@ interface FormFieldProps {
     placeholder?: string
     disabled?: boolean
     labelClassName?: string
+    required?: boolean
 }
 
-const { label, modelValue, type, placeholder, disabled, labelClassName } =
+const { label, modelValue, type, placeholder, disabled, labelClassName, required } =
     defineProps<FormFieldProps>()
 
 defineEmits<{
