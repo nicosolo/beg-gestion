@@ -2,6 +2,9 @@ import { z } from "zod"
 import { paginationSchema, createPageResponseSchema } from "./pagination"
 import { booleanSchema, dateSchema, nullableTimestampsSchema, timestampsSchema } from "./base"
 
+export const projectStatusEnum = ["offer", "draft", "active"] as const
+export type ProjectStatus = (typeof projectStatusEnum)[number]
+
 // Base project filter schema without pagination
 const projectBaseFilterSchema = z.object({
     name: z.string().optional(),
@@ -42,7 +45,7 @@ const projectBaseFilterSchema = z.object({
     sortOrder: z.enum(["asc", "desc"]).optional().default("asc"),
     hasUnbilledTime: booleanSchema.optional().default(false),
     includeArchived: booleanSchema.optional().default(false),
-    includeDraft: booleanSchema.optional().default(false),
+    status: z.enum(projectStatusEnum).optional(),
 })
 
 // Project filter schema for listing (includes pagination)
@@ -131,7 +134,7 @@ export const projectResponseSchema = z
         lastActivityDate: z.coerce.date().nullable(),
         ended: z.boolean().nullable(),
         archived: z.boolean().nullable(),
-        isDraft: z.boolean(),
+        status: z.enum(projectStatusEnum),
     })
     .merge(nullableTimestampsSchema)
 
@@ -150,7 +153,7 @@ export const projectCreateSchema = z.object({
     startDate: dateSchema,
     projectTypeIds: z.array(z.number().positive()).min(1),
     locationId: z.number().positive().optional().nullable(),
-    clientId: z.number().positive().optional(),
+    clientId: z.number().positive().optional().nullable(),
     engineerId: z.number().positive().optional().nullable(),
     companyId: z.number().positive().optional().nullable(),
     projectManagers: z.array(z.number().positive()).optional().default([]),
@@ -158,6 +161,7 @@ export const projectCreateSchema = z.object({
     remark: z.string().optional(),
     invoicingAddress: z.string().optional(),
     offerAmount: z.number().optional().nullable(),
+    status: z.enum(projectStatusEnum).optional().default("active"),
     ended: z.boolean().optional().default(false),
     archived: z.boolean().optional().default(false),
     latitude: z.number().optional().nullable(),

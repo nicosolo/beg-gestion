@@ -51,22 +51,19 @@ export const projectRepository = {
             sortBy = "name",
             sortOrder = "asc",
             hasUnbilledTime = undefined,
-            includeDraft = false,
+            status,
         } = filters || {}
         const offset = (page - 1) * limit
 
         // Build where conditions
         const whereConditions = []
 
-        // Draft filter - exclude drafts by default (only show when includeDraft is true)
-        if (includeDraft) {
-            whereConditions.push(
-                sql`${projects.projectNumber} IS NULL OR ${projects.projectNumber} = ''`
-            )
+        // Status filter
+        if (status) {
+            whereConditions.push(eq(projects.status, status))
         } else {
-            whereConditions.push(
-                sql`${projects.projectNumber} IS NOT NULL AND ${projects.projectNumber} != ''`
-            )
+            // By default exclude "offer" projects
+            whereConditions.push(ne(projects.status, "offer"))
         }
 
         // Name filter (case-insensitive search)
@@ -216,6 +213,7 @@ export const projectRepository = {
                 invoicingAddress: projects.invoicingAddress,
                 latitude: projects.latitude,
                 longitude: projects.longitude,
+                status: projects.status,
                 archived: projects.archived,
                 createdAt: projects.createdAt,
                 updatedAt: projects.updatedAt,
@@ -366,7 +364,6 @@ export const projectRepository = {
             projectManagers: managersMap.get(project.id) || [],
             projectMembers: membersMap.get(project.id) || [],
             types: typesMap.get(project.id) || [],
-            isDraft: !project.projectNumber || project.projectNumber.trim() === "",
         }))
 
         // Count total with same filters (excluding pagination)
@@ -414,6 +411,7 @@ export const projectRepository = {
                 invoicingAddress: projects.invoicingAddress,
                 latitude: projects.latitude,
                 longitude: projects.longitude,
+                status: projects.status,
                 archived: projects.archived,
                 createdAt: projects.createdAt,
                 updatedAt: projects.updatedAt,
@@ -507,7 +505,6 @@ export const projectRepository = {
             projectManagers: managers,
             projectMembers: members,
             types: projectTypesList,
-            isDraft: !project.projectNumber || project.projectNumber.trim() === "",
         } as ProjectResponse
     },
 
@@ -616,6 +613,7 @@ export const projectRepository = {
                   engineerId: data.engineerId || parentProjectData.engineerId,
                   companyId: data.companyId || parentProjectData.companyId,
                   remark: data.remark || parentProjectData.remark,
+                  status: data.status || parentProjectData.status || "active",
                   ended: data.ended ?? parentProjectData.ended,
                   archived: data.archived ?? parentProjectData.archived,
                   invoicingAddress: data.invoicingAddress || parentProjectData.invoicingAddress,
@@ -644,6 +642,7 @@ export const projectRepository = {
                   engineerId: data.engineerId || null,
                   companyId: data.companyId || null,
                   remark: data.remark || null,
+                  status: data.status || "active",
                   ended: data.ended || false,
                   archived: data.archived || false,
                   invoicingAddress: data.invoicingAddress || null,
@@ -739,6 +738,7 @@ export const projectRepository = {
         if (data.companyId !== undefined) updateData.companyId = data.companyId || null
         if (data.remark !== undefined) updateData.remark = data.remark || null
         if (data.invoicingAddress !== undefined) updateData.invoicingAddress = data.invoicingAddress
+        if (data.status !== undefined) updateData.status = data.status
         if (data.ended !== undefined) updateData.ended = data.ended
         if (data.archived !== undefined) updateData.archived = data.archived
         if (data.latitude !== undefined) updateData.latitude = data.latitude

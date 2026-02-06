@@ -11,17 +11,20 @@
         :required="required"
         :class-name="className"
         :min-search-length="1"
-        @update:model-value="$emit('update:modelValue', $event)"
+        @update:model-value="$emit('update:modelValue', $event ?? undefined)"
     >
         <template #item="{ item }">
             <div class="font-medium flex items-center gap-2">
-                <Badge v-if="item.isDraft" variant="warning" size="sm">
-                    {{ $t("projects.draft") }}
+                <Badge v-if="item.status === 'offer'" variant="info" size="sm">
+                    {{ $t("projects.status.offer") }}
+                </Badge>
+                <Badge v-else-if="item.status === 'draft'" variant="warning" size="sm">
+                    {{ $t("projects.status.draft") }}
                 </Badge>
                 <Badge v-if="item.ended" variant="muted" size="sm">
                     {{ $t("projects.ended") }}
                 </Badge>
-                <span :class="{ 'text-gray-500': item.isDraft || item.ended }">{{
+                <span :class="{ 'text-gray-500': item.status !== 'active' || item.ended }">{{
                     formatProjectLabel(item)
                 }}</span>
             </div>
@@ -111,8 +114,7 @@ const fetchProjects = async (searchText: string) => {
         query: {
             name: searchText,
             includeArchived: props.includeArchived,
-            limit: 50, // Reasonable limit for dropdown
-            includeDraft: false,
+            limit: 50,
             sortBy: "projectNumber",
         },
     })

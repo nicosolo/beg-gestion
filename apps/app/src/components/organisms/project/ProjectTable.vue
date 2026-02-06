@@ -10,8 +10,11 @@
     >
         <template #cell:name="{ item }">
             <div>
-                <Badge v-if="item.isDraft" variant="warning" class="mr-2">
-                    {{ $t("projects.draft") }}
+                <Badge v-if="item.status === 'offer'" variant="info" class="mr-2">
+                    {{ $t("projects.status.offer") }}
+                </Badge>
+                <Badge v-else-if="item.status === 'draft'" variant="warning" class="mr-2">
+                    {{ $t("projects.status.draft") }}
                 </Badge>
                 <span class="text-md font-medium mr-2"
                     >{{ item.projectNumber

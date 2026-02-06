@@ -86,7 +86,6 @@ const hasInteracted = ref(false)
 const filter = ref<ProjectFilterModel>({
     name: "",
     includeArchived: false,
-    includeDraft: false,
     sortBy: "name",
     sortOrder: "asc",
     fromDate: undefined,

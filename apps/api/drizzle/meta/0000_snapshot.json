@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "374f7b2b-f563-44c8-8e38-86dff0443f86",
+  "id": "dbdec37a-5699-4966-b49f-3e3ff1b9e7f1",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "activities": {
@@ -1866,6 +1866,14 @@
           "notNull": false,
           "autoincrement": false
         },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'active'"
+        },
         "ended": {
           "name": "ended",
           "type": "integer",
@@ -1974,6 +1982,13 @@
           "name": "projects_total_duration_idx",
           "columns": [
             "totalDuration"
+          ],
+          "isUnique": false
+        },
+        "projects_status_idx": {
+          "name": "projects_status_idx",
+          "columns": [
+            "status"
           ],
           "isUnique": false
         },

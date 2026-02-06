@@ -20,8 +20,19 @@
                         <Badge v-else-if="projectData?.ended" variant="muted" size="md">
                             {{ $t("projects.markAsEnded") }}
                         </Badge>
-                        <Badge v-else-if="projectData?.isDraft" variant="amber" size="md">
-                            {{ $t("projects.draft") }}
+                        <Badge
+                            v-else-if="projectData?.status === 'offer'"
+                            variant="info"
+                            size="md"
+                        >
+                            {{ $t("projects.status.offer") }}
+                        </Badge>
+                        <Badge
+                            v-else-if="projectData?.status === 'draft'"
+                            variant="amber"
+                            size="md"
+                        >
+                            {{ $t("projects.status.draft") }}
                         </Badge>
                     </div>
                     <span class="text-lg text-gray-900 leading-tight">

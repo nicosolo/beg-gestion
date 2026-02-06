@@ -4,164 +4,250 @@
         :loading="isSubmitting || loadingData"
         :error-message="errorMessage"
     >
-        <form @submit.prevent="saveProject" id="projectForm" class="space-y-4">
-            <FormField
-                :label="$t('projects.startDate')"
-                :error="errors.startDate"
-                required
-                class=""
-            >
-                <template #input>
-                    <Input type="date" v-model="formattedDate" required />
-                </template>
-            </FormField>
-            <!-- Parent Project Selection (for new sub-projects) -->
-            <div v-if="isNewProject" class="">
-                <FormField :label="$t('projects.parentProject')" :error="errors.parentProjectId">
-                    <template #input>
-                        <ProjectSelect
-                            v-model="form.parentProjectId"
-                            :placeholder="$t('projects.selectParentProject')"
-                            :include-ended="false"
-                            :include-archived="false"
-                            @update:model-value="handleParentProjectChange"
-                        />
-                    </template>
-                </FormField>
-            </div>
-
-            <!-- First Line: Number (1/3) and Name (2/3) -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <FormField :label="$t('projects.mandat')" :error="errors.projectNumber">
-                    <template #input>
-                        <Input
-                            type="text"
-                            v-model="form.projectNumber"
-                            :disabled="!!form.parentProjectId"
-                            :placeholder="$t('projects.mandatPlaceholder')"
-                        />
-                    </template>
-                    <template #help>
-                        <p class="text-sm text-gray-500 mt-1">
-                            {{ $t("projects.mandatHelp") }}
-                        </p>
-                    </template>
-                </FormField>
-                <FormField :label="$t('projects.designation')" :error="errors.name" required>
-                    <template #input>
-                        <Input type="text" v-model="form.name" required />
-                    </template>
-                </FormField>
-
-                <FormField
-                    v-if="form.parentProjectId || (!isNewProject && form.subProjectName)"
-                    :label="$t('projects.subProjectName')"
-                    :error="errors.subProjectName"
+        <!-- Project mode tabs (only for new projects) -->
+        <div v-if="isNewProject" class="border-b border-gray-200 mb-4">
+            <nav class="flex gap-2 -mb-px">
+                <button
+                    type="button"
+                    @click="setProjectMode('standard')"
+                    :class="[
+                        'py-3 px-6 font-medium text-sm cursor-pointer shrink-0',
+                        projectMode === 'standard'
+                            ? 'border-b-2 border-blue-500 text-blue-600'
+                            : 'text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                    ]"
                 >
-                    <template #input>
-                        <Input
-                            type="text"
-                            v-model="form.subProjectName"
-                            :placeholder="$t('projects.subProjectNamePlaceholder')"
-                            required
-                        />
-                    </template>
-                </FormField>
-            </div>
-            <!-- Second Line: Project Manager, Type, and Company -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <FormField :label="$t('projects.responsible')" :error="errors.projectManagers">
-                    <template #input>
-                        <UserSelect
-                            v-model="form.projectManagers"
-                            :placeholder="$t('common.select')"
-                            :multiple="true"
-                        />
-                    </template>
-                </FormField>
-
-                <FormField :label="$t('projects.members')" :error="errors.projectMembers">
-                    <template #input>
-                        <UserSelect
-                            v-model="form.projectMembers"
-                            :placeholder="$t('common.select')"
-                            :multiple="true"
-                        />
-                    </template>
-                </FormField>
-
-                <FormField :label="$t('projects.type')" :error="errors.projectTypeIds" required>
-                    <template #input>
-                        <MultiProjectTypeSelect
-                            v-model="form.projectTypeIds"
-                            :placeholder="$t('common.select')"
-                        />
-                    </template>
-                </FormField>
-            </div>
-
-            <!-- Third Line: Company -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <FormField :label="$t('projects.enterprise')" :error="errors.companyId">
-                    <template #input>
-                        <CompanySelect
-                            v-model="form.companyId"
-                            :placeholder="$t('common.select')"
-                        />
-                    </template>
-                </FormField>
-            </div>
-
-            <!-- Additional Details: Locality, Client, Engineer -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <FormField :label="$t('projects.locality')" :error="errors.locationId">
-                    <template #input>
-                        <LocationSelect
-                            v-model="form.locationId"
-                            :placeholder="$t('common.select')"
-                        />
-                    </template>
-                </FormField>
-
-                <FormField :label="$t('projects.client')" :error="errors.clientId">
-                    <template #input>
-                        <ClientSelect
-                            required
-                            v-model="form.clientId"
-                            :placeholder="$t('common.select')"
-                        />
-                    </template>
-                </FormField>
-
-                <FormField :label="$t('projects.engineer')" :error="errors.engineerId">
-                    <template #input>
-                        <EngineerSelect
-                            v-model="form.engineerId"
-                            :placeholder="$t('common.select')"
-                        />
-                    </template>
-                </FormField>
-            </div>
-
-            <!-- Location Picker -->
-            <div class="">
-                <FormField
-                    :label="$t('projects.location')"
-                    :error="errors.latitude || errors.longitude"
+                    {{ $t("projects.mode.standard") }}
+                </button>
+                <button
+                    type="button"
+                    @click="setProjectMode('sub')"
+                    :class="[
+                        'py-3 px-6 font-medium text-sm cursor-pointer shrink-0',
+                        projectMode === 'sub'
+                            ? 'border-b-2 border-blue-500 text-blue-600'
+                            : 'text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                    ]"
                 >
-                    <template #input>
-                        <LocationPicker
-                            :latitude="parsedLatitude"
-                            :longitude="parsedLongitude"
-                            @update:latitude="updateLatitude"
-                            @update:longitude="updateLongitude"
-                        />
-                    </template>
-                </FormField>
-            </div>
+                    {{ $t("projects.mode.sub") }}
+                </button>
+            </nav>
+        </div>
 
-            <!-- Remark -->
-            <div class="">
+        <form @submit.prevent="saveProject" id="projectForm" class="divide-y divide-gray-200">
+            <!-- Section: Identification -->
+            <fieldset class="space-y-4 pt-2 pb-8">
+                <legend class="text-base font-semibold text-gray-700 uppercase tracking-wide mb-4">
+                    {{ $t("projects.sections.identification") }}
+                </legend>
+
+                <!-- Parent Project Selection (sub mode only) -->
+                <div v-if="isNewProject && projectMode === 'sub'">
+                    <FormField
+                        :label="$t('projects.parentProject')"
+                        :error="errors.parentProjectId"
+                    >
+                        <template #input>
+                            <ProjectSelect
+                                v-model="form.parentProjectId"
+                                :placeholder="$t('projects.selectParentProject')"
+                                :include-ended="false"
+                                :include-archived="false"
+                                @update:model-value="handleParentProjectChange"
+                            />
+                        </template>
+                    </FormField>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <FormField :label="$t('projects.mandat')" :error="errors.projectNumber">
+                        <template #input>
+                            <Input
+                                type="text"
+                                v-model="form.projectNumber"
+                                :disabled="!!form.parentProjectId"
+                                :placeholder="$t('projects.mandatPlaceholder')"
+                            />
+                        </template>
+                        <template #help>
+                            <p class="text-sm text-gray-500 mt-1">
+                                {{ $t("projects.mandatHelp") }}
+                            </p>
+                        </template>
+                    </FormField>
+                    <FormField :label="$t('projects.designation')" :error="errors.name" required>
+                        <template #input>
+                            <Input type="text" v-model="form.name" required />
+                        </template>
+                    </FormField>
+                    <FormField
+                        v-if="projectMode === 'sub' || (!isNewProject && form.subProjectName)"
+                        :label="$t('projects.subProjectName')"
+                        :error="errors.subProjectName"
+                    >
+                        <template #input>
+                            <Input
+                                type="text"
+                                v-model="form.subProjectName"
+                                :placeholder="$t('projects.subProjectNamePlaceholder')"
+                            />
+                        </template>
+                    </FormField>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <FormField :label="$t('projects.startDate')" :error="errors.startDate" required>
+                        <template #input>
+                            <Input type="date" v-model="formattedDate" required />
+                        </template>
+                    </FormField>
+                    <FormField :label="$t('projects.type')" :error="errors.projectTypeIds" required>
+                        <template #input>
+                            <MultiProjectTypeSelect
+                                v-model="form.projectTypeIds"
+                                :placeholder="$t('common.select')"
+                            />
+                        </template>
+                    </FormField>
+                    <FormField :label="$t('projects.statusLabel')" :error="errors.status">
+                        <template #input>
+                            <ToggleGroup
+                                :model-value="form.status"
+                                :options="statusOptions"
+                                @update:model-value="form.status = ($event as typeof form.status) || 'active'"
+                            />
+                        </template>
+                    </FormField>
+                </div>
+            </fieldset>
+
+            <!-- Section: Intervenants -->
+            <fieldset class="space-y-4 pt-10 pb-8">
+                <legend class="text-base font-semibold text-gray-700 uppercase tracking-wide my-4">
+                    {{ $t("projects.sections.stakeholders") }}
+                </legend>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <FormField :label="$t('projects.client')" :error="errors.clientId">
+                        <template #input>
+                            <ClientSelect
+                                v-model="form.clientId"
+                                :placeholder="$t('common.select')"
+                            />
+                        </template>
+                    </FormField>
+                    <FormField :label="$t('projects.enterprise')" :error="errors.companyId">
+                        <template #input>
+                            <CompanySelect
+                                v-model="form.companyId"
+                                :placeholder="$t('common.select')"
+                            />
+                        </template>
+                    </FormField>
+                    <FormField :label="$t('projects.engineer')" :error="errors.engineerId">
+                        <template #input>
+                            <EngineerSelect
+                                v-model="form.engineerId"
+                                :placeholder="$t('common.select')"
+                            />
+                        </template>
+                    </FormField>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField :label="$t('projects.responsible')" :error="errors.projectManagers">
+                        <template #input>
+                            <UserSelect
+                                v-model="form.projectManagers"
+                                :placeholder="$t('common.select')"
+                                :multiple="true"
+                            />
+                        </template>
+                    </FormField>
+                    <FormField :label="$t('projects.members')" :error="errors.projectMembers">
+                        <template #input>
+                            <UserSelect
+                                v-model="form.projectMembers"
+                                :placeholder="$t('common.select')"
+                                :multiple="true"
+                            />
+                        </template>
+                    </FormField>
+                </div>
+            </fieldset>
+
+            <!-- Section: Localisation (card style) -->
+            <fieldset class="pt-10 pb-8">
+                <legend class="text-base font-semibold text-gray-700 uppercase tracking-wide mb-4">
+                    {{ $t("projects.sections.location") }}
+                </legend>
+
+                <div class="bg-gray-50 rounded-lg border border-gray-300 p-5 space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <FormField :label="$t('projects.locality')" :error="errors.locationId">
+                            <template #input>
+                                <LocationSelect
+                                    v-model="form.locationId"
+                                    :placeholder="$t('common.select')"
+                                />
+                            </template>
+                        </FormField>
+                    </div>
+
+                    <FormField
+                        :label="$t('projects.location')"
+                        :error="errors.latitude || errors.longitude"
+                    >
+                        <template #input>
+                            <LocationPicker
+                                :latitude="parsedLatitude"
+                                :longitude="parsedLongitude"
+                                @update:latitude="updateLatitude"
+                                @update:longitude="updateLongitude"
+                            />
+                        </template>
+                    </FormField>
+                </div>
+            </fieldset>
+
+            <!-- Section: Finances & notes -->
+            <fieldset class="space-y-4 pt-10 pb-8">
+                <legend class="text-base font-semibold text-gray-700 uppercase tracking-wide mb-4">
+                    {{ $t("projects.sections.financesNotes") }}
+                </legend>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField :label="$t('projects.offerAmount')" :error="errors.offerAmount">
+                        <template #input>
+                            <Input
+                                type="number"
+                                v-model.number="form.offerAmount"
+                                step="0.05"
+                                min="0"
+                                :placeholder="$t('projects.offerAmountPlaceholder')"
+                            />
+                        </template>
+                        <template #help>
+                            <p class="text-sm text-gray-500 mt-1">
+                                {{ $t("projects.offerAmountHelp") }}
+                            </p>
+                        </template>
+                    </FormField>
+                    <FormField
+                        :label="$t('projects.invoicingAddress')"
+                        :error="errors.invoicingAddress"
+                    >
+                        <template #input>
+                            <Textarea
+                                v-model="form.invoicingAddress"
+                                rows="3"
+                                class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                :placeholder="$t('projects.invoicingAddressPlaceholder')"
+                            ></Textarea>
+                        </template>
+                    </FormField>
+                </div>
+
                 <FormField :label="$t('projects.remark')" :error="errors.remark">
                     <template #input>
                         <Textarea
@@ -172,73 +258,33 @@
                         ></Textarea>
                     </template>
                 </FormField>
-            </div>
+            </fieldset>
 
-            <!-- Invoicing Address -->
-            <div class="">
-                <FormField
-                    :label="$t('projects.invoicingAddress')"
-                    :error="errors.invoicingAddress"
-                >
-                    <template #input>
-                        <Textarea
-                            v-model="form.invoicingAddress"
-                            rows="4"
-                            class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            :placeholder="$t('projects.invoicingAddressPlaceholder')"
-                        ></Textarea>
-                    </template>
-                </FormField>
-            </div>
+            <!-- Section: Statut (only when editing) -->
+            <fieldset v-if="!isNewProject" class="pt-10 pb-2">
+                <legend class="text-base font-semibold text-gray-700 uppercase tracking-wide mb-4">
+                    {{ $t("projects.statusLabel") }}
+                </legend>
 
-            <!-- Offer Amount -->
-            <div class="">
-                <FormField :label="$t('projects.offerAmount')" :error="errors.offerAmount">
-                    <template #input>
-                        <Input
-                            type="number"
-                            v-model.number="form.offerAmount"
-                            step="0.05"
-                            min="0"
-                            :placeholder="$t('projects.offerAmountPlaceholder')"
+                <div class="flex gap-8">
+                    <label class="flex items-center">
+                        <input
+                            type="checkbox"
+                            v-model="form.ended"
+                            class="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
-                    </template>
-                    <template #help>
-                        <p class="text-sm text-gray-500 mt-1">
-                            {{ $t("projects.offerAmountHelp") }}
-                        </p>
-                    </template>
-                </FormField>
-            </div>
-
-            <!-- Flags -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <FormField :label="$t('projects.statusLabel')">
-                    <template #input>
-                        <label class="flex items-center">
-                            <input
-                                type="checkbox"
-                                v-model="form.ended"
-                                class="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                            />
-                            <span>{{ $t("projects.markAsEnded") }}</span>
-                        </label>
-                    </template>
-                </FormField>
-
-                <FormField :label="$t('projects.archive')">
-                    <template #input>
-                        <label class="flex items-center">
-                            <input
-                                type="checkbox"
-                                v-model="form.archived"
-                                class="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                            />
-                            <span>{{ $t("projects.markAsArchived") }}</span>
-                        </label>
-                    </template>
-                </FormField>
-            </div>
+                        <span>{{ $t("projects.markAsEnded") }}</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input
+                            type="checkbox"
+                            v-model="form.archived"
+                            class="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <span>{{ $t("projects.markAsArchived") }}</span>
+                    </label>
+                </div>
+            </fieldset>
         </form>
 
         <template #actions>
@@ -275,6 +321,7 @@ import CompanySelect from "@/components/organisms/company/CompanySelect.vue"
 import MultiProjectTypeSelect from "@/components/organisms/projectType/MultiProjectTypeSelect.vue"
 import UserSelect from "@/components/organisms/user/UserSelect.vue"
 import LocationPicker from "@/components/molecules/LocationPicker.vue"
+import ToggleGroup from "@/components/atoms/ToggleGroup.vue"
 
 // API Composables
 import { useFetchProject, useCreateProject, useUpdateProject } from "@/composables/api/useProject"
@@ -297,6 +344,7 @@ interface ProjectFormState {
     remark?: string
     invoicingAddress?: string
     offerAmount?: number | null
+    status: "offer" | "draft" | "active"
     ended: boolean
     archived: boolean
     latitude: string
@@ -304,6 +352,25 @@ interface ProjectFormState {
 }
 
 const { t } = useI18n()
+
+const statusOptions = computed(() => [
+    {
+        value: "offer",
+        label: t("projects.status.offer"),
+        activeClass: "bg-blue-600 text-white border-blue-600",
+    },
+    {
+        value: "draft",
+        label: t("projects.status.draft"),
+        activeClass: "bg-amber-500 text-white border-amber-500",
+    },
+    {
+        value: "active",
+        label: t("projects.status.active"),
+        activeClass: "bg-emerald-600 text-white border-emerald-600",
+    },
+])
+
 const route = useRoute()
 const router = useRouter()
 const { successAlert, errorAlert } = useAlert()
@@ -314,6 +381,28 @@ const user = computed(() => authStore.user)
 // Determine if we're creating a new project or editing an existing one
 const projectId = computed(() => (route.params.id ? parseInt(route.params.id as string) : null))
 const isNewProject = computed(() => !projectId.value)
+
+// Project mode tabs (only used for new projects)
+const projectMode = ref<"standard" | "sub">("standard")
+
+const setProjectMode = (mode: "standard" | "sub") => {
+    projectMode.value = mode
+    if (mode === "standard") {
+        form.value.parentProjectId = undefined
+        form.value.subProjectName = ""
+        form.value.projectNumber = ""
+        form.value.projectTypeIds = []
+        form.value.name = ""
+        form.value.locationId = undefined
+        form.value.clientId = undefined
+        form.value.engineerId = undefined
+        form.value.companyId = undefined
+        form.value.projectManagers = []
+        form.value.projectMembers = []
+        form.value.latitude = ""
+        form.value.longitude = ""
+    }
+}
 
 // Loading states
 const isSubmitting = ref(false)
@@ -347,6 +436,7 @@ const form = ref<ProjectFormState>({
     remark: "",
     invoicingAddress: "",
     offerAmount: null,
+    status: "active",
     ended: false,
     archived: false,
     latitude: "",
@@ -512,6 +602,7 @@ const saveProject = async () => {
             remark: form.value.remark,
             invoicingAddress: form.value.invoicingAddress,
             offerAmount: form.value.offerAmount || null,
+            status: form.value.status,
             ended: form.value.ended || false,
             archived: form.value.archived || false,
             latitude: parsedLatitude,
@@ -590,8 +681,9 @@ onMounted(async () => {
                     remark: projectData.value.remark || "",
                     invoicingAddress: projectData.value.invoicingAddress || "",
                     offerAmount: projectData.value.offerAmount || null,
+                    status: projectData.value.status || "active",
                     ended: projectData.value.ended || false,
-                    archived: false, // This field doesn't exist in current response
+                    archived: projectData.value.archived || false,
                     latitude:
                         projectData.value.latitude !== null &&
                         projectData.value.latitude !== undefined

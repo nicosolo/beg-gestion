@@ -101,7 +101,7 @@
             <!-- Right section: Checkboxes -->
             <div
                 v-if="showCheckboxes"
-                class="w-full lg:w-48 border-t lg:border-t-0 lg:border-l border-gray-300 pt-4 lg:pt-0 lg:pl-4"
+                class="w-full lg:w-72 border-t lg:border-t-0 lg:border-l border-gray-300 pt-4 lg:pt-0 lg:pl-4"
             >
                 <div class="space-y-2">
                     <Checkbox
@@ -116,13 +116,17 @@
                         :label="$t('projects.filters.includeArchived')"
                         id="includeArchived"
                     />
-                    <Checkbox
-                        v-if="isRole('admin')"
-                        v-model="filterData.includeDraft"
-                        @update:model-value="emitChange"
-                        :label="$t('projects.filters.includeDraft')"
-                        id="includeDraft"
-                    />
+                    <div>
+                        <Label class="text-xs mb-1.5 block">{{
+                            $t("projects.filters.status")
+                        }}</Label>
+                        <ToggleGroup
+                            :model-value="filterData.status"
+                            :options="statusOptions"
+                            :allow-deselect="true"
+                            @update:model-value="handleStatusChange"
+                        />
+                    </div>
                 </div>
             </div>
         </div>
@@ -132,9 +136,11 @@
 <script setup lang="ts">
 defineOptions({ name: "ProjectFilterPanel" })
 
-import { onActivated, onMounted, reactive, watch } from "vue"
+import { computed, onActivated, onMounted, reactive, watch } from "vue"
+import { useI18n } from "vue-i18n"
 import Label from "../../atoms/Label.vue"
 import Select from "../../atoms/Select.vue"
+import ToggleGroup from "../../atoms/ToggleGroup.vue"
 import Button from "../../atoms/Button.vue"
 import FormField from "../../molecules/FormField.vue"
 import DateRange from "../../molecules/DateRange.vue"
@@ -156,6 +162,25 @@ interface ProjectFilterProps {
 }
 
 const { isRole } = useAuthStore()
+const { t } = useI18n()
+
+const statusOptions = computed(() => [
+    {
+        value: "offer",
+        label: t("projects.status.offer"),
+        activeClass: "bg-blue-600 text-white border-blue-600",
+    },
+    {
+        value: "draft",
+        label: t("projects.status.draft"),
+        activeClass: "bg-amber-500 text-white border-amber-500",
+    },
+    {
+        value: "active",
+        label: t("projects.status.active"),
+        activeClass: "bg-emerald-600 text-white border-emerald-600",
+    },
+])
 
 // Define props for the component
 const {
@@ -175,7 +200,7 @@ const emit = defineEmits<{
 const filterData = reactive<ProjectFilterProps["filter"]>({
     name: filter.name,
     includeArchived: filter.includeArchived,
-    includeDraft: filter.includeDraft || false,
+    status: filter.status,
     sortBy: filter.sortBy,
     sortOrder: filter.sortOrder,
     fromDate: filter.fromDate,
@@ -196,7 +221,7 @@ watch(
     (newFilter) => {
         filterData.name = newFilter.name
         filterData.includeArchived = newFilter.includeArchived
-        filterData.includeDraft = newFilter.includeDraft
+        filterData.status = newFilter.status
         filterData.sortBy = newFilter.sortBy
         filterData.sortOrder = newFilter.sortOrder
         filterData.fromDate = newFilter.fromDate
@@ -213,9 +238,17 @@ const debouncedFilterChange = debounce(() => {
     emit("update:filter", { ...filterData })
 }, 300)
 
+const handleStatusChange = (value: string | undefined) => {
+    filterData.status = value as typeof filterData.status
+    emitChange()
+}
+
 // Emit methods
 const emitChange = () => {
-    emit("update:filter", { ...filterData })
+    emit("update:filter", {
+        ...filterData,
+        status: filterData.status || undefined,
+    })
 }
 
 const emitInputChange = () => {
@@ -227,7 +260,7 @@ const resetFilters = () => {
     const { from, to } = getYearRange()
     filterData.name = ""
     filterData.includeArchived = false
-    filterData.includeDraft = false
+    filterData.status = undefined
     filterData.sortBy = "name"
     filterData.sortOrder = "asc"
     filterData.fromDate = from

@@ -548,6 +548,10 @@ async function importProjects() {
                 invoicingAddress: rawProject.Facture || null,
                 createdAt: rawProject.Début ? parseAccessDate(rawProject.Début) : new Date(),
                 updatedAt: new Date(),
+                status:
+                    rawProject.Mandat || rawProject.Mandat === 0 || rawProject.Mandat === "0"
+                        ? ("active" as const)
+                        : ("draft" as const),
                 ended: rawProject.Etat === "Terminé",
                 subProjectName: rawProject["Sous-mandat"]?.trim() || null,
             } satisfies typeof projects.$inferInsert

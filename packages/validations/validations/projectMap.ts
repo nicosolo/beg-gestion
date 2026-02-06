@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { booleanSchema, dateSchema } from "./base"
+import { projectStatusEnum } from "./project"
 
 // Filter schema for project map (includes all project filters plus map bounds)
 export const projectMapFilterSchema = z.object({
@@ -27,7 +28,7 @@ export const projectMapFilterSchema = z.object({
     toDate: z.coerce.date().optional(),
     hasUnbilledTime: booleanSchema.optional().default(false),
     includeArchived: booleanSchema.optional().default(false),
-    includeDraft: booleanSchema.optional().default(false),
+    status: z.enum(projectStatusEnum).optional(),
     // Bounds filtering for viewport
     minLat: z.coerce.number().optional(),
     maxLat: z.coerce.number().optional(),

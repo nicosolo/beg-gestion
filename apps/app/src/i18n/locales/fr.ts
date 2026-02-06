@@ -222,7 +222,6 @@ export default {
             toDate: "Date de fin",
             includeArchived: "Archivés",
             includeEnded: "Terminés",
-            includeDraft: "Nº à attribuer",
             hasUnbilledTime: "Avec heures non facturées",
             searchByNameAndNumber: "Rechercher par numéro ou nom",
             referentUser: "Responsable",
@@ -231,6 +230,8 @@ export default {
         options: "Options",
         status: {
             all: "Tous",
+            offer: "Offre",
+            draft: "Nº à attribuer",
             active: "Actif",
             completed: "Terminé",
             cancelled: "Annulé",
@@ -260,6 +261,16 @@ export default {
             invoices: "Factures",
         },
         location: "Localisation",
+        mode: {
+            standard: "Mandat standard",
+            sub: "Sous-mandat",
+        },
+        sections: {
+            identification: "Identification",
+            stakeholders: "Intervenants",
+            location: "Localisation",
+            financesNotes: "Finances et notes",
+        },
     },
     pagination: {
         showing: "Affichage de {from} à {to} sur {total} éléments",

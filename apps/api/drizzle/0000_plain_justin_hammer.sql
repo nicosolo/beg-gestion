@@ -261,6 +261,7 @@ CREATE TABLE `projects` (
 	`unBilledDuration` real DEFAULT 0,
 	`unBilledDisbursementDuration` real DEFAULT 0,
 	`offerAmount` real,
+	`status` text DEFAULT 'active' NOT NULL,
 	`ended` integer DEFAULT false,
 	`archived` integer DEFAULT false,
 	`updatedAt` integer DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -282,6 +283,7 @@ CREATE INDEX `projects_company_idx` ON `projects` (`companyId`);--> statement-br
 CREATE INDEX `projects_first_activity_date_idx` ON `projects` (`firstActivityDate`);--> statement-breakpoint
 CREATE INDEX `projects_last_activity_date_idx` ON `projects` (`lastActivityDate`);--> statement-breakpoint
 CREATE INDEX `projects_total_duration_idx` ON `projects` (`totalDuration`);--> statement-breakpoint
+CREATE INDEX `projects_status_idx` ON `projects` (`status`);--> statement-breakpoint
 CREATE INDEX `projects_archived_idx` ON `projects` (`archived`);--> statement-breakpoint
 CREATE INDEX `projects_ended_idx` ON `projects` (`ended`);--> statement-breakpoint
 CREATE INDEX `projects_un_billed_duration_idx` ON `projects` (`unBilledDuration`);--> statement-breakpoint
