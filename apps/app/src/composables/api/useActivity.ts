@@ -4,9 +4,11 @@ import {
     activityExportFilterSchema,
     activityCreateSchema,
     activityUpdateSchema,
+    userMonthlyStatsFilterSchema,
     type ActivityListResponse,
     type ActivityResponse,
     type OrphanedActivitiesResponse,
+    type UserMonthlyStatsResponse,
 } from "@beg/validations"
 import { useGet, usePost, usePut, useDelete, useGetBinary } from "./useAPI"
 
@@ -77,4 +79,15 @@ export function useDeleteActivity() {
 
 export function useFetchOrphanedActivities() {
     return useGet<OrphanedActivitiesResponse>("activity/orphaned")
+}
+
+export function useFetchMyMonthlyStats() {
+    return useGet<
+        UserMonthlyStatsResponse,
+        {
+            query: typeof userMonthlyStatsFilterSchema
+        }
+    >("activity/my-stats", {
+        query: userMonthlyStatsFilterSchema,
+    })
 }

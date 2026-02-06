@@ -91,6 +91,10 @@ export default {
             addedSuccess: "{user} a été ajouté au mandat {project}",
             addedError: "Erreur lors de l'ajout du membre",
         },
+        monthlyStats: {
+            title: "Mes heures par mois",
+            total: "Total",
+        },
     },
     auth: {
         login: "Connexion",

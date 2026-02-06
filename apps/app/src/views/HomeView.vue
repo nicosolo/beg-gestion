@@ -38,6 +38,11 @@
             <OrphanedActivitiesAlert />
         </div>
 
+        <!-- Monthly hours stats -->
+        <div class="max-w-6xl mx-auto">
+            <MonthlyHoursStats />
+        </div>
+
         <div>
             <TimeEntriesManager
                 :show-project-filter="false"
@@ -62,6 +67,7 @@ import { useI18n } from "vue-i18n"
 import ProjectSelect from "@/components/organisms/project/ProjectSelect.vue"
 import TimeEntriesManager from "@/components/organisms/time/TimeEntriesManager.vue"
 import OrphanedActivitiesAlert from "@/components/organisms/activity/OrphanedActivitiesAlert.vue"
+import MonthlyHoursStats from "@/components/organisms/activity/MonthlyHoursStats.vue"
 import { useAuthStore } from "@/stores/auth"
 import { getTodayRange } from "@/composables/utils/useDateRangePresets"
 

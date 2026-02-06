@@ -12,6 +12,8 @@ import {
     idParamSchema,
     activityListResponse,
     orphanedActivitiesResponseSchema,
+    userMonthlyStatsFilterSchema,
+    userMonthlyStatsResponseSchema,
 } from "@beg/validations"
 import { activityRepository } from "../db/repositories/activity.repository"
 import { projectRepository } from "../db/repositories/project.repository"
@@ -75,6 +77,20 @@ export const activityRoutes = new Hono<{ Variables: Variables }>()
             const user = c.get("user")
             const orphanedActivities = await activityRepository.findOrphanedActivities(user)
             return c.render(orphanedActivities, 200)
+        }
+    )
+    // Get monthly hours stats for the current user
+    .get(
+        "/my-stats",
+        zValidator("query", userMonthlyStatsFilterSchema),
+        responseValidator({
+            200: userMonthlyStatsResponseSchema,
+        }),
+        async (c) => {
+            const { year } = c.req.valid("query")
+            const user = c.get("user")
+            const stats = await activityRepository.getMonthlyStats(user.id, year)
+            return c.render(stats, 200)
         }
     )
     .get(

@@ -145,3 +145,23 @@ export const orphanedActivitiesResponseSchema = z.array(orphanedActivityGroupSch
 
 export type OrphanedActivityGroup = z.infer<typeof orphanedActivityGroupSchema>
 export type OrphanedActivitiesResponse = z.infer<typeof orphanedActivitiesResponseSchema>
+
+// Monthly hours stats for a user
+export const userMonthlyStatsFilterSchema = z.object({
+    year: z.coerce.number().min(2000).max(2100),
+})
+
+export const userMonthlyStatsItemSchema = z.object({
+    month: z.number().min(1).max(12),
+    duration: z.number(),
+})
+
+export const userMonthlyStatsResponseSchema = z.object({
+    year: z.number(),
+    months: z.array(userMonthlyStatsItemSchema),
+    totalDuration: z.number(),
+})
+
+export type UserMonthlyStatsFilter = z.infer<typeof userMonthlyStatsFilterSchema>
+export type UserMonthlyStatsItem = z.infer<typeof userMonthlyStatsItemSchema>
+export type UserMonthlyStatsResponse = z.infer<typeof userMonthlyStatsResponseSchema>

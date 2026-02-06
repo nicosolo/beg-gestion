@@ -469,4 +469,36 @@ export const activityRepository = {
             )
             .orderBy(projects.projectNumber)
     },
+
+    // Get monthly hours stats for a user
+    getMonthlyStats: async (userId: number, year: number) => {
+        const startDate = new Date(year, 0, 1)
+        const endDate = new Date(year, 11, 31, 23, 59, 59)
+
+        const result = await db
+            .select({
+                month: sql<number>`CAST(strftime('%m', datetime(${activities.date}, 'unixepoch')) AS INTEGER)`,
+                duration: sql<number>`COALESCE(SUM(${activities.duration}), 0)`,
+            })
+            .from(activities)
+            .where(
+                and(
+                    eq(activities.userId, userId),
+                    gte(activities.date, startDate),
+                    lte(activities.date, endDate)
+                )
+            )
+            .groupBy(sql`strftime('%m', datetime(${activities.date}, 'unixepoch'))`)
+            .orderBy(sql`strftime('%m', datetime(${activities.date}, 'unixepoch'))`)
+
+        // Fill in missing months with 0
+        const months = Array.from({ length: 12 }, (_, i) => {
+            const found = result.find((r) => r.month === i + 1)
+            return { month: i + 1, duration: found?.duration ?? 0 }
+        })
+
+        const totalDuration = months.reduce((sum, m) => sum + m.duration, 0)
+
+        return { year, months, totalDuration }
+    },
 }
