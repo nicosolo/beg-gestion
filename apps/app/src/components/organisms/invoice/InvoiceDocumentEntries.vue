@@ -176,7 +176,11 @@ const entries = computed({
     set: (value: InvoiceDocumentEntry[]) => emit("update:modelValue", value),
 })
 
-const accept = computed(() => props.accept || ".pdf,.doc,.docx,.xls,.xlsx")
+const accept = computed(
+    () =>
+        props.accept ||
+        ".pdf,.doc,.docx,.xls,.xlsx,.html,.jpg,.jpeg,.png,.gif,.nef,.tiff,.bmp,.heic,.heif,.webp,.ppt,.pptx"
+)
 
 const showAmount = computed(() => props.showAmount)
 
@@ -286,6 +290,4 @@ const formatAmount = (value: InvoiceDocumentEntry["amount"]) => {
     if (value === null || value === undefined) return ""
     return String(value)
 }
-
-
 </script>

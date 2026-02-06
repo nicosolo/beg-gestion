@@ -9,6 +9,28 @@
                     Informations pour la comptabilité
                 </caption>
                 <tbody>
+                    <tr v-if="invoice.project">
+                        <td
+                            class="font-bold pr-4 text-right w-[4cm] border border-gray-300 p-1 text-sm"
+                        >
+                            Mandat
+                        </td>
+                        <td class="border border-gray-300 p-1 text-sm">
+                            <router-link
+                                :to="`/project/${invoice.project.id}/view`"
+                                class="text-blue-600 hover:underline"
+                            >
+                                {{ invoice.project.projectNumber }}
+                                <template v-if="invoice.project.subProjectName">
+                                    - {{ invoice.project.subProjectName }}
+                                </template>
+                                - {{ invoice.project.name }}
+                            </router-link>
+                            <span v-if="invoice.project.client" class="text-gray-500 ml-1">
+                                ({{ invoice.project.client.name }})
+                            </span>
+                        </td>
+                    </tr>
                     <tr>
                         <td
                             class="font-bold pr-4 text-right w-[4cm] border border-gray-300 p-1 text-sm"
@@ -556,16 +578,12 @@
                 </tbody>
             </table>
             <button
-                v-if="invoice.legacyInvoicePath"
+                v-if="invoice.legacyInvoicePath && isTauri"
                 type="button"
                 class="text-blue-600 hover:underline"
-                @click="
-                    downloadInvoiceFile(
-                        invoice.id,
-                        invoice.legacyInvoicePath.replace(/\.fab$/i, '.html')
-                    )
-                "
+                @click="openLegacyInvoice"
             >
+                Facture originale:
                 {{ extractFileName(invoice.legacyInvoicePath.replace(/\.fab$/i, ".html")) }}
             </button>
         </div>
@@ -579,6 +597,8 @@ import { useFormat } from "@/composables/utils/useFormat"
 import { useI18n } from "vue-i18n"
 import { useInvoiceDocuments } from "@/composables/invoice/useInvoiceDocuments"
 import Button from "@/components/atoms/Button.vue"
+import { useTauri } from "@/composables/useTauri"
+import { useAppSettingsStore } from "@/stores/appSettings"
 
 interface InvoiceProps {
     invoice: InvoiceResponse
@@ -588,6 +608,17 @@ const props = defineProps<InvoiceProps>()
 const { formatCurrency, formatDuration, formatDate, nl2br } = useFormat()
 const { t } = useI18n()
 const { buildFileUrl, downloadInvoiceFile, extractFileName } = useInvoiceDocuments()
+const { isTauri, openFile } = useTauri()
+
+const openLegacyInvoice = async () => {
+    const appSettingsStore = useAppSettingsStore()
+    const absolutePath = appSettingsStore.getAbsolutePath(
+        props.invoice.legacyInvoicePath?.replace(/\.fab$/i, ".html") || ""
+    )
+    if (isTauri.value) {
+        await openFile(absolutePath)
+    }
+}
 
 const inChargeUserName = computed(() => {
     const user = props.invoice.inChargeUser
@@ -632,14 +663,27 @@ const hasAdditionalInfo = computed(() => {
     )
 })
 
+const invoiceUrl = computed(() => {
+    const path = `/invoice/${props.invoice.id}/preview`
+    return `beg-gestion:/${path}`
+})
+
+const projectUrl = computed(() => {
+    if (!props.invoice.project) return null
+    const path = `/project/${props.invoice.project.id}/view`
+    return `beg-gestion:/${path}`
+})
+
 const mailtoLink = computed(() => {
-    const currentUrl = window.location.href
     const subject = encodeURIComponent(
         `Facture ${props.invoice.invoiceNumber || props.invoice.reference || ""}`
     )
-    const body = encodeURIComponent(
-        `Bonjour,\n\nVeuillez trouver ci-joint le lien vers la facture:\n\n${currentUrl}\n\nCordialement`
-    )
+    let text = `Bonjour,\n\nVeuillez trouver ci-joint le lien vers la facture:\n\n${invoiceUrl.value}`
+    if (projectUrl.value) {
+        text += `\n\nMandat: ${projectUrl.value}`
+    }
+    text += `\n\nCordialement`
+    const body = encodeURIComponent(text)
     return `mailto:?subject=${subject}&body=${body}`
 })
 </script>
