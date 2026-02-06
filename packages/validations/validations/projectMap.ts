@@ -52,6 +52,7 @@ export const projectMapItemResponseSchema = z.object({
     locationName: z.string().nullable(),
     lastActivityDate: dateSchema.nullable(),
     ended: z.boolean().optional(),
+    types: z.array(z.object({ id: z.number(), name: z.string() })).optional(),
 })
 
 // Array response for map endpoint

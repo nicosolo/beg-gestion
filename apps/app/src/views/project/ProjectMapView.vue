@@ -1,6 +1,6 @@
 <template>
     <div class="flex flex-col h-full">
-        <div class="p-6 pb-4">
+        <div class="pb-4">
             <h1 class="text-2xl font-bold">{{ $t("projects.map.title") }}</h1>
             <ProjectFilterPanel
                 :filter="filter"
@@ -20,7 +20,7 @@
                 </div>
             </div>
         </div>
-        <div class="flex-1 px-6 pb-6 min-h-0 relative">
+        <div class="flex-1 -mx-4 md:mx-0 pb-6 min-h-0 relative">
             <!-- Loading indicator -->
             <div
                 v-if="loading"
@@ -56,7 +56,7 @@
 
             <ProjectMap
                 :projects="projects ?? []"
-                class="h-full"
+                class="min-h-[500px] h-[calc(100vh-800px)] lg:h-[calc(100vh-600px)] md:h-[calc(100vh-500px)] w-full"
                 @bounds-changed="handleBoundsChanged"
             />
         </div>

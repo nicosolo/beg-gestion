@@ -118,6 +118,7 @@ export const projectRoutes = new Hono<{ Variables: Variables }>()
                     locationName: project.location?.name ?? null,
                     lastActivityDate: project.lastActivityDate,
                     ended: project.ended ?? false,
+                    types: project.types ?? [],
                 }))
 
             // Apply limit (show most recent first)

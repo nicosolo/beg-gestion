@@ -1,5 +1,5 @@
 <template>
-    <div class="w-full h-full rounded-lg shadow-lg overflow-hidden">
+    <div class="md:rounded-lg md:shadow-lg overflow-hidden">
         <div ref="mapContainer" class="w-full h-full"></div>
     </div>
 </template>
@@ -162,15 +162,23 @@ const createMarkers = async () => {
                 const endedBadge = project.ended
                     ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-semibold bg-gray-200 text-gray-500 ml-1">Terminé</span>'
                     : ""
+                const typeBadges = (project.types ?? [])
+                    .map(
+                        (t: { id: number; name: string }) =>
+                            `<span class="inline-flex items-center font-semibold rounded-full px-3 py-1 text-sm bg-amber-200 text-amber-900">${t.name}</span>`
+                    )
+                    .join("")
                 return `
-                <div class="flex items-center justify-between gap-3 py-1">
-                    <span class="font-medium text-sm">${label}${endedBadge} - ${project.name}</span>
-                    <button
-                        onclick="window.dispatchEvent(new CustomEvent('navigate-to-project', { detail: ${project.id} }))"
-                        class="shrink-0 rounded-md font-medium focus:outline-none cursor-pointer text-indigo-600 hover:text-indigo-800 text-sm px-1"
-                    >
-                        Voir
-                    </button>
+                <div class="py-1">
+                    <div class="flex items-center justify-between gap-3">
+                        <span class="font-medium text-sm">${label}${endedBadge} - ${project.name}</span>
+                        <button
+                            onclick="window.dispatchEvent(new CustomEvent('navigate-to-project', { detail: ${project.id} }))"
+                            class="shrink-0 rounded-md font-medium focus:outline-none cursor-pointer text-indigo-600 hover:text-indigo-800 text-sm px-1"
+                        >
+                            Voir
+                        </button>
+                    </div>${typeBadges ? `<div class="flex flex-wrap gap-1 mt-1">${typeBadges}</div>` : ""}
                 </div>
             `
             })
