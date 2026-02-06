@@ -1,4 +1,4 @@
-import { eq, or } from "drizzle-orm"
+import { and, eq, or } from "drizzle-orm"
 import { db } from "../index"
 import { users } from "../schema"
 import type {
@@ -14,7 +14,12 @@ export const userRepository = {
         const results = await db
             .select()
             .from(users)
-            .where(or(eq(users.email, emailOrInitials), eq(users.initials, emailOrInitials)))
+            .where(
+                and(
+                    or(eq(users.email, emailOrInitials), eq(users.initials, emailOrInitials)),
+                    eq(users.archived, false)
+                )
+            )
         return results[0] || null
     },
     findByEmail: async (email: string) => {

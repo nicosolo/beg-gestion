@@ -172,6 +172,46 @@ async function loadProjectTypeMapping(): Promise<{
 }
 
 // Map French names to DB table structure
+const ARCHIVED_USERS: [string, string][] = [
+    ["Alexis", "Jaspar"],
+    ["Augustine", "Raymond"],
+    ["Battista", "Matasci"],
+    ["Céline", "Posse"],
+    ["Charlène", "Gaillard"],
+    ["Christophe", "Badertscher"],
+    ["Clara", "Chauvet"],
+    ["Clémence", "Maire"],
+    ["Debora", "Janos"],
+    ["Didier", "Cardis"],
+    ["Dimitri", "Giugni"],
+    ["Filipe", "Carrasco"],
+    ["François", "Negro"],
+    ["Hélène", "Mas"],
+    ["Jacques", "Bechet"],
+    ["Jacques1", "Philipossian1"],
+    ["JacquesAndre", "Lanet"],
+    ["Jean", "Savary"],
+    ["Jérémie", "Pralong"],
+    ["Julien", "Richon"],
+    ["Julien", "Travelletti"],
+    ["Laurent", "Aubin"],
+    ["Léa", "Perrochet"],
+    ["Liliane", "Bianco"],
+    ["Lisa", "Coianiz"],
+    ["Maria", "Fonticoba"],
+    ["Oliver", "Tomson"],
+    ["Pascale", "Girod"],
+    ["Patricia", "Conus"],
+    ["Renaud", "Saint-Loup"],
+    ["Roel", "Verberne"],
+    ["Romain", "Sonney"],
+    ["Sébastien", "Simoens"],
+    ["Tamara", "Veuthey"],
+    ["Tess", "Calderon"],
+    ["Vincent", "Boitelet"],
+    ["Yasin", "Khanabeigi"],
+]
+
 function mapUserData(data: any): typeof users.$inferInsert {
     // Use original ID if available
     const superAdminUsers = ["fp", "mo", "md"]
@@ -189,7 +229,11 @@ function mapUserData(data: any): typeof users.$inferInsert {
               ? "admin"
               : "user",
 
-        archived: false,
+        archived: ARCHIVED_USERS.some(
+            ([firstName, lastName]) =>
+                data.Prénom.toLowerCase().trim() === firstName.toLowerCase().trim() &&
+                data.Nom.toLowerCase().trim() === lastName.toLowerCase().trim()
+        ),
         createdAt: new Date(),
         updatedAt: new Date(),
         activityRates: [] as ActivityRateUser[],
