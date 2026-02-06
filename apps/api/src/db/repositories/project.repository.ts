@@ -1,20 +1,4 @@
-import {
-    eq,
-    sql,
-    like,
-    and,
-    or,
-    gte,
-    lte,
-    asc,
-    desc,
-    inArray,
-    lt,
-    gt,
-    ne,
-    type SQL,
-} from "drizzle-orm"
-import type { SQLiteColumn } from "drizzle-orm/sqlite-core"
+import { eq, sql, like, and, or, gte, lte, asc, desc, inArray, gt, ne } from "drizzle-orm"
 import { db } from "../index"
 import {
     projects,
