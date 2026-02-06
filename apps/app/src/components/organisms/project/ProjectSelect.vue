@@ -112,7 +112,7 @@ const fetchProjects = async (searchText: string) => {
     }
     await get({
         query: {
-            name: searchText,
+            text: searchText,
             includeArchived: props.includeArchived,
             limit: 50,
             sortBy: "projectNumber",

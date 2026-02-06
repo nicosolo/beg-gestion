@@ -1,4 +1,20 @@
-import { eq, sql, like, and, or, gte, lte, asc, desc, inArray, lt, gt, ne } from "drizzle-orm"
+import {
+    eq,
+    sql,
+    like,
+    and,
+    or,
+    gte,
+    lte,
+    asc,
+    desc,
+    inArray,
+    lt,
+    gt,
+    ne,
+    type SQL,
+} from "drizzle-orm"
+import type { SQLiteColumn } from "drizzle-orm/sqlite-core"
 import { db } from "../index"
 import {
     projects,
@@ -42,7 +58,7 @@ export const projectRepository = {
         const {
             page = 1,
             limit = 10,
-            name,
+            text,
             includeArchived = false,
             referentUserId,
             projectTypeIds,
@@ -68,8 +84,8 @@ export const projectRepository = {
 
         // Name filter (case-insensitive search)
         // Split search terms: numbers match projectNumber, text matches name
-        if (name && name.trim()) {
-            const terms = name.trim().split(/\s+/)
+        if (text && text.trim()) {
+            const terms = text.trim().split(/\s+/)
             const numberTerms = terms.filter((t) => /^\d+$/.test(t))
             const textTerms = terms.filter((t) => !/^\d+$/.test(t))
 
@@ -81,10 +97,23 @@ export const projectRepository = {
                 conditions.push(like(projects.projectNumber, `${numberPattern}%`))
             }
 
-            // Match text terms against name
+            // Match text terms against name and related entities (accent-insensitive)
             if (textTerms.length > 0) {
                 const textPattern = `%${textTerms.join("%")}%`
-                conditions.push(like(projects.name, textPattern))
+                conditions.push(
+                    or(
+                        sql`${projects.name} LIKE ${textPattern}`,
+                        sql`${projects.subProjectName} LIKE ${textPattern}`,
+                        sql`${clients.name} LIKE ${textPattern}`,
+                        sql`${locations.name} LIKE ${textPattern}`,
+                        sql`${locations.region} LIKE ${textPattern}`,
+                        sql`${locations.address} LIKE ${textPattern}`,
+                        sql`${engineers.name} LIKE ${textPattern}`,
+                        sql`${companies.name} LIKE ${textPattern}`,
+                        sql`EXISTS (SELECT 1 FROM ${projectUsers} pu JOIN ${users} u ON pu.userId = u.id WHERE pu.projectId = ${projects.id} AND (${sql`u.firstName`} LIKE ${textPattern} OR ${sql`u.lastName`} LIKE ${textPattern} OR ${sql`u.initials`} LIKE ${textPattern}))`,
+                        sql`EXISTS (SELECT 1 FROM ${projectProjectTypes} ppt JOIN ${projectTypes} pt ON ppt.projectTypeId = pt.id WHERE ppt.projectId = ${projects.id} AND ${sql`pt.name`} LIKE ${textPattern})`
+                    )
+                )
             }
 
             // If only numbers or only text, also try matching full string against both
@@ -92,8 +121,17 @@ export const projectRepository = {
                 const fullPattern = `%${terms.join("%")}%`
                 whereConditions.push(
                     or(
-                        like(projects.name, fullPattern),
+                        sql`${projects.name} LIKE ${fullPattern}`,
                         like(projects.projectNumber, `${terms.join("%")}%`),
+                        sql`${projects.subProjectName} LIKE ${fullPattern}`,
+                        sql`${clients.name} LIKE ${fullPattern}`,
+                        sql`${locations.name} LIKE ${fullPattern}`,
+                        sql`${locations.region} LIKE ${fullPattern}`,
+                        sql`${locations.address} LIKE ${fullPattern}`,
+                        sql`${engineers.name} LIKE ${fullPattern}`,
+                        sql`${companies.name} LIKE ${fullPattern}`,
+                        sql`EXISTS (SELECT 1 FROM ${projectUsers} pu JOIN ${users} u ON pu.userId = u.id WHERE pu.projectId = ${projects.id} AND (${sql`u.firstName`} LIKE ${fullPattern} OR ${sql`u.lastName`} LIKE ${fullPattern} OR ${sql`u.initials`} LIKE ${fullPattern}))`,
+                        sql`EXISTS (SELECT 1 FROM ${projectProjectTypes} ppt JOIN ${projectTypes} pt ON ppt.projectTypeId = pt.id WHERE ppt.projectId = ${projects.id} AND ${sql`pt.name`} LIKE ${fullPattern})`,
                         ...(conditions.length > 0 ? [and(...conditions)] : [])
                     )
                 )
@@ -167,8 +205,8 @@ export const projectRepository = {
         const sortExpressions = []
 
         // If searching by name, add priority sort for exact projectNumber matches
-        if (name && name.trim()) {
-            const terms = name.trim().split(/\s+/)
+        if (text && text.trim()) {
+            const terms = text.trim().split(/\s+/)
             const numberTerms = terms.filter((t) => /^\d+$/.test(t))
 
             // Prioritize exact projectNumber match for number terms
@@ -184,12 +222,14 @@ export const projectRepository = {
             } else {
                 // No number terms - use original logic for text-only search
                 const searchTokens = terms.join("%")
-                const projectNamePattern = `%${searchTokens}%`
+                const namePattern = `%${searchTokens}%`
                 sortExpressions.push(
                     sql`CASE
-                            WHEN ${projects.projectNumber} LIKE ${terms.join("%") + "%"} THEN 0
-                            WHEN ${projects.name} LIKE ${projectNamePattern} THEN 1
-                            ELSE 2
+                            WHEN ${projects.subProjectName} LIKE ${namePattern} THEN 0
+                            WHEN ${projects.projectNumber} LIKE ${terms.join("%") + "%"} THEN 1
+                            WHEN ${projects.name} LIKE ${namePattern} THEN 2
+                            WHEN ${clients.name} LIKE ${namePattern} OR ${locations.name} LIKE ${namePattern} OR ${locations.region} LIKE ${namePattern} OR ${engineers.name} LIKE ${namePattern} OR ${companies.name} LIKE ${namePattern} THEN 3
+                            ELSE 4
                         END`
                 )
             }
@@ -368,6 +408,10 @@ export const projectRepository = {
         let countQuery = db
             .select({ count: sql<number>`count(DISTINCT ${projects.id})` })
             .from(projects)
+            .leftJoin(locations, eq(projects.locationId, locations.id))
+            .leftJoin(clients, eq(projects.clientId, clients.id))
+            .leftJoin(engineers, eq(projects.engineerId, engineers.id))
+            .leftJoin(companies, eq(projects.companyId, companies.id))
             .$dynamic()
 
         // Apply same manager filter as main query
