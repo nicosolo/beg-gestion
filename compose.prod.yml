@@ -11,6 +11,7 @@ services:
             - ./data:/app/data
             - $MANDATS_PATH:/mandats:ro
             - $MS_ACCESS_DB_PATH:/export-mdb/beg.mdb:ro
+            - $FILE_STORAGE:/app/files
         working_dir: /app/apps/api
         command: bun run start
         restart: always

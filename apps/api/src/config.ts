@@ -13,3 +13,5 @@ export const MS_ACCESS_DB_PATH = "/export-mdb/beg.mdb"
 
 // Project folder configuration
 export const PROJECT_BASE_DIR = "/mandats"
+
+export const FILE_STORAGE = "/app/files"

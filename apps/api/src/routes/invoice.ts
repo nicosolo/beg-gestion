@@ -12,33 +12,14 @@ import {
     type InvoiceUpdateInput,
 } from "@beg/validations"
 import { invoiceRepository } from "../db/repositories/invoice.repository"
-import { projectRepository } from "../db/repositories/project.repository"
 import { authMiddleware } from "@src/tools/auth-middleware"
 import { responseValidator } from "@src/tools/response-validator"
-import {
-    throwNotFound,
-    throwValidationError,
-    parseZodError,
-    throwNoProjectFolderError,
-} from "@src/tools/error-handler"
+import { throwNotFound, throwValidationError, parseZodError } from "@src/tools/error-handler"
 import type { Variables } from "@src/types/global"
 import { roleMiddleware } from "@src/tools/role-middleware"
-import { findProjectInvoiceFolder } from "@src/tools/project-folder-finder"
-import { PROJECT_BASE_DIR } from "@src/config"
 import { z, ZodError } from "zod"
-import path from "node:path"
-import { mkdir, stat } from "node:fs/promises"
-import { createReadStream, createWriteStream } from "node:fs"
-import { Readable } from "node:stream"
-import { pipeline } from "node:stream/promises"
-import {
-    guessMimeType,
-    contentDispositionInline,
-    normalizeStoredPath,
-    fileBaseName,
-    matchesStoredPath,
-    pathIsWithin,
-} from "@src/tools/file-utils"
+import { normalizeStoredPath, fileBaseName, matchesStoredPath } from "@src/tools/file-utils"
+import { storeFile, serveFile } from "@src/services/file-storage.service"
 
 type UploadedInvoiceFiles = {
     invoiceDocument?: File
@@ -164,174 +145,38 @@ const hasUploadedFiles = (files: UploadedInvoiceFiles) => {
     )
 }
 
-const sanitizeFileName = (filename: string) => {
-    const base = path.basename(filename)
-    const sanitized = base.replace(/[\\/:*?"<>|]/g, "_").trim()
-    return sanitized.length > 0 ? sanitized : `document-${Date.now()}`
-}
-
-const writeUploadedFile = async (file: File, destinationPath: string) => {
-    await mkdir(path.dirname(destinationPath), { recursive: true })
-    const readable = Readable.fromWeb(file.stream())
-    const writable = createWriteStream(destinationPath)
-    await pipeline(readable, writable)
-}
-
-// Check if a relative file path exists under PROJECT_BASE_DIR
-const fileExistsInMandats = async (filePath: string | undefined | null): Promise<boolean> => {
-    if (!filePath) return false
-    if (path.isAbsolute(filePath)) return false
-    if (!filePath.includes("/")) return false
-    const fullPath = path.resolve(PROJECT_BASE_DIR, filePath)
-    // Security: ensure resolved path is within PROJECT_BASE_DIR
-    if (!fullPath.startsWith(path.resolve(PROJECT_BASE_DIR))) return false
-    try {
-        const stats = await stat(fullPath)
-        return stats.isFile()
-    } catch {
-        return false
-    }
-}
-
 const persistUploadedFiles = async (
     invoiceData: InvoiceCreateInput | InvoiceUpdateInput,
-    files: UploadedInvoiceFiles,
-    destinationFolder: string
+    files: UploadedInvoiceFiles
 ) => {
-    if (!hasUploadedFiles(files)) {
-        return
-    }
+    if (!hasUploadedFiles(files)) return
 
-    await mkdir(destinationFolder, { recursive: true })
+    const folderId = crypto.randomUUID()
 
     if (files.invoiceDocument) {
-        const existingPath = (invoiceData as any).invoiceDocument
-        if (!(await fileExistsInMandats(existingPath))) {
-            const safeName = sanitizeFileName(files.invoiceDocument.name)
-            const destinationPath = path.join(destinationFolder, safeName)
-            await writeUploadedFile(files.invoiceDocument, destinationPath)
-            ;(invoiceData as any).invoiceDocument = destinationPath.replace(/\\/g, "/")
-        }
+        const dbPath = await storeFile(files.invoiceDocument, "invoice", folderId)
+        ;(invoiceData as any).invoiceDocument = dbPath
     }
 
-    if (files.offers) {
-        const offers = Array.isArray(invoiceData.offers) ? [...invoiceData.offers] : []
-        for (const [indexKey, file] of Object.entries(files.offers)) {
+    const collections = [
+        { key: "offers" as const, filesMap: files.offers },
+        { key: "adjudications" as const, filesMap: files.adjudications },
+        { key: "situations" as const, filesMap: files.situations },
+        { key: "documents" as const, filesMap: files.documents },
+    ] as const
+
+    for (const { key, filesMap } of collections) {
+        const items = Array.isArray(invoiceData[key]) ? [...invoiceData[key]!] : []
+        for (const [indexKey, file] of Object.entries(filesMap)) {
             const index = Number(indexKey)
             if (!file) continue
-            const existing = offers[index] ? { ...offers[index] } : ({} as any)
-            if (await fileExistsInMandats(existing.file)) {
-                offers[index] = existing
-                continue
-            }
-            const safeName = sanitizeFileName(file.name)
-            const destinationPath = path.join(destinationFolder, safeName)
-            await writeUploadedFile(file, destinationPath)
-            existing.file = destinationPath.replace(/\\/g, "/")
-            offers[index] = existing
+            const existing = items[index] ? { ...items[index] } : ({} as any)
+            const dbPath = await storeFile(file, "invoice", folderId)
+            existing.file = dbPath
+            items[index] = existing
         }
-        invoiceData.offers = offers as any
+        ;(invoiceData as any)[key] = items
     }
-
-    if (files.adjudications) {
-        const adjudications = Array.isArray(invoiceData.adjudications)
-            ? [...invoiceData.adjudications]
-            : []
-
-        for (const [indexKey, file] of Object.entries(files.adjudications)) {
-            const index = Number(indexKey)
-            if (!file) continue
-            const existing = adjudications[index] ? { ...adjudications[index] } : ({} as any)
-            if (await fileExistsInMandats(existing.file)) {
-                adjudications[index] = existing
-                continue
-            }
-            const safeName = sanitizeFileName(file.name)
-            const destinationPath = path.join(destinationFolder, safeName)
-            await writeUploadedFile(file, destinationPath)
-            existing.file = destinationPath.replace(/\\/g, "/")
-            adjudications[index] = existing
-        }
-
-        invoiceData.adjudications = adjudications as any
-    }
-
-    if (files.situations) {
-        const situations = Array.isArray(invoiceData.situations) ? [...invoiceData.situations] : []
-
-        for (const [indexKey, file] of Object.entries(files.situations)) {
-            const index = Number(indexKey)
-            if (!file) continue
-            const existing = situations[index] ? { ...situations[index] } : ({} as any)
-            if (await fileExistsInMandats(existing.file)) {
-                situations[index] = existing
-                continue
-            }
-            const safeName = sanitizeFileName(file.name)
-            const destinationPath = path.join(destinationFolder, safeName)
-            await writeUploadedFile(file, destinationPath)
-            existing.file = destinationPath.replace(/\\/g, "/")
-            situations[index] = existing
-        }
-
-        invoiceData.situations = situations as any
-    }
-
-    if (files.documents) {
-        const documents = Array.isArray(invoiceData.documents) ? [...invoiceData.documents] : []
-
-        for (const [indexKey, file] of Object.entries(files.documents)) {
-            const index = Number(indexKey)
-            if (!file) continue
-            const existing = documents[index] ? { ...documents[index] } : ({} as any)
-            if (await fileExistsInMandats(existing.file)) {
-                documents[index] = existing
-                continue
-            }
-            const safeName = sanitizeFileName(file.name)
-            const destinationPath = path.join(destinationFolder, safeName)
-            await writeUploadedFile(file, destinationPath)
-            existing.file = destinationPath.replace(/\\/g, "/")
-            documents[index] = existing
-        }
-
-        invoiceData.documents = documents as any
-    }
-}
-
-const handleInvoiceUploads = async (
-    invoiceData: InvoiceCreateInput | InvoiceUpdateInput,
-    files: UploadedInvoiceFiles,
-    user: Variables["user"]
-) => {
-    if (!hasUploadedFiles(files)) {
-        return
-    }
-
-    const projectId = invoiceData.projectId
-
-    if (!projectId) {
-        throwValidationError("Project ID is required to upload invoice documents")
-    }
-
-    const project = await projectRepository.findById(projectId)
-    if (!project) {
-        throwNoProjectFolderError("Project not found for invoice", [
-            { field: "projectId", message: "Project could not be found" },
-        ])
-    }
-
-    const invoiceFolder = await findProjectInvoiceFolder(project.projectNumber || "undefined")
-    if (!invoiceFolder) {
-        throwNoProjectFolderError("Invoice folder not found", [
-            {
-                field: "projectId",
-                message: "No folder starting with '9' found for this project",
-            },
-        ])
-    }
-
-    await persistUploadedFiles(invoiceData, files, invoiceFolder.fullPath)
 }
 
 export const invoiceRoutes = new Hono<{ Variables: Variables }>()
@@ -412,81 +257,7 @@ export const invoiceRoutes = new Hono<{ Variables: Variables }>()
                 throwNotFound("Invoice document")
             }
 
-            const projectNumber = invoice.project?.projectNumber
-            if (!projectNumber) {
-                throwValidationError("Project folder not found for invoice")
-            }
-            const invoiceFolder = await findProjectInvoiceFolder(projectNumber)
-            if (!invoiceFolder) {
-                throwValidationError("Invoice folder not found", [
-                    {
-                        field: "projectId",
-                        message: "No folder starting with '9' found for this project",
-                    },
-                ])
-            }
-
-            const projectBase = path.resolve(
-                invoiceFolder.project.fullPath || path.dirname(invoiceFolder.fullPath)
-            )
-
-            // Build candidate paths from the requested file path
-            const candidatePaths = new Set<string>()
-            const requestedBaseName = fileBaseName(normalizedRequested)
-
-            // Try the requested path first (for .html variant of .fab files)
-            if (path.isAbsolute(normalizedRequested)) {
-                candidatePaths.add(path.normalize(normalizedRequested))
-            } else {
-                candidatePaths.add(path.resolve(invoiceFolder.fullPath, normalizedRequested))
-                candidatePaths.add(path.resolve(projectBase, normalizedRequested))
-            }
-            candidatePaths.add(path.resolve(invoiceFolder.fullPath, requestedBaseName))
-
-            // Also try the stored file path as fallback
-            const normalizedStored = normalizeStoredPath(matchedFile)
-            if (path.isAbsolute(normalizedStored)) {
-                candidatePaths.add(path.normalize(normalizedStored))
-            } else {
-                candidatePaths.add(path.resolve(projectBase, normalizedStored))
-                candidatePaths.add(path.resolve(invoiceFolder.fullPath, normalizedStored))
-            }
-            candidatePaths.add(path.resolve(invoiceFolder.fullPath, fileBaseName(normalizedStored)))
-
-            let targetPath: string | null = null
-            let fileStats: Awaited<ReturnType<typeof stat>> | null = null
-
-            for (const candidate of candidatePaths) {
-                const normalizedCandidate = path.normalize(candidate)
-                if (!pathIsWithin(normalizedCandidate, projectBase)) {
-                    continue
-                }
-                try {
-                    const stats = await stat(normalizedCandidate)
-                    if (stats.isFile()) {
-                        targetPath = normalizedCandidate
-                        fileStats = stats
-                        break
-                    }
-                } catch {
-                    // ignore missing candidate
-                }
-            }
-
-            if (!targetPath || !fileStats) {
-                throwNotFound("Invoice document")
-            }
-
-            // Use the requested filename for Content-Disposition
-            const responseFileName = requestedBaseName
-            const nodeStream = createReadStream(targetPath)
-            const webStream = Readable.toWeb(nodeStream) as unknown as ReadableStream
-            const headers = new Headers({
-                "Content-Type": guessMimeType(responseFileName),
-                "Content-Length": fileStats.size.toString(),
-                "Content-Disposition": contentDispositionInline(responseFileName),
-            })
-            return new Response(webStream, { headers })
+            return serveFile(matchedFile, fileBaseName(normalizedRequested))
         }
     )
     .post(
@@ -507,7 +278,7 @@ export const invoiceRoutes = new Hono<{ Variables: Variables }>()
                     { field: "projectId", message: "Missing project reference" },
                 ])
             }
-            await handleInvoiceUploads(invoiceData, uploadedFiles, user)
+            await persistUploadedFiles(invoiceData, uploadedFiles)
             const newInvoice = await invoiceRepository.create(invoiceData, user)
             return c.render(newInvoice, 201)
         }
@@ -527,7 +298,7 @@ export const invoiceRoutes = new Hono<{ Variables: Variables }>()
             )
             const invoiceData = parsedInvoice as InvoiceUpdateInput
 
-            await handleInvoiceUploads(invoiceData, uploadedFiles, user)
+            await persistUploadedFiles(invoiceData, uploadedFiles)
             const updatedInvoice = await invoiceRepository.update(id, invoiceData, user)
             if (!updatedInvoice) {
                 throwNotFound("Invoice")

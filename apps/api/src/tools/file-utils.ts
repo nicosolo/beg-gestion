@@ -39,9 +39,10 @@ export const guessMimeType = (fileName: string) => {
 }
 
 export const contentDispositionInline = (fileName: string) => {
-    const escaped = fileName.replace(/"/g, '\\"')
+    // ASCII-only fallback for filename param (non-ASCII chars replaced)
+    const asciiFallback = fileName.replace(/[^\x20-\x7E]/g, "_").replace(/"/g, '\\"')
     const encoded = encodeURIComponent(fileName)
-    return `inline; filename="${escaped}"; filename*=UTF-8''${encoded}`
+    return `inline; filename="${asciiFallback}"; filename*=UTF-8''${encoded}`
 }
 
 export const matchesStoredPath = (stored: string | null | undefined, requested: string) => {

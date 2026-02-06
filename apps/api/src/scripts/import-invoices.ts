@@ -14,6 +14,7 @@ import fs from "fs/promises"
 import { existsSync } from "fs"
 import path from "path"
 import type { InvoiceType, BillingMode, InvoiceStatus } from "@beg/validations"
+import { storeFileFromPath } from "../services/file-storage.service"
 
 // Base path for mandats in container
 const MANDATS_BASE_PATH = "/mandats"
@@ -464,7 +465,7 @@ async function importInvoiceFromFab(fabPath: string): Promise<boolean> {
                 visaDate,
                 visaByUserId,
                 inChargeUserId,
-                legacyInvoicePath: fabPath,
+                legacyInvoicePath: fabPath.replace("/mandats/", ""),
                 feesBase,
                 feesAdjusted,
                 feesTotal,
@@ -510,15 +511,15 @@ async function importInvoiceFromFab(fabPath: string): Promise<boolean> {
                 }))
             )
         }
-
+        const folderId = crypto.randomUUID()
         // Insert offers
         const offers = parseAttachedFiles(fabData.datas, "grdOffres", true)
         const validOffers = offers.filter((o) => o.filePath)
         if (validOffers.length > 0) {
-            await db.insert(invoiceOffers).values(
-                validOffers.map((o) => ({
+            const storedOffers = await Promise.all(
+                validOffers.map(async (o) => ({
                     invoiceId,
-                    file: o.filePath!,
+                    file: await storeFileFromPath(o.filePath!, "invoice", folderId),
                     date: o.date || new Date(),
                     amount: Math.round(o.amount),
                     remark: o.remark,
@@ -526,16 +527,17 @@ async function importInvoiceFromFab(fabPath: string): Promise<boolean> {
                     updatedAt: new Date(),
                 }))
             )
+            await db.insert(invoiceOffers).values(storedOffers)
         }
 
         // Insert adjudications
         const adjudications = parseAttachedFiles(fabData.datas, "grdAdjudications", true)
         const validAdjudications = adjudications.filter((a) => a.filePath)
         if (validAdjudications.length > 0) {
-            await db.insert(invoiceAdjudications).values(
-                validAdjudications.map((a) => ({
+            const storedAdjudications = await Promise.all(
+                validAdjudications.map(async (a) => ({
                     invoiceId,
-                    file: a.filePath!,
+                    file: await storeFileFromPath(a.filePath!, "invoice", folderId),
                     date: a.date || new Date(),
                     amount: Math.round(a.amount),
                     remark: a.remark,
@@ -543,16 +545,17 @@ async function importInvoiceFromFab(fabPath: string): Promise<boolean> {
                     updatedAt: new Date(),
                 }))
             )
+            await db.insert(invoiceAdjudications).values(storedAdjudications)
         }
 
         // Insert situations
         const situations = parseAttachedFiles(fabData.datas, "grdSituations", true)
         const validSituations = situations.filter((s) => s.filePath)
         if (validSituations.length > 0) {
-            await db.insert(invoiceSituations).values(
-                validSituations.map((s) => ({
+            const storedSituations = await Promise.all(
+                validSituations.map(async (s) => ({
                     invoiceId,
-                    file: s.filePath!,
+                    file: await storeFileFromPath(s.filePath!, "invoice", folderId),
                     date: s.date || new Date(),
                     amount: Math.round(s.amount),
                     remark: s.remark,
@@ -560,22 +563,24 @@ async function importInvoiceFromFab(fabPath: string): Promise<boolean> {
                     updatedAt: new Date(),
                 }))
             )
+            await db.insert(invoiceSituations).values(storedSituations)
         }
 
         // Insert documents
         const documents = parseAttachedFiles(fabData.datas, "grdDocuments", false)
         const validDocuments = documents.filter((d) => d.filePath)
         if (validDocuments.length > 0) {
-            await db.insert(invoiceDocuments).values(
-                validDocuments.map((doc) => ({
+            const storedDocuments = await Promise.all(
+                validDocuments.map(async (doc) => ({
                     invoiceId,
-                    file: doc.filePath!,
+                    file: await storeFileFromPath(doc.filePath!, "invoice", folderId),
                     date: doc.date || new Date(),
                     remark: doc.remark,
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 }))
             )
+            await db.insert(invoiceDocuments).values(storedDocuments)
         }
 
         console.log(`Imported invoice ${invoiceNumber} for project ${projectId}`)
