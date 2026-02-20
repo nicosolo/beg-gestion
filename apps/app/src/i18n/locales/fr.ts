@@ -147,6 +147,7 @@ export default {
         draft: "Nº à attribuer",
         ended: "Terminé",
         date: "Date",
+        createdAt: "Date de création",
         designation: "Désignation",
         locality: "Localité",
         client: "Client",

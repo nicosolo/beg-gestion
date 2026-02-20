@@ -153,6 +153,15 @@
                                         </p>
                                     </div>
 
+                                    <div>
+                                        <p class="text-sm text-gray-500">
+                                            {{ $t("projects.createdAt") }}
+                                        </p>
+                                        <p class="font-medium">
+                                            {{ formatDate(projectData.createdAt) }}
+                                        </p>
+                                    </div>
+
                                     <div class="col-span-2">
                                         <p class="text-sm text-gray-500">
                                             {{ $t("projects.designation") }}
