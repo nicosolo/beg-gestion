@@ -66,7 +66,7 @@
                     </Button>
                     <Button
                         @click="openProjectFolder"
-                        v-if="projectFolder?.found"
+                        v-if="canOpenFolder"
                         type="button"
                         class="text-sm px-3 py-1.5 rounded-md font-medium focus:outline-none focus:ring-2 cursor-pointer leading-none block text-center hover:bg-indigo-200 text-indigo-700 w-full sm:w-auto"
                     >
@@ -415,14 +415,14 @@ import Badge from "@/components/atoms/Badge.vue"
 import TimeEntriesManager from "@/components/organisms/time/TimeEntriesManager.vue"
 import InvoiceListManager from "@/components/organisms/invoice/InvoiceListManager.vue"
 import TimeEntryModal from "@/components/organisms/time/TimeEntryModal.vue"
-import { useFetchProject, useProjectFolder } from "@/composables/api/useProject"
+import { useFetchProject } from "@/composables/api/useProject"
+import { useOpenProjectFolder } from "@/composables/useOpenProjectFolder"
 import LoadingOverlay from "@/components/atoms/LoadingOverlay.vue"
 import MapDisplay from "@/components/molecules/MapDisplay.vue"
 import { useFormat } from "@/composables/utils/useFormat"
 import { useTauri } from "@/composables/useTauri"
 import { buildGeoAdminUrl, buildGoogleMapsUrl } from "@/utils/coordinates"
 import { useAuthStore } from "@/stores/auth"
-import { useAppSettingsStore } from "@/stores/appSettings"
 import { getMonthRange } from "@/composables/utils/useDateRangePresets"
 const route = useRoute()
 const router = useRouter()
@@ -441,9 +441,9 @@ const showTimeEntryModal = ref(false)
 
 // API client
 const { get: fetchProject, loading, data: projectData } = useFetchProject()
-const { get: fetchProjectFolder, data: projectFolder } = useProjectFolder()
+const { fetchProjectFolder, projectFolder, canOpen: canOpenFolder, openProjectFolder } = useOpenProjectFolder()
 const { formatNumber, formatDate } = useFormat()
-const { isTauri, openFolder } = useTauri()
+const { isTauri } = useTauri()
 const mapLink = computed(() =>
     buildGeoAdminUrl(projectData.value?.longitude ?? null, projectData.value?.latitude ?? null)
 )
@@ -536,24 +536,4 @@ const handleTimeEntrySaved = async () => {
     activeTab.value = "activities"
 }
 
-// Open project folder in native finder
-const openProjectFolder = async (e?: Event) => {
-    if (!projectFolder.value?.folder?.fullPath) return
-
-    if (isTauri.value) {
-        // Prevent default link behavior in Tauri
-        e?.preventDefault()
-
-        // Get app settings store to build absolute path
-        const appSettingsStore = useAppSettingsStore()
-        const absolutePath = appSettingsStore.getAbsolutePath(projectFolder.value.folder.fullPath)
-
-        // Use Tauri API to open folder with absolute path
-        const success = await openFolder(absolutePath)
-        if (!success) {
-            console.error("Failed to open folder in Tauri")
-        }
-        console.log(success)
-    }
-}
 </script>

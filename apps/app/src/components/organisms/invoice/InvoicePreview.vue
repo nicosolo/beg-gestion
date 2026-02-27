@@ -3,7 +3,7 @@
         <div class="mb-4 print:hidden">
             <Button variant="primary" :href="mailtoLink">Partager par email</Button>
         </div>
-        <div class="invoice-preview print:p-0 p-6 text-sm" style="width: 17cm">
+        <div class="invoice-preview print:p-0 p-6 text-sm w-[25cm] print:w-[17cm]">
             <table class="line w-full border border-gray-300 border-collapse">
                 <caption class="main text-base font-bold bg-gray-300 mt-6 p-1">
                     Informations pour la comptabilité
@@ -464,21 +464,21 @@
                 <caption class="main text-base font-bold bg-gray-300 mt-6 p-1">
                     Liste des documents
                 </caption>
-            </table>
-
-            <table
-                class="line w-full border border-gray-300 border-collapse"
-                v-if="invoice.offers && invoice.offers.length > 0"
-            >
-                <caption class="sub text-left font-bold p-1 text-sm">
-                    Liste des offres
-                </caption>
-                <tbody>
-                    <tr v-for="(offer, index) in invoice.offers" :key="index">
-                        <td class="doc1 w-[1.8cm] border-none p-1 text-sm">
+                <colgroup>
+                    <col class="w-[1.8cm]" />
+                    <col class="w-[5.7cm]" />
+                    <col class="w-[2.5cm]" />
+                    <col />
+                </colgroup>
+                <tbody v-if="invoice.offers && invoice.offers.length > 0">
+                    <tr>
+                        <td colspan="4" class="sub font-bold p-1 text-sm">Liste des offres</td>
+                    </tr>
+                    <tr v-for="(offer, index) in invoice.offers" :key="'o' + index">
+                        <td class="border border-gray-300 p-1 text-sm">
                             {{ formatDate(offer.date) }}
                         </td>
-                        <td class="doc2 w-[5.7cm] border-none p-1 text-sm">
+                        <td class="border border-gray-300 p-1 text-sm">
                             <button
                                 v-if="buildFileUrl(invoice.id, offer.file)"
                                 type="button"
@@ -489,24 +489,23 @@
                             </button>
                             <template v-else>{{ extractFileName(offer.file) }}</template>
                         </td>
-                        <td class="doc3 border-none p-1 text-sm">{{ offer.remark }}</td>
+                        <td class="text-right border border-gray-300 p-1 text-sm">
+                            {{ offer.amount ? formatCurrency(offer.amount) : "" }}
+                        </td>
+                        <td class="border border-gray-300 p-1 text-sm">{{ offer.remark }}</td>
                     </tr>
                 </tbody>
-            </table>
-
-            <table
-                class="line w-full border border-gray-300 border-collapse"
-                v-if="invoice.adjudications && invoice.adjudications.length > 0"
-            >
-                <caption class="sub text-left font-bold p-1 text-sm">
-                    Liste des adjudications
-                </caption>
-                <tbody>
-                    <tr v-for="(adjudication, index) in invoice.adjudications" :key="index">
-                        <td class="doc1 w-[1.8cm] border-none p-1 text-sm">
+                <tbody v-if="invoice.adjudications && invoice.adjudications.length > 0">
+                    <tr>
+                        <td colspan="4" class="sub font-bold p-1 text-sm">
+                            Liste des adjudications
+                        </td>
+                    </tr>
+                    <tr v-for="(adjudication, index) in invoice.adjudications" :key="'a' + index">
+                        <td class="border border-gray-300 p-1 text-sm">
                             {{ formatDate(adjudication.date) }}
                         </td>
-                        <td class="doc2 w-[5.7cm] border-none p-1 text-sm">
+                        <td class="border border-gray-300 p-1 text-sm">
                             <button
                                 v-if="buildFileUrl(invoice.id, adjudication.file)"
                                 type="button"
@@ -517,24 +516,23 @@
                             </button>
                             <template v-else>{{ extractFileName(adjudication.file) }}</template>
                         </td>
-                        <td class="doc3 border-none p-1 text-sm">{{ adjudication.remark }}</td>
+                        <td class="text-right border border-gray-300 p-1 text-sm">
+                            {{ adjudication.amount ? formatCurrency(adjudication.amount) : "" }}
+                        </td>
+                        <td class="border border-gray-300 p-1 text-sm">
+                            {{ adjudication.remark }}
+                        </td>
                     </tr>
                 </tbody>
-            </table>
-
-            <table
-                class="line w-full border border-gray-300 border-collapse"
-                v-if="invoice.situations && invoice.situations.length > 0"
-            >
-                <caption class="sub text-left font-bold p-1 text-sm">
-                    Liste des situations
-                </caption>
-                <tbody>
-                    <tr v-for="(situation, index) in invoice.situations" :key="index">
-                        <td class="doc1 w-[1.8cm] border-none p-1 text-sm">
+                <tbody v-if="invoice.situations && invoice.situations.length > 0">
+                    <tr>
+                        <td colspan="4" class="sub font-bold p-1 text-sm">Liste des situations</td>
+                    </tr>
+                    <tr v-for="(situation, index) in invoice.situations" :key="'s' + index">
+                        <td class="border border-gray-300 p-1 text-sm">
                             {{ formatDate(situation.date) }}
                         </td>
-                        <td class="doc2 w-[5.7cm] border-none p-1 text-sm">
+                        <td class="border border-gray-300 p-1 text-sm">
                             <button
                                 v-if="buildFileUrl(invoice.id, situation.file)"
                                 type="button"
@@ -545,24 +543,21 @@
                             </button>
                             <template v-else>{{ extractFileName(situation.file) }}</template>
                         </td>
-                        <td class="doc3 border-none p-1 text-sm">{{ situation.remark }}</td>
+                        <td class="text-right border border-gray-300 p-1 text-sm">
+                            {{ situation.amount ? formatCurrency(situation.amount) : "" }}
+                        </td>
+                        <td class="border border-gray-300 p-1 text-sm">{{ situation.remark }}</td>
                     </tr>
                 </tbody>
-            </table>
-
-            <table
-                class="line w-full border border-gray-300 border-collapse"
-                v-if="invoice.documents && invoice.documents.length > 0"
-            >
-                <caption class="sub text-left font-bold p-1 text-sm">
-                    Liste des documents
-                </caption>
-                <tbody>
-                    <tr v-for="(document, index) in invoice.documents" :key="index">
-                        <td class="doc1 w-[1.8cm] border-none p-1 text-sm">
+                <tbody v-if="invoice.documents && invoice.documents.length > 0">
+                    <tr>
+                        <td colspan="4" class="sub font-bold p-1 text-sm">Liste des documents</td>
+                    </tr>
+                    <tr v-for="(document, index) in invoice.documents" :key="'d' + index">
+                        <td class="border border-gray-300 p-1 text-sm">
                             {{ formatDate(document.date) }}
                         </td>
-                        <td class="doc2 w-[5.7cm] border-none p-1 text-sm">
+                        <td class="border border-gray-300 p-1 text-sm">
                             <button
                                 v-if="buildFileUrl(invoice.id, document.file)"
                                 type="button"
@@ -573,7 +568,8 @@
                             </button>
                             <template v-else>{{ extractFileName(document.file) }}</template>
                         </td>
-                        <td class="doc3 border-none p-1 text-sm">{{ document.remark }}</td>
+                        <td class="border border-gray-300 p-1 text-sm"></td>
+                        <td class="border border-gray-300 p-1 text-sm">{{ document.remark }}</td>
                     </tr>
                 </tbody>
             </table>

@@ -7,6 +7,16 @@
             :error-message="errorMessage"
             :has-unsaved-changes="hasUnsavedChanges"
         >
+            <template #header-actions>
+                <Button
+                    v-if="canOpenFolder"
+                    type="button"
+                    @click="openProjectFolder"
+                    class="text-sm px-3 py-1.5 rounded-md font-medium focus:outline-none focus:ring-2 cursor-pointer leading-none block text-center hover:bg-indigo-200 text-indigo-700"
+                >
+                    Ouvrir dossier
+                </Button>
+            </template>
             <!-- Tabs Navigation -->
             <div class="-mx-6 -mt-6 mb-6">
                 <div class="border-b border-gray-200">
@@ -106,7 +116,8 @@ import InvoiceGeneralInfo from "@/components/organisms/invoice/InvoiceGeneralInf
 import InvoiceDetails from "@/components/organisms/invoice/InvoiceDetails.vue"
 import { createEmptyInvoice, type Invoice, type InvoiceResponse } from "@beg/validations"
 import { useFetchInvoice, useDeleteInvoice } from "@/composables/api/useInvoice"
-import { useFetchProject, useProjectFolder } from "@/composables/api/useProject"
+import { useFetchProject } from "@/composables/api/useProject"
+import { useOpenProjectFolder } from "@/composables/useOpenProjectFolder"
 import { useFetchUnbilledActivities } from "@/composables/api/useUnbilled"
 import { useFormat } from "@/composables/utils/useFormat"
 import { useI18n } from "vue-i18n"
@@ -133,14 +144,9 @@ const { delete: deleteInvoice, loading: deleteLoading } = useDeleteInvoice()
 const { get: fetchProject, loading: fetchProjectLoading, data: projectResponse } = useFetchProject()
 
 const { get: fetchUnbilledActivities, loading: fetchUnbilledLoading } = useFetchUnbilledActivities()
-const { get: fetchProjectFolder, data: projectFolder } = useProjectFolder()
+const { fetchProjectFolder, projectFolder, canOpen: canOpenFolder, absolutePath: projectFolderPath, openProjectFolder } = useOpenProjectFolder()
 const appSettingsStore = useAppSettingsStore()
 const authStore = useAuthStore()
-const projectFolderPath = computed(() =>
-    projectFolder.value?.folder?.fullPath
-        ? appSettingsStore.getAbsolutePath(projectFolder.value?.folder?.fullPath)
-        : undefined
-)
 
 const pendingOfferFiles = ref<(File | null)[]>([])
 const pendingAdjudicationFiles = ref<(File | null)[]>([])

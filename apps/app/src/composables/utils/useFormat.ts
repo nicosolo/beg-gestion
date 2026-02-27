@@ -47,7 +47,7 @@ export const useFormat = () => {
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#039;")
-        return escaped.replace(/\n/g, "<br>")
+        return escaped.replace(/\n\n/g, "<br>").replace(/\n/g, "<br>")
     }
 
     return { formatCurrency, formatPercentage, formatDuration, formatDate, formatNumber, nl2br }

@@ -10,10 +10,10 @@
 
             <div class="grid gap-4 md:grid-cols-2">
                 <!-- Windows x86 -->
-                <a
-                    :href="downloads.windowsX86"
+                <button
+                    @click="download(downloads.windowsX86)"
                     :class="[
-                        'flex flex-col items-center p-6 border rounded-lg transition-colors',
+                        'flex flex-col items-center p-6 border rounded-lg transition-colors cursor-pointer',
                         detectedOS === 'windows-x86'
                             ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500'
                             : 'border-gray-200 hover:border-blue-500 hover:bg-blue-50',
@@ -28,28 +28,7 @@
                     >
                         {{ $t("downloadApp.recommended") }}
                     </span>
-                </a>
-
-                <!-- Windows ARM -->
-                <!-- <a
-                    :href="downloads.windowsArm"
-                    :class="[
-                        'flex flex-col items-center p-6 border rounded-lg transition-colors',
-                        detectedOS === 'windows-arm'
-                            ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500'
-                            : 'border-gray-200 hover:border-blue-500 hover:bg-blue-50',
-                    ]"
-                >
-                    <ComputerDesktopIcon class="h-12 w-12 text-gray-600 mb-3" />
-                    <span class="font-medium text-gray-900">Windows</span>
-                    <span class="text-sm text-gray-500">ARM (64-bit)</span>
-                    <span
-                        v-if="detectedOS === 'windows-arm'"
-                        class="mt-2 text-xs text-blue-600 font-medium"
-                    >
-                        {{ $t("downloadApp.recommended") }}
-                    </span>
-                </a> -->
+                </button>
             </div>
 
             <div class="mt-6 text-sm text-gray-500">
@@ -63,14 +42,23 @@
 import { computed } from "vue"
 import { ArrowDownTrayIcon, ComputerDesktopIcon } from "@heroicons/vue/24/outline"
 import desktopVersion from "@/config/desktop-version.json"
+import { useFileDownload } from "@/composables/utils/useFileDownload"
 
 const version = desktopVersion.version
+const { downloadBlob } = useFileDownload()
 
 const downloads = computed(() => ({
     macos: `/downloads/BEG-Gestion_${version}_universal.dmg`,
     windowsX86: `/downloads/BEG-Gestion_${version}_x64-setup.exe`,
     windowsArm: `/downloads/BEG-Gestion_${version}_arm64-setup.exe`,
 }))
+
+const download = async (url: string) => {
+    const fileName = url.split("/").pop() || "setup.exe"
+    const response = await fetch(url)
+    const blob = await response.blob()
+    await downloadBlob(blob, fileName, [{ name: "Installer", extensions: ["exe"] }])
+}
 
 const detectedOS = computed(() => {
     const userAgent = navigator.userAgent.toLowerCase()
