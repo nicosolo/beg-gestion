@@ -86,7 +86,7 @@ import { useAuthStore } from "@/stores/auth"
 
 const { isRole } = useAuthStore()
 
-export type InvoiceSortBy = "date" | "reference" | "total" | "status"
+export type InvoiceSortBy = "date" | "reference" | "total" | "status" | "inChargeUser"
 export type SortOrder = "asc" | "desc"
 
 export interface InvoiceFilterModel {

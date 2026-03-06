@@ -213,7 +213,12 @@ const allColumns = [
     },
     { key: "totalTTC", label: t("invoice.totalTTC"), size: "amount" as const, sortKey: "totalTTC" },
     { key: "status", label: t("invoice.status.title"), size: "status" as const, sortKey: "status" },
-    { key: "inChargeUser", label: t("invoice.inChargeUser"), size: "2xs" as const, sortKey: "inChargeUser" },
+    {
+        key: "inChargeUser",
+        label: t("invoice.inChargeUser"),
+        size: "2xs" as const,
+        sortKey: "inChargeUser",
+    },
     { key: "actions", label: t("common.actions"), size: "action" as const },
 ]
 
@@ -273,6 +278,9 @@ onActivated(() => {
     loadInvoices()
 })
 
+onMounted(() => {
+    loadInvoices()
+})
 const getStatusVariant = (status: string): "success" | "error" | "warning" | "info" | undefined => {
     const variants = {
         sent: "info",
