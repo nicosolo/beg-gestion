@@ -131,12 +131,13 @@ const buildFilterComponents = (filter: ActivityFilter, user?: Variables["user"])
     if (includeUnbilled) billingConditions.push(eq(activities.billed, false))
 
     // Disbursement filters - only for activities with expenses > 0
+    const disbursementConditions = []
     if (includeDisbursed)
-        billingConditions.push(
+        disbursementConditions.push(
             and(eq(activities.disbursement, true), sql`${activities.expenses} > 0`)
         )
     if (includeNotDisbursed)
-        billingConditions.push(
+        disbursementConditions.push(
             and(eq(activities.disbursement, false), sql`${activities.expenses} > 0`)
         )
     if (user && !hasRole(user.role, "admin")) {
@@ -145,6 +146,9 @@ const buildFilterComponents = (filter: ActivityFilter, user?: Variables["user"])
 
     if (billingConditions.length > 0) {
         whereConditions.push(or(...billingConditions))
+    }
+    if (disbursementConditions.length > 0) {
+        whereConditions.push(or(...disbursementConditions))
     }
 
     if (invoiceId) {
