@@ -17,6 +17,10 @@ import { ApiException } from "@src/tools/error-handler"
 import type { Variables } from "@src/types/global"
 import { roleMiddleware, hasRole } from "@src/tools/role-middleware"
 import { userRepository } from "@src/db/repositories/user.repository"
+import type { ActivityRateUser, CollaboratorType, ClassPresets } from "@beg/validations"
+import { db } from "@src/db"
+import { users } from "@src/db/schema"
+import { eq } from "drizzle-orm"
 
 // Create the app and apply auth middleware to all routes
 export const activityTypeRoutes = new Hono<{ Variables: Variables }>()
@@ -103,6 +107,37 @@ export const activityTypeRoutes = new Hono<{ Variables: Variables }>()
             }
 
             const newActivityType = await activityTypeRepository.create(activityTypeData)
+
+            // Auto-assign to all non-archived users with a collaboratorType
+            if (newActivityType.classPresets) {
+                const allUsers = await userRepository.findAllDetails()
+                const eligibleUsers = allUsers.filter(
+                    (u) => !u.archived && u.collaboratorType
+                )
+
+                for (const user of eligibleUsers) {
+                    const collabType = user.collaboratorType as CollaboratorType
+                    const rateClass = (newActivityType.classPresets as ClassPresets)[collabType]
+                    if (!rateClass) continue
+
+                    const existingRates: ActivityRateUser[] =
+                        (user.activityRates as ActivityRateUser[] | null) || []
+                    if (existingRates.some((r) => r.activityId === newActivityType.id)) continue
+
+                    const updatedRates = [
+                        ...existingRates,
+                        { activityId: newActivityType.id, class: rateClass },
+                    ]
+                    await db
+                        .update(users)
+                        .set({
+                            activityRates: updatedRates,
+                            updatedAt: new Date(),
+                        })
+                        .where(eq(users.id, user.id))
+                }
+            }
+
             return c.render(newActivityType, 201)
         }
     )

@@ -3,7 +3,9 @@ import { sqliteTable, text, integer, index, real } from "drizzle-orm/sqlite-core
 import { timestamps } from "./column.helper"
 import type {
     ActivityRateUser,
+    ClassPresets,
     ClassSchema,
+    CollaboratorType,
     UserRole,
     ProjectUserRole,
     ProjectStatus,
@@ -28,6 +30,7 @@ export const users = sqliteTable(
         activityRates: text("activityRates", { mode: "json" })
             .$type<ActivityRateUser[]>()
             .default([]),
+        collaboratorType: text("collaboratorType").$type<CollaboratorType>(),
         ...timestamps,
     },
     (table) => [
@@ -246,6 +249,7 @@ export const activityTypes = sqliteTable(
         code: text("code").notNull(),
         billable: integer("billable", { mode: "boolean" }).notNull(),
         adminOnly: integer("adminOnly", { mode: "boolean" }).notNull().default(false),
+        classPresets: text("classPresets", { mode: "json" }).$type<ClassPresets>(),
         ...timestamps,
     },
     () => []

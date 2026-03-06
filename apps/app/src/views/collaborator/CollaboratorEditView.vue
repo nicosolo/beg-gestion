@@ -100,6 +100,28 @@
                     </p>
                 </div>
 
+                <!-- Type de collaborateur -->
+                <div>
+                    <label
+                        for="collaboratorType"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                        >Type de collaborateur</label
+                    >
+                    <select
+                        id="collaboratorType"
+                        v-model="collaborator.collaboratorType"
+                        class="w-full p-2 border border-gray-300 rounded-md"
+                    >
+                        <option :value="null">—</option>
+                        <option value="cadre">Cadre</option>
+                        <option value="chefDeProjet">Chef de projet</option>
+                        <option value="collaborateur">Collaborateur</option>
+                        <option value="operateur">Opérateur</option>
+                        <option value="secretaire">Secrétaire</option>
+                        <option value="stagiaire">Stagiaire</option>
+                    </select>
+                </div>
+
                 <!-- Archivé -->
                 <div>
                     <label class="flex items-center">
@@ -132,7 +154,7 @@
                                 v-model="selectedPreset"
                                 class="block w-48 pl-3 pr-10 py-1 text-base border-gray-300 sm:text-sm rounded-md"
                                 :options="
-                                    activityPresetOptions.map((p) => ({
+                                    collaboratorTypeOptions.map((p) => ({
                                         label: p.label,
                                         value: p.value,
                                     }))
@@ -213,7 +235,12 @@ import FormLayout from "@/components/templates/FormLayout.vue"
 import { useFetchUser, useCreateUser, useUpdateUser } from "../../composables/api/useUser"
 import { useFetchActivityTypes } from "../../composables/api/useActivityType"
 import UserWorkloadList from "@/components/organisms/workload/UserWorkloadList.vue"
-import type { UserCreateInput, UserUpdateInput, ClassSchema } from "@beg/validations"
+import type {
+    UserCreateInput,
+    UserUpdateInput,
+    ClassSchema,
+    CollaboratorType,
+} from "@beg/validations"
 import { useAuthStore } from "@/stores/auth"
 import { useAlert } from "@/composables/utils/useAlert"
 import Select from "@/components/atoms/Select.vue"
@@ -255,14 +282,15 @@ const collaborator = ref<UserCreateInput | UserUpdateInput>({
     role: "user",
     archived: false,
     activityRates: [],
+    collaboratorType: null,
 })
 
 // Track selected activities and their classes
 const selectedActivities = ref<Record<number, boolean>>({})
 const activityClasses = ref<Record<number, ClassSchema>>({})
 
-const activityPresetOptions = [
-    { label: "Select", value: "" },
+const collaboratorTypeOptions = [
+    { label: "Sélectionner", value: "" },
     { label: "Cadre", value: "cadre" },
     { label: "Chef de projet", value: "chefDeProjet" },
     { label: "Collaborateur", value: "collaborateur" },
@@ -271,122 +299,18 @@ const activityPresetOptions = [
     { label: "Stagiaire", value: "stagiaire" },
 ] as const
 
-type ActivityPresetKey =
-    | "cadre"
-    | "chefDeProjet"
-    | "collaborateur"
-    | "operateur"
-    | "secretaire"
-    | "stagiaire"
-type ActivityPresetOptionValue = "" | ActivityPresetKey
+type CollaboratorTypeOptionValue = "" | CollaboratorType
 
-const activityClassPresets: Record<ActivityPresetKey, Record<string, ClassSchema>> = {
-    cadre: {
-        Ex: "B",
-        Ec: "C",
-        Eo: "C",
-        Er: "B",
-        Es: "C",
-        Et: "C",
-        Ee: "D",
-        Ed: "C",
-        Ef: "D",
-        Em: "E",
-        Nf: "R",
-        Ga: "R",
-        Gc: "R",
-        Gr: "R",
-    },
-    chefDeProjet: {
-        Ex: "C",
-        Ec: "C",
-        Eo: "C",
-        Er: "C",
-        Es: "C",
-        Et: "C",
-        Ee: "E",
-        Ed: "C",
-        Ef: "F",
-        Em: "F",
-        Nf: "R",
-        Ga: "R",
-        Gc: "R",
-        Gr: "R",
-    },
-    collaborateur: {
-        Ex: "C",
-        Ec: "D",
-        Eo: "D",
-        Er: "D",
-        Es: "D",
-        Et: "D",
-        Ee: "E",
-        Ed: "D",
-        Ef: "F",
-        Em: "G",
-        Nf: "R",
-        Ga: "R",
-        Gc: "R",
-        Gr: "R",
-    },
-    operateur: {
-        Ex: "D",
-        Ec: "E",
-        Eo: "E",
-        Er: "E",
-        Es: "E",
-        Et: "E",
-        Ee: "E",
-        Ed: "E",
-        Ef: "G",
-        Em: "G",
-        Nf: "R",
-        Ga: "R",
-        Gc: "R",
-        Gr: "R",
-    },
-    secretaire: {
-        Ex: "R",
-        Ec: "G",
-        Eo: "G",
-        Er: "G",
-        Es: "G",
-        Et: "R",
-        Ee: "R",
-        Ed: "R",
-        Ef: "G",
-        Em: "G",
-        Nf: "R",
-        Ga: "R",
-        Gc: "R",
-        Gr: "R",
-    },
-    stagiaire: {
-        Ex: "G",
-        Ec: "G",
-        Eo: "G",
-        Er: "G",
-        Es: "G",
-        Et: "G",
-        Ee: "G",
-        Ed: "G",
-        Ef: "G",
-        Em: "G",
-        Nf: "R",
-        Ga: "R",
-        Gc: "R",
-        Gr: "R",
-    },
-}
+const selectedPreset = ref<CollaboratorTypeOptionValue>("")
 
-const selectedPreset = ref<ActivityPresetOptionValue>("")
+const applyPresetToSelectedActivities = (preset: CollaboratorType) => {
+    if (!activityTypes.value) return
 
-const applyPresetToSelectedActivities = (preset: ActivityPresetKey) => {
-    const presetMap = activityClassPresets[preset]
-    if (!presetMap) return
+    activityTypes.value.forEach((activity) => {
+        const presets = activity.classPresets
+        if (!presets) return
 
-    activityTypes.value?.forEach((activity) => {
-        const presetClass = presetMap[activity.code]
+        const presetClass = presets[preset]
         if (!presetClass) return
 
         selectedActivities.value[activity.id] = true
@@ -396,6 +320,7 @@ const applyPresetToSelectedActivities = (preset: ActivityPresetKey) => {
 
 watch(selectedPreset, (newPreset, oldPreset) => {
     if (!newPreset || newPreset === oldPreset) return
+    collaborator.value.collaboratorType = newPreset
     applyPresetToSelectedActivities(newPreset)
 })
 
@@ -420,7 +345,12 @@ onMounted(async () => {
                 role: userData.value.role,
                 archived: userData.value.archived,
                 activityRates: userData.value.activityRates || [],
+                collaboratorType: userData.value.collaboratorType ?? null,
                 // Don't populate password for security
+            }
+
+            if (userData.value.collaboratorType) {
+                selectedPreset.value = userData.value.collaboratorType as CollaboratorType
             }
 
             // Populate selected activities and classes from existing data
@@ -438,8 +368,7 @@ onMounted(async () => {
 const initializeDefaultClasses = () => {
     if (!activityTypes.value) return
 
-    const presetKey = selectedPreset.value
-    const presetMap = presetKey ? activityClassPresets[presetKey] : null
+    const presetKey = selectedPreset.value as CollaboratorType | ""
 
     activityTypes.value.forEach((activity) => {
         const isSelected = selectedActivities.value[activity.id]
@@ -451,8 +380,11 @@ const initializeDefaultClasses = () => {
         if (!isSelected) return
 
         if (!activityClasses.value[activity.id]) {
-            const defaultClass = (presetMap && presetMap[activity.code]) || "C"
-            activityClasses.value[activity.id] = defaultClass as ClassSchema
+            const presetClass =
+                presetKey && activity.classPresets
+                    ? activity.classPresets[presetKey]
+                    : null
+            activityClasses.value[activity.id] = (presetClass || "C") as ClassSchema
         }
     })
 }

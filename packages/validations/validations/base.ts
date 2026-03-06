@@ -20,6 +20,30 @@ export type IdParamSchema = z.infer<typeof idParamSchema>
 // Class type
 export const classSchema = z.enum(["A", "B", "C", "D", "E", "F", "G", "R", "Z"])
 
+// Collaborator type
+export const collaboratorTypeSchema = z.enum([
+    "cadre",
+    "chefDeProjet",
+    "collaborateur",
+    "operateur",
+    "secretaire",
+    "stagiaire",
+])
+
+export type CollaboratorType = z.infer<typeof collaboratorTypeSchema>
+
+// Class presets: maps each collaborator type to a rate class
+export const classPresetsSchema = z.object({
+    cadre: classSchema,
+    chefDeProjet: classSchema,
+    collaborateur: classSchema,
+    operateur: classSchema,
+    secretaire: classSchema,
+    stagiaire: classSchema,
+})
+
+export type ClassPresets = z.infer<typeof classPresetsSchema>
+
 export type ClassSchema = z.infer<typeof classSchema>
 
 export const successSchema = z.object({

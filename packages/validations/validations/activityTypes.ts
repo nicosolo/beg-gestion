@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { timestampsSchema } from "./base"
+import { timestampsSchema, classPresetsSchema } from "./base"
 
 // Activity type creation schema
 export const activityTypeCreateSchema = z.object({
@@ -7,6 +7,7 @@ export const activityTypeCreateSchema = z.object({
     code: z.string().min(1),
     billable: z.coerce.boolean(),
     adminOnly: z.coerce.boolean().optional().default(false),
+    classPresets: classPresetsSchema.optional().nullable(),
 })
 
 // Activity type update schema (makes most fields optional)
@@ -15,6 +16,7 @@ export const activityTypeUpdateSchema = z.object({
     code: z.string().min(1).optional(),
     billable: z.coerce.boolean().optional(),
     adminOnly: z.coerce.boolean().optional(),
+    classPresets: classPresetsSchema.optional().nullable(),
 })
 
 // Activity type response schema
@@ -25,6 +27,7 @@ export const activityTypeResponseSchema = z
         code: z.string(),
         billable: z.boolean(),
         adminOnly: z.boolean(),
+        classPresets: classPresetsSchema.nullable(),
     })
     .merge(timestampsSchema)
 

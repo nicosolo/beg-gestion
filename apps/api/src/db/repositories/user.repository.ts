@@ -40,6 +40,7 @@ export const userRepository = {
                 createdAt: users.createdAt,
                 updatedAt: users.updatedAt,
                 activityRates: users.activityRates,
+                collaboratorType: users.collaboratorType,
             })
             .from(users)
             .where(eq(users.id, id))
@@ -79,6 +80,7 @@ export const userRepository = {
                 createdAt: users.createdAt,
                 updatedAt: users.updatedAt,
                 activityRates: users.activityRates,
+                collaboratorType: users.collaboratorType,
             })
             .from(users)
     },
@@ -97,6 +99,7 @@ export const userRepository = {
                 role: userData.role,
                 archived: userData.archived,
                 activityRates: userData.activityRates || null,
+                collaboratorType: userData.collaboratorType ?? null,
                 createdAt: new Date(),
                 updatedAt: new Date(),
             })
@@ -111,6 +114,7 @@ export const userRepository = {
                 createdAt: users.createdAt,
                 updatedAt: users.updatedAt,
                 activityRates: users.activityRates,
+                collaboratorType: users.collaboratorType,
             })
 
         return newUser
@@ -127,6 +131,9 @@ export const userRepository = {
         if (userData.archived !== undefined) updateData.archived = userData.archived
         if (userData.activityRates !== undefined) {
             updateData.activityRates = userData.activityRates || null
+        }
+        if (userData.collaboratorType !== undefined) {
+            updateData.collaboratorType = userData.collaboratorType ?? null
         }
         updateData.updatedAt = new Date()
         if (!updateData.createdAt) {
@@ -153,6 +160,7 @@ export const userRepository = {
                 createdAt: users.createdAt,
                 updatedAt: users.updatedAt,
                 activityRates: users.activityRates,
+                collaboratorType: users.collaboratorType,
             })
 
         return updatedUser

@@ -53,6 +53,35 @@
             </p>
         </div>
 
+        <!-- Class Presets -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                Préréglages de classe par type de collaborateur
+            </label>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div v-for="ct in collaboratorTypes" :key="ct.value">
+                    <label
+                        :for="`preset-${ct.value}`"
+                        class="block text-xs font-medium text-gray-600 mb-1"
+                    >
+                        {{ ct.label }}
+                    </label>
+                    <select
+                        :id="`preset-${ct.value}`"
+                        v-model="formData.classPresets[ct.value]"
+                        class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option v-for="cls in rateClasses" :key="cls" :value="cls">
+                            {{ cls }}
+                        </option>
+                    </select>
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">
+                Classe attribuée automatiquement aux collaborateurs lors de la création
+            </p>
+        </div>
+
         <div class="flex justify-end gap-2 pt-4">
             <Button type="button" variant="secondary" @click="$emit('cancel')" :disabled="loading">
                 Annuler
@@ -72,7 +101,12 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue"
 import Button from "@/components/atoms/Button.vue"
-import type { ActivityTypeResponse } from "@beg/validations"
+import type {
+    ActivityTypeResponse,
+    ClassPresets,
+    ClassSchema,
+    CollaboratorType,
+} from "@beg/validations"
 
 interface Props {
     activityType?: ActivityTypeResponse | null
@@ -82,15 +116,44 @@ interface Props {
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
-    submit: [data: { name: string; code: string; billable: boolean; adminOnly: boolean }]
+    submit: [
+        data: {
+            name: string
+            code: string
+            billable: boolean
+            adminOnly: boolean
+            classPresets: ClassPresets
+        },
+    ]
     cancel: []
 }>()
+
+const collaboratorTypes: { value: CollaboratorType; label: string }[] = [
+    { value: "cadre", label: "Cadre" },
+    { value: "chefDeProjet", label: "Chef de projet" },
+    { value: "collaborateur", label: "Collaborateur" },
+    { value: "operateur", label: "Opérateur" },
+    { value: "secretaire", label: "Secrétaire" },
+    { value: "stagiaire", label: "Stagiaire" },
+]
+
+const rateClasses: ClassSchema[] = ["B", "C", "D", "E", "F", "G", "R"]
+
+const defaultPresets: ClassPresets = {
+    cadre: "C",
+    chefDeProjet: "D",
+    collaborateur: "D",
+    operateur: "E",
+    secretaire: "G",
+    stagiaire: "G",
+}
 
 const formData = ref({
     name: "",
     code: "",
     billable: false,
     adminOnly: false,
+    classPresets: { ...defaultPresets } as ClassPresets,
 })
 
 const isFormValid = computed(() => {
@@ -104,6 +167,7 @@ const handleSubmit = () => {
             code: formData.value.code.trim().toUpperCase(),
             billable: formData.value.billable,
             adminOnly: formData.value.adminOnly,
+            classPresets: formData.value.classPresets,
         })
     }
 }
@@ -118,6 +182,9 @@ watch(
                 code: newActivityType.code || "",
                 billable: newActivityType.billable || false,
                 adminOnly: newActivityType.adminOnly || false,
+                classPresets: newActivityType.classPresets
+                    ? { ...newActivityType.classPresets }
+                    : { ...defaultPresets },
             }
         } else {
             // Reset form for new activity type
@@ -126,6 +193,7 @@ watch(
                 code: "",
                 billable: false,
                 adminOnly: false,
+                classPresets: { ...defaultPresets },
             }
         }
     },

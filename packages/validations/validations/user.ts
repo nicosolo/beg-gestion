@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { nullableTimestampsSchema, timestampsSchema } from "./base"
+import { nullableTimestampsSchema, collaboratorTypeSchema } from "./base"
 import { activityRateUserSchema } from "./activityRateUser"
 import { booleanSchema } from "./base"
 // Create a schema that parses query string values
@@ -25,6 +25,7 @@ export const userCreateSchema = z.object({
     role: z.enum(["super_admin", "admin", "user"]).default("user"),
     archived: z.boolean().default(false),
     activityRates: z.array(activityRateUserSchema).optional(),
+    collaboratorType: collaboratorTypeSchema.optional().nullable(),
 })
 
 // User update schema (makes most fields optional except id)
@@ -37,6 +38,7 @@ export const userUpdateSchema = z.object({
     role: z.enum(["super_admin", "admin", "user"]).optional(),
     archived: z.boolean().optional(),
     activityRates: z.array(activityRateUserSchema).optional(),
+    collaboratorType: collaboratorTypeSchema.optional().nullable(),
 })
 
 export type LoginInput = z.infer<typeof loginSchema>
@@ -79,6 +81,7 @@ export const userDetailResponseSchema = z
         role: z.enum(["super_admin", "admin", "user"]),
         archived: z.boolean(),
         activityRates: z.array(activityRateUserSchema).nullable(),
+        collaboratorType: collaboratorTypeSchema.nullable(),
     })
     .merge(nullableTimestampsSchema)
 

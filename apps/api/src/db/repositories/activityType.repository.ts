@@ -27,6 +27,7 @@ export const activityTypeRepository = {
                 code: activityTypes.code,
                 billable: activityTypes.billable,
                 adminOnly: activityTypes.adminOnly,
+                classPresets: activityTypes.classPresets,
                 createdAt: activityTypes.createdAt,
                 updatedAt: activityTypes.updatedAt,
             })
@@ -43,6 +44,7 @@ export const activityTypeRepository = {
                 code: activityTypes.code,
                 billable: activityTypes.billable,
                 adminOnly: activityTypes.adminOnly,
+                classPresets: activityTypes.classPresets,
                 createdAt: activityTypes.createdAt,
                 updatedAt: activityTypes.updatedAt,
             })
@@ -59,6 +61,7 @@ export const activityTypeRepository = {
                 code: activityTypes.code,
                 billable: activityTypes.billable,
                 adminOnly: activityTypes.adminOnly,
+                classPresets: activityTypes.classPresets,
                 createdAt: activityTypes.createdAt,
                 updatedAt: activityTypes.updatedAt,
             })
@@ -75,6 +78,7 @@ export const activityTypeRepository = {
                 code: activityTypeData.code,
                 billable: activityTypeData.billable,
                 adminOnly: activityTypeData.adminOnly ?? false,
+                classPresets: activityTypeData.classPresets ?? null,
                 createdAt: new Date(),
                 updatedAt: new Date(),
             })
@@ -84,6 +88,7 @@ export const activityTypeRepository = {
                 code: activityTypes.code,
                 billable: activityTypes.billable,
                 adminOnly: activityTypes.adminOnly,
+                classPresets: activityTypes.classPresets,
                 createdAt: activityTypes.createdAt,
                 updatedAt: activityTypes.updatedAt,
             })
@@ -102,6 +107,8 @@ export const activityTypeRepository = {
         if (activityTypeData.billable !== undefined) updateData.billable = activityTypeData.billable
         if (activityTypeData.adminOnly !== undefined)
             updateData.adminOnly = activityTypeData.adminOnly
+        if (activityTypeData.classPresets !== undefined)
+            updateData.classPresets = activityTypeData.classPresets ?? null
         updateData.updatedAt = new Date()
         const [updatedActivityType] = await db
             .update(activityTypes)
@@ -113,6 +120,7 @@ export const activityTypeRepository = {
                 code: activityTypes.code,
                 billable: activityTypes.billable,
                 adminOnly: activityTypes.adminOnly,
+                classPresets: activityTypes.classPresets,
                 createdAt: activityTypes.createdAt,
                 updatedAt: activityTypes.updatedAt,
             })

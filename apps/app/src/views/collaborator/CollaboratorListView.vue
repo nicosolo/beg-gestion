@@ -12,8 +12,13 @@
                 </Button>
             </div>
 
+            <label class="flex items-center gap-2 mb-4">
+                <input v-model="showArchived" type="checkbox" class="rounded" />
+                Afficher les collaborateurs archivés
+            </label>
+
             <DataTable
-                :items="collaborators || []"
+                :items="filteredCollaborators"
                 :columns="columns"
                 item-key="IDcollaborateur"
                 empty-message="Aucun collaborateur trouvé"
@@ -49,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue"
+import { ref, computed, onMounted } from "vue"
 import Button from "@/components/atoms/Button.vue"
 import DataTable, { type Column } from "@/components/molecules/DataTable.vue"
 import LoadingOverlay from "@/components/atoms/LoadingOverlay.vue"
@@ -57,6 +62,11 @@ import { useFetchUsers } from "@/composables/api/useUser"
 
 // API client
 const { get: fetchUsers, loading, data: collaborators } = useFetchUsers()
+const showArchived = ref(false)
+const filteredCollaborators = computed(() => {
+    if (!collaborators.value) return []
+    return showArchived.value ? collaborators.value : collaborators.value.filter((c) => !c.archived)
+})
 
 const columns: Column[] = [
     { key: "id", label: "ID" },
