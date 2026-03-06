@@ -117,7 +117,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from "vue"
+import { ref, computed, onMounted, watch, nextTick } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import FormLayout from "@/components/templates/FormLayout.vue"
 import Button from "@/components/atoms/Button.vue"
@@ -472,13 +472,13 @@ const loadInvoice = async () => {
                 invoice.value = convertResponseToInvoice(data)
                 savedStatus.value = data.status
                 pendingInvoiceDocumentFile.value = null
+                await nextTick()
+                isDirty.value = false
+                isUpdatingFromApi.value = false
             }
             fetchProjectFolder({ params: { id: data.projectId } })
         } catch (err: any) {
             console.error("Failed to load invoice:", err)
-            // Error will be displayed in the FormLayout
-        } finally {
-            isUpdatingFromApi.value = false
         }
     }
 }
@@ -566,7 +566,9 @@ const handleSave = async () => {
         pendingSituationFiles.value = pendingSituationFiles.value.map(() => null)
         pendingDocumentFiles.value = pendingDocumentFiles.value.map(() => null)
         pendingInvoiceDocumentFile.value = null
+        await nextTick()
         markClean()
+        isUpdatingFromApi.value = false
 
         successAlert(t("invoice.save.success"), 4000)
         router.push({ name: "invoice-preview", params: { id: data.id } })
@@ -607,6 +609,12 @@ const handleDuplicate = () => {
         id: undefined,
     })
 
+    if (hasUnsavedChanges.value) {
+        const answer = window.confirm("Vous avez des modifications non enregistrées. Voulez-vous vraiment dupliquer ?")
+        if (!answer) return
+    }
+    isUpdatingFromApi.value = true
+    isDirty.value = false
     invoice.value = duplicated
     router.push({ name: "invoice-new", query: { projectId: invoice.value.projectId?.toString() } })
 }
