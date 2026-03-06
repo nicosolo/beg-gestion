@@ -22,6 +22,37 @@ import { db } from "@src/db"
 import { users } from "@src/db/schema"
 import { eq } from "drizzle-orm"
 
+async function applyClassPresetsToUsers(activityId: number, classPresets: ClassPresets) {
+    const allUsers = await userRepository.findAllDetails()
+    const eligibleUsers = allUsers.filter((u) => !u.archived && u.collaboratorType)
+
+    for (const user of eligibleUsers) {
+        const collabType = user.collaboratorType as CollaboratorType
+        const rateClass = classPresets[collabType]
+
+        const existingRates: ActivityRateUser[] =
+            (user.activityRates as ActivityRateUser[] | null) || []
+        const existingIndex = existingRates.findIndex((r) => r.activityId === activityId)
+
+        let updatedRates: ActivityRateUser[]
+        if (!rateClass) {
+            // Null class: remove the activity from user's rates
+            if (existingIndex < 0) continue
+            updatedRates = existingRates.filter((r) => r.activityId !== activityId)
+        } else if (existingIndex >= 0) {
+            updatedRates = [...existingRates]
+            updatedRates[existingIndex] = { activityId, class: rateClass }
+        } else {
+            updatedRates = [...existingRates, { activityId, class: rateClass }]
+        }
+
+        await db
+            .update(users)
+            .set({ activityRates: updatedRates, updatedAt: new Date() })
+            .where(eq(users.id, user.id))
+    }
+}
+
 // Create the app and apply auth middleware to all routes
 export const activityTypeRoutes = new Hono<{ Variables: Variables }>()
     .use("/*", authMiddleware)
@@ -96,7 +127,7 @@ export const activityTypeRoutes = new Hono<{ Variables: Variables }>()
             201: activityTypeResponseSchema,
         }),
         async (c) => {
-            const activityTypeData = c.req.valid("json")
+            const { applyClasses, ...activityTypeData } = c.req.valid("json")
 
             // Check if activity type with this code already exists
             const existingActivityType = await activityTypeRepository.findByCode(
@@ -108,34 +139,8 @@ export const activityTypeRoutes = new Hono<{ Variables: Variables }>()
 
             const newActivityType = await activityTypeRepository.create(activityTypeData)
 
-            // Auto-assign to all non-archived users with a collaboratorType
-            if (newActivityType.classPresets) {
-                const allUsers = await userRepository.findAllDetails()
-                const eligibleUsers = allUsers.filter(
-                    (u) => !u.archived && u.collaboratorType
-                )
-
-                for (const user of eligibleUsers) {
-                    const collabType = user.collaboratorType as CollaboratorType
-                    const rateClass = (newActivityType.classPresets as ClassPresets)[collabType]
-                    if (!rateClass) continue
-
-                    const existingRates: ActivityRateUser[] =
-                        (user.activityRates as ActivityRateUser[] | null) || []
-                    if (existingRates.some((r) => r.activityId === newActivityType.id)) continue
-
-                    const updatedRates = [
-                        ...existingRates,
-                        { activityId: newActivityType.id, class: rateClass },
-                    ]
-                    await db
-                        .update(users)
-                        .set({
-                            activityRates: updatedRates,
-                            updatedAt: new Date(),
-                        })
-                        .where(eq(users.id, user.id))
-                }
+            if (applyClasses && newActivityType.classPresets) {
+                await applyClassPresetsToUsers(newActivityType.id, newActivityType.classPresets as ClassPresets)
             }
 
             return c.render(newActivityType, 201)
@@ -153,7 +158,7 @@ export const activityTypeRoutes = new Hono<{ Variables: Variables }>()
         }),
         async (c) => {
             const { id } = c.req.valid("param")
-            const activityTypeData = c.req.valid("json")
+            const { applyClasses, ...activityTypeData } = c.req.valid("json")
 
             // Check if activity type exists
             const existingActivityType = await activityTypeRepository.findById(id)
@@ -170,6 +175,11 @@ export const activityTypeRoutes = new Hono<{ Variables: Variables }>()
             }
 
             const updatedActivityType = await activityTypeRepository.update(id, activityTypeData)
+
+            if (applyClasses && updatedActivityType.classPresets) {
+                await applyClassPresetsToUsers(updatedActivityType.id, updatedActivityType.classPresets as ClassPresets)
+            }
+
             return c.render(updatedActivityType, 200)
         }
     )

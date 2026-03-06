@@ -34,12 +34,12 @@ export type CollaboratorType = z.infer<typeof collaboratorTypeSchema>
 
 // Class presets: maps each collaborator type to a rate class
 export const classPresetsSchema = z.object({
-    cadre: classSchema,
-    chefDeProjet: classSchema,
-    collaborateur: classSchema,
-    operateur: classSchema,
-    secretaire: classSchema,
-    stagiaire: classSchema,
+    cadre: classSchema.nullable(),
+    chefDeProjet: classSchema.nullable(),
+    collaborateur: classSchema.nullable(),
+    operateur: classSchema.nullable(),
+    secretaire: classSchema.nullable(),
+    stagiaire: classSchema.nullable(),
 })
 
 export type ClassPresets = z.infer<typeof classPresetsSchema>

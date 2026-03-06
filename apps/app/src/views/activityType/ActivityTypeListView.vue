@@ -137,7 +137,7 @@ const closeDialog = () => {
 }
 
 // Save handler
-const handleSave = async (data: { name: string; code: string; billable: boolean; adminOnly: boolean }) => {
+const handleSave = async (data: { name: string; code: string; billable: boolean; adminOnly: boolean; applyClasses: boolean }) => {
     if (selectedActivityType.value) {
         // Update existing activity type
         await updateActivityType({

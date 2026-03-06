@@ -133,7 +133,7 @@
 
             <!-- Activities Section -->
             <div class="mt-8">
-                <h2 class="text-lg font-medium mb-4">Heures associées</h2>
+                <h2 class="text-lg font-medium mb-4">Activités et classes associées</h2>
                 <div class="bg-gray-50 p-4 rounded-md">
                     <div v-if="loadingActivityTypes" class="text-gray-500">
                         Chargement des activités...
@@ -145,23 +145,15 @@
                         Aucune activité disponible
                     </div>
                     <div v-else class="space-y-3">
-                        <div class="flex items-center">
-                            <label for="activityPreset" class="text-sm font-medium text-gray-700">
-                                Préréglage des classes
-                            </label>
-                            <Select
-                                id="activityPreset"
-                                v-model="selectedPreset"
-                                class="block w-48 pl-3 pr-10 py-1 text-base border-gray-300 sm:text-sm rounded-md"
-                                :options="
-                                    collaboratorTypeOptions.map((p) => ({
-                                        label: p.label,
-                                        value: p.value,
-                                    }))
-                                "
-                            >
-                            </Select>
-                        </div>
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            :disabled="!collaborator.collaboratorType"
+                            @click="applyCollaboratorPreset"
+                        >
+                            Appliquer les préréglages
+                        </Button>
                         <!-- Column Headers -->
                         <div class="flex items-center space-x-2 pb-2 mb-2 border-b border-gray-200">
                             <div class="w-6"></div>
@@ -243,7 +235,6 @@ import type {
 } from "@beg/validations"
 import { useAuthStore } from "@/stores/auth"
 import { useAlert } from "@/composables/utils/useAlert"
-import Select from "@/components/atoms/Select.vue"
 
 interface ActivityRate {
     activityId: number
@@ -289,40 +280,25 @@ const collaborator = ref<UserCreateInput | UserUpdateInput>({
 const selectedActivities = ref<Record<number, boolean>>({})
 const activityClasses = ref<Record<number, ClassSchema>>({})
 
-const collaboratorTypeOptions = [
-    { label: "Sélectionner", value: "" },
-    { label: "Cadre", value: "cadre" },
-    { label: "Chef de projet", value: "chefDeProjet" },
-    { label: "Collaborateur", value: "collaborateur" },
-    { label: "Opérateur", value: "operateur" },
-    { label: "Secrétaire", value: "secretaire" },
-    { label: "Stagiaire", value: "stagiaire" },
-] as const
-
-type CollaboratorTypeOptionValue = "" | CollaboratorType
-
-const selectedPreset = ref<CollaboratorTypeOptionValue>("")
-
-const applyPresetToSelectedActivities = (preset: CollaboratorType) => {
-    if (!activityTypes.value) return
+const applyCollaboratorPreset = () => {
+    const collabType = collaborator.value.collaboratorType as CollaboratorType | null
+    if (!collabType || !activityTypes.value) return
 
     activityTypes.value.forEach((activity) => {
         const presets = activity.classPresets
         if (!presets) return
 
-        const presetClass = presets[preset]
-        if (!presetClass) return
+        const presetClass = presets[collabType]
+        if (!presetClass) {
+            selectedActivities.value[activity.id] = false
+            delete activityClasses.value[activity.id]
+            return
+        }
 
         selectedActivities.value[activity.id] = true
         activityClasses.value[activity.id] = presetClass
     })
 }
-
-watch(selectedPreset, (newPreset, oldPreset) => {
-    if (!newPreset || newPreset === oldPreset) return
-    collaborator.value.collaboratorType = newPreset
-    applyPresetToSelectedActivities(newPreset)
-})
 
 // Error state
 const errorMessage = ref<string | null>(null)
@@ -349,10 +325,6 @@ onMounted(async () => {
                 // Don't populate password for security
             }
 
-            if (userData.value.collaboratorType) {
-                selectedPreset.value = userData.value.collaboratorType as CollaboratorType
-            }
-
             // Populate selected activities and classes from existing data
             if (userData.value.activityRates) {
                 userData.value.activityRates.forEach((rate) => {
@@ -368,7 +340,7 @@ onMounted(async () => {
 const initializeDefaultClasses = () => {
     if (!activityTypes.value) return
 
-    const presetKey = selectedPreset.value as CollaboratorType | ""
+    const presetKey = (collaborator.value.collaboratorType ?? "") as CollaboratorType | ""
 
     activityTypes.value.forEach((activity) => {
         const isSelected = selectedActivities.value[activity.id]
@@ -384,7 +356,7 @@ const initializeDefaultClasses = () => {
                 presetKey && activity.classPresets
                     ? activity.classPresets[presetKey]
                     : null
-            activityClasses.value[activity.id] = (presetClass || "C") as ClassSchema
+            activityClasses.value[activity.id] = (presetClass ?? "C") as ClassSchema
         }
     })
 }

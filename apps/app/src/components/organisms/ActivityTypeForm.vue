@@ -89,14 +89,30 @@
                         v-model="formData.classPresets[ct.value]"
                         class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                        <option v-for="cls in rateClasses" :key="cls" :value="cls">
-                            {{ cls }}
+                        <option v-for="cls in rateClasses" :key="cls ?? 'none'" :value="cls">
+                            {{ cls ?? '—' }}
                         </option>
                     </select>
                 </div>
             </div>
             <p class="text-xs text-gray-500 mt-1">
                 Classe attribuée automatiquement aux collaborateurs lors de la création
+            </p>
+        </div>
+
+        <div>
+            <label class="flex items-center">
+                <input
+                    v-model="formData.applyClasses"
+                    type="checkbox"
+                    class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <span class="ml-2 text-sm font-medium text-gray-700">
+                    Appliquer les classes
+                </span>
+            </label>
+            <p class="text-xs text-gray-500 mt-1">
+                Attribue les classes aux collaborateurs selon leurs types
             </p>
         </div>
 
@@ -142,6 +158,7 @@ const emit = defineEmits<{
             adminOnly: boolean
             classPresets: ClassPresets
             defaultDuration: number | null
+            applyClasses: boolean
         },
     ]
     cancel: []
@@ -156,15 +173,15 @@ const collaboratorTypes: { value: CollaboratorType; label: string }[] = [
     { value: "stagiaire", label: "Stagiaire" },
 ]
 
-const rateClasses: ClassSchema[] = ["B", "C", "D", "E", "F", "G", "R"]
+const rateClasses: (ClassSchema | null)[] = [null, "B", "C", "D", "E", "F", "G", "R"]
 
 const defaultPresets: ClassPresets = {
-    cadre: "C",
-    chefDeProjet: "D",
-    collaborateur: "D",
-    operateur: "E",
-    secretaire: "G",
-    stagiaire: "G",
+    cadre: null,
+    chefDeProjet: null,
+    collaborateur: null,
+    operateur: null,
+    secretaire: null,
+    stagiaire: null,
 }
 
 const formData = ref({
@@ -174,6 +191,7 @@ const formData = ref({
     adminOnly: false,
     classPresets: { ...defaultPresets } as ClassPresets,
     defaultDuration: null as number | null,
+    applyClasses: true,
 })
 
 const isFormValid = computed(() => {
@@ -189,6 +207,7 @@ const handleSubmit = () => {
             adminOnly: formData.value.adminOnly,
             classPresets: formData.value.classPresets,
             defaultDuration: formData.value.defaultDuration || null,
+            applyClasses: formData.value.applyClasses,
         })
     }
 }
@@ -207,6 +226,7 @@ watch(
                     ? { ...newActivityType.classPresets }
                     : { ...defaultPresets },
                 defaultDuration: newActivityType.defaultDuration ?? null,
+                applyClasses: false,
             }
         } else {
             // Reset form for new activity type
@@ -217,6 +237,7 @@ watch(
                 adminOnly: false,
                 classPresets: { ...defaultPresets },
                 defaultDuration: null,
+                applyClasses: true,
             }
         }
     },
