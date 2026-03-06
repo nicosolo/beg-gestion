@@ -49,8 +49,18 @@
                     </nav>
                 </div>
             </div>
+            <!-- Locked invoice banner -->
+            <div v-if="isLocked && !isNewInvoice" class="bg-yellow-50 border border-yellow-300 rounded-md p-3 mb-4 flex items-center justify-between">
+                <span class="text-sm text-yellow-800 font-medium">
+                    Cette facture est verrouillée ({{ invoice?.status === 'sent' ? 'envoyée' : 'visée' }}) et ne peut pas être modifiée.
+                </span>
+                <label v-if="isRole('admin')" class="flex items-center gap-2 text-sm text-yellow-800 cursor-pointer">
+                    <input type="checkbox" v-model="adminUnlock" class="h-4 w-4 rounded border-gray-300 text-yellow-600 focus:ring-yellow-500" />
+                    Déverrouiller (admin)
+                </label>
+            </div>
             <!-- Tab Content -->
-            <div class="tab-content" v-if="invoice">
+            <fieldset :disabled="!canEdit" class="tab-content" v-if="invoice">
                 <InvoiceGeneralInfo
                     v-if="activeTab === 'general'"
                     v-model="invoice"
@@ -64,7 +74,7 @@
                     v-if="activeTab === 'details' && activityBasedBilling"
                     v-model="invoice"
                 />
-            </div>
+            </fieldset>
             <template #actions>
                 <Button
                     v-if="!isNewInvoice"
@@ -87,7 +97,7 @@
                 <Button variant="secondary" type="button" @click="handleCancel" :disabled="loading">
                     Annuler
                 </Button>
-                <Button variant="primary" type="submit" :loading="loading">
+                <Button variant="primary" type="submit" :loading="loading" :disabled="!canEdit">
                     {{ $t("common.save") }}
                 </Button>
             </template>
@@ -147,6 +157,7 @@ const { get: fetchUnbilledActivities, loading: fetchUnbilledLoading } = useFetch
 const { fetchProjectFolder, projectFolder, canOpen: canOpenFolder, absolutePath: projectFolderPath, openProjectFolder } = useOpenProjectFolder()
 const appSettingsStore = useAppSettingsStore()
 const authStore = useAuthStore()
+const { isRole } = authStore
 
 const pendingOfferFiles = ref<(File | null)[]>([])
 const pendingAdjudicationFiles = ref<(File | null)[]>([])
@@ -158,6 +169,7 @@ const savingError = ref<string | null>(null)
 
 // Form state
 const invoice = ref<Invoice | null>(null)
+const savedStatus = ref<string | null>(null)
 
 watch(
     () => invoice.value?.offers ?? [],
@@ -204,7 +216,12 @@ const hasPendingUploads = computed(
         Boolean(pendingInvoiceDocumentFile.value)
 )
 
-const canDelete = computed(() => invoice.value?.status !== "sent")
+const isLocked = computed(() => {
+    return savedStatus.value === "sent" || savedStatus.value === "vise"
+})
+const canDelete = computed(() => !isLocked.value)
+const adminUnlock = ref(false)
+const canEdit = computed(() => !isLocked.value || adminUnlock.value)
 
 // Unsaved changes tracking
 const { isDirty, hasUnsavedChanges, markClean } = useUnsavedChanges({
@@ -453,6 +470,7 @@ const loadInvoice = async () => {
             if (data) {
                 isUpdatingFromApi.value = true
                 invoice.value = convertResponseToInvoice(data)
+                savedStatus.value = data.status
                 pendingInvoiceDocumentFile.value = null
             }
             fetchProjectFolder({ params: { id: data.projectId } })
@@ -468,6 +486,7 @@ const loadInvoice = async () => {
 // Save invoice
 const handleSave = async () => {
     if (!invoice.value) return
+    if (!canEdit.value) return
 
     if (invoice.value.billingMode === "accordingToInvoice" && !invoice.value.invoiceDocument) {
         errorAlert(t("invoice.document.required"), 5000)
@@ -540,6 +559,7 @@ const handleSave = async () => {
         const data = (await response.json()) as InvoiceResponse
         isUpdatingFromApi.value = true
         invoice.value = convertResponseToInvoice(data)
+        savedStatus.value = data.status
 
         pendingOfferFiles.value = pendingOfferFiles.value.map(() => null)
         pendingAdjudicationFiles.value = pendingAdjudicationFiles.value.map(() => null)
@@ -575,7 +595,9 @@ const handleDuplicate = () => {
 
     const duplicated = createEmptyInvoice({
         ...invoice.value,
+        status: "draft",
         visaBy: undefined,
+        visaByUserId: undefined,
         visaDate: undefined,
         activityIds: [],
         invoiceNumber: undefined,

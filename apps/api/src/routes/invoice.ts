@@ -14,9 +14,9 @@ import {
 import { invoiceRepository } from "../db/repositories/invoice.repository"
 import { authMiddleware } from "@src/tools/auth-middleware"
 import { responseValidator } from "@src/tools/response-validator"
-import { throwNotFound, throwValidationError, parseZodError } from "@src/tools/error-handler"
+import { throwNotFound, throwForbidden, throwValidationError, parseZodError } from "@src/tools/error-handler"
 import type { Variables } from "@src/types/global"
-import { roleMiddleware } from "@src/tools/role-middleware"
+import { roleMiddleware, hasRole } from "@src/tools/role-middleware"
 import { z, ZodError } from "zod"
 import { normalizeStoredPath, fileBaseName, matchesStoredPath } from "@src/tools/file-utils"
 import { storeFile, serveFile } from "@src/services/file-storage.service"
@@ -292,6 +292,17 @@ export const invoiceRoutes = new Hono<{ Variables: Variables }>()
         async (c) => {
             const { id } = c.req.valid("param")
             const user = c.get("user")
+
+            // Block editing of sent/visé invoices
+            const existing = await invoiceRepository.findById(id, user)
+            if (!existing) throwNotFound("Invoice")
+            if (
+                (existing.status === "sent" || existing.status === "vise") &&
+                !hasRole(user.role, "admin")
+            ) {
+                throwForbidden("Cannot modify locked invoices (visé or sent)")
+            }
+
             const { invoiceData: parsedInvoice, uploadedFiles } = await parseInvoiceRequestBody(
                 c,
                 "update"
@@ -333,8 +344,8 @@ export const invoiceRoutes = new Hono<{ Variables: Variables }>()
             }
             return c.json({ message: "Invoice deleted successfully" }, 200)
         } catch (error) {
-            if (error instanceof Error && error.message === "Cannot delete sent invoices") {
-                return c.json({ error: "Cannot delete sent invoices" }, 400)
+            if (error instanceof Error && error.message === "Cannot delete locked invoices") {
+                return c.json({ error: "Cannot delete locked invoices" }, 400)
             }
             throw error
         }

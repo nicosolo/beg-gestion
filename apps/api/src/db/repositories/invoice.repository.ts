@@ -851,9 +851,9 @@ export const invoiceRepository = {
             return false
         }
 
-        // Prevent deletion of sent invoices
-        if (existing.status === "sent") {
-            throw new Error("Cannot delete sent invoices")
+        // Prevent deletion of locked invoices
+        if (existing.status === "sent" || existing.status === "vise") {
+            throw new Error("Cannot delete locked invoices")
         }
 
         await db.delete(invoices).where(eq(invoices.id, id))
