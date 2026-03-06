@@ -28,6 +28,7 @@ export const activityTypeRepository = {
                 billable: activityTypes.billable,
                 adminOnly: activityTypes.adminOnly,
                 classPresets: activityTypes.classPresets,
+                defaultDuration: activityTypes.defaultDuration,
                 createdAt: activityTypes.createdAt,
                 updatedAt: activityTypes.updatedAt,
             })
@@ -45,6 +46,7 @@ export const activityTypeRepository = {
                 billable: activityTypes.billable,
                 adminOnly: activityTypes.adminOnly,
                 classPresets: activityTypes.classPresets,
+                defaultDuration: activityTypes.defaultDuration,
                 createdAt: activityTypes.createdAt,
                 updatedAt: activityTypes.updatedAt,
             })
@@ -62,6 +64,7 @@ export const activityTypeRepository = {
                 billable: activityTypes.billable,
                 adminOnly: activityTypes.adminOnly,
                 classPresets: activityTypes.classPresets,
+                defaultDuration: activityTypes.defaultDuration,
                 createdAt: activityTypes.createdAt,
                 updatedAt: activityTypes.updatedAt,
             })
@@ -79,6 +82,7 @@ export const activityTypeRepository = {
                 billable: activityTypeData.billable,
                 adminOnly: activityTypeData.adminOnly ?? false,
                 classPresets: activityTypeData.classPresets ?? null,
+                defaultDuration: activityTypeData.defaultDuration ?? null,
                 createdAt: new Date(),
                 updatedAt: new Date(),
             })
@@ -89,6 +93,7 @@ export const activityTypeRepository = {
                 billable: activityTypes.billable,
                 adminOnly: activityTypes.adminOnly,
                 classPresets: activityTypes.classPresets,
+                defaultDuration: activityTypes.defaultDuration,
                 createdAt: activityTypes.createdAt,
                 updatedAt: activityTypes.updatedAt,
             })
@@ -109,6 +114,8 @@ export const activityTypeRepository = {
             updateData.adminOnly = activityTypeData.adminOnly
         if (activityTypeData.classPresets !== undefined)
             updateData.classPresets = activityTypeData.classPresets ?? null
+        if (activityTypeData.defaultDuration !== undefined)
+            updateData.defaultDuration = activityTypeData.defaultDuration ?? null
         updateData.updatedAt = new Date()
         const [updatedActivityType] = await db
             .update(activityTypes)
@@ -121,6 +128,7 @@ export const activityTypeRepository = {
                 billable: activityTypes.billable,
                 adminOnly: activityTypes.adminOnly,
                 classPresets: activityTypes.classPresets,
+                defaultDuration: activityTypes.defaultDuration,
                 createdAt: activityTypes.createdAt,
                 updatedAt: activityTypes.updatedAt,
             })

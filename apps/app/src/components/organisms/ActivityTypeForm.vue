@@ -53,6 +53,24 @@
             </p>
         </div>
 
+        <div>
+            <label for="defaultDuration" class="block text-sm font-medium text-gray-700 mb-1">
+                Durée par défaut (heures)
+            </label>
+            <input
+                id="defaultDuration"
+                v-model.number="formData.defaultDuration"
+                type="number"
+                step="0.1"
+                min="0"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Ex: 8.3"
+            />
+            <p class="text-xs text-gray-500 mt-1">
+                Pré-rempli automatiquement lors de la saisie des heures (laissez vide pour aucun)
+            </p>
+        </div>
+
         <!-- Class Presets -->
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -123,6 +141,7 @@ const emit = defineEmits<{
             billable: boolean
             adminOnly: boolean
             classPresets: ClassPresets
+            defaultDuration: number | null
         },
     ]
     cancel: []
@@ -154,6 +173,7 @@ const formData = ref({
     billable: false,
     adminOnly: false,
     classPresets: { ...defaultPresets } as ClassPresets,
+    defaultDuration: null as number | null,
 })
 
 const isFormValid = computed(() => {
@@ -168,6 +188,7 @@ const handleSubmit = () => {
             billable: formData.value.billable,
             adminOnly: formData.value.adminOnly,
             classPresets: formData.value.classPresets,
+            defaultDuration: formData.value.defaultDuration || null,
         })
     }
 }
@@ -185,6 +206,7 @@ watch(
                 classPresets: newActivityType.classPresets
                     ? { ...newActivityType.classPresets }
                     : { ...defaultPresets },
+                defaultDuration: newActivityType.defaultDuration ?? null,
             }
         } else {
             // Reset form for new activity type
@@ -194,6 +216,7 @@ watch(
                 billable: false,
                 adminOnly: false,
                 classPresets: { ...defaultPresets },
+                defaultDuration: null,
             }
         }
     },

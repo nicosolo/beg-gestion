@@ -8,6 +8,7 @@ export const activityTypeCreateSchema = z.object({
     billable: z.coerce.boolean(),
     adminOnly: z.coerce.boolean().optional().default(false),
     classPresets: classPresetsSchema.optional().nullable(),
+    defaultDuration: z.coerce.number().positive().optional().nullable(),
 })
 
 // Activity type update schema (makes most fields optional)
@@ -17,6 +18,7 @@ export const activityTypeUpdateSchema = z.object({
     billable: z.coerce.boolean().optional(),
     adminOnly: z.coerce.boolean().optional(),
     classPresets: classPresetsSchema.optional().nullable(),
+    defaultDuration: z.coerce.number().positive().optional().nullable(),
 })
 
 // Activity type response schema
@@ -28,6 +30,7 @@ export const activityTypeResponseSchema = z
         billable: z.boolean(),
         adminOnly: z.boolean(),
         classPresets: classPresetsSchema.nullable(),
+        defaultDuration: z.coerce.number().nullable(),
     })
     .merge(timestampsSchema)
 

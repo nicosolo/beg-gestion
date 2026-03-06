@@ -184,6 +184,7 @@ import {
     useUpdateActivity,
     useDeleteActivity,
 } from "@/composables/api/useActivity"
+import { useFetchActivityTypeFiltered } from "@/composables/api/useActivityType"
 import { ApiError } from "@/utils/api-error"
 import type { ActivityCreateInput, ActivityUpdateInput, ActivityResponse } from "@beg/validations"
 import InputNumber from "@/components/atoms/InputNumber.vue"
@@ -259,6 +260,7 @@ const { get: fetchActivity, loading: loadingActivity } = useFetchActivity()
 const { post: createActivity, loading: creatingActivity } = useCreateActivity()
 const { put: updateActivity, loading: updatingActivity } = useUpdateActivity()
 const { delete: deleteActivity, loading: deletingActivity } = useDeleteActivity()
+const { get: fetchActivityTypes, data: activityTypesData } = useFetchActivityTypeFiltered()
 
 // Date constraints for non-admin users (60 days in the past, max today)
 const minDate = computed(() => {
@@ -272,6 +274,18 @@ const minDate = computed(() => {
     sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60)
     return sixtyDaysAgo
 })
+
+// Auto-fill duration when selecting an activity type with defaultDuration (new entries only)
+watch(
+    () => activity.value.activityTypeId,
+    (newTypeId) => {
+        if (!isNewEntry.value || !newTypeId || !activityTypesData.value) return
+        const selectedType = activityTypesData.value.find((t) => t.id === Number(newTypeId))
+        if (selectedType?.defaultDuration && activity.value.duration === 0) {
+            activity.value.duration = selectedType.defaultDuration
+        }
+    }
+)
 
 // Load activity data if editing
 const loadActivityData = async () => {
@@ -442,6 +456,7 @@ watch(
     () => props.modelValue,
     async (isOpen) => {
         if (isOpen) {
+            fetchActivityTypes()
             if (props.activityId) {
                 await loadActivityData()
             } else {

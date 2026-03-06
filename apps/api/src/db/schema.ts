@@ -250,6 +250,7 @@ export const activityTypes = sqliteTable(
         billable: integer("billable", { mode: "boolean" }).notNull(),
         adminOnly: integer("adminOnly", { mode: "boolean" }).notNull().default(false),
         classPresets: text("classPresets", { mode: "json" }).$type<ClassPresets>(),
+        defaultDuration: real("defaultDuration"),
         ...timestamps,
     },
     () => []
