@@ -9,11 +9,7 @@
                         class="w-full divide-y divide-gray-200 text-left min-w-[550px] table-fixed"
                     >
                         <colgroup>
-                            <col style="width: 25%" />
-                            <col style="width: 15%" />
-                            <col style="width: 20%" />
-                            <col style="width: 20%" />
-                            <col style="width: 20%" />
+                            <col v-for="(w, i) in colWidths" :key="i" :style="{ width: w }" />
                         </colgroup>
                         <thead class="bg-gray-50">
                             <tr>
@@ -56,7 +52,7 @@
                                             (value) => updateRate(index, 'adjusted', value)
                                         "
                                         type="time"
-                                        class="w-24"
+                                        class="w-20"
                                     />
                                 </td>
                                 <td class="px-4 py-2">
@@ -178,11 +174,7 @@
                         class="w-full divide-y divide-gray-200 text-left min-w-[550px] table-fixed"
                     >
                         <colgroup>
-                            <col style="width: 25%" />
-                            <col style="width: 15%" />
-                            <col style="width: 20%" />
-                            <col style="width: 20%" />
-                            <col style="width: 20%" />
+                            <col v-for="(w, i) in colWidths" :key="i" :style="{ width: w }" />
                         </colgroup>
                         <thead class="bg-gray-50">
                             <tr>
@@ -207,14 +199,14 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200 text-sm">
                             <!-- Travel expenses (kilometers) -->
-                            <tr>
+                            <tr v-if="!hasPackage">
                                 <td class="px-4 py-2">Km</td>
                                 <td class="px-4 py-2">{{ invoice.expensesTravelBase || 0 }} km</td>
                                 <td class="px-4 py-2">
                                     <InputNumber
                                         v-model="invoice.expensesTravelAdjusted"
                                         :step="1"
-                                        class="w-24"
+                                        class="w-20"
                                     />
                                     <span class="ml-1">km</span>
                                 </td>
@@ -232,7 +224,7 @@
                                 </td>
                             </tr>
                             <!-- Other expenses -->
-                            <tr>
+                            <tr v-if="!hasPackage">
                                 <td class="px-4 py-2">Autres frais</td>
                                 <td class="px-4 py-2">
                                     {{ formatCurrency(invoice.expensesOtherBase || 0) }}
@@ -249,7 +241,7 @@
                                 </td>
                             </tr>
                             <!-- Third-party expenses -->
-                            <tr>
+                            <tr v-if="!hasPackage">
                                 <td class="px-4 py-2">Frais tiers</td>
                                 <td class="px-4 py-2" colspan="3">
                                     <InputNumber
@@ -550,6 +542,8 @@ const { formatCurrency, formatDuration } = useFormat()
 
 const invoice = useVModel(props, "modelValue", emit)
 
+const colWidths = ["25%", "15%", "16%", "20%", "24%"]
+
 const { get: fetchRates, loading: fetchRatesLoading, data: ratesData } = useFetchRates()
 const { get: fetchVatRates, loading: fetchVatRatesLoading, data: vatRates } = useFetchVatRates()
 
@@ -687,7 +681,7 @@ watch(
     { deep: true, immediate: true }
 )
 
-// Watch for discount changesfeesTotal
+// Watch for discount changes and recalculate feesTotal
 watch(
     [() => invoice.value.feesFinalTotal, () => invoice.value.feesDiscountAmount],
     () => {
@@ -697,31 +691,51 @@ watch(
     { immediate: true }
 )
 
-// Watch for expense changes
+// Calculate travel amount
 watch(
-    [
-        () => invoice.value.expensesTravelAdjusted,
-        () => invoice.value.expensesTravelRate,
-        () => invoice.value.expensesOtherAmount,
-        () => invoice.value.expensesThirdPartyAmount,
-        () => invoice.value.expensesPackageAmount,
-        () => invoice.value.expensesPackagePercentage,
-        () => invoice.value.expensesPackagePercentage,
-    ],
+    [() => invoice.value.expensesTravelAdjusted, () => invoice.value.expensesTravelRate],
     () => {
-        // Calculate travel amount
         invoice.value.expensesTravelAmount =
             (invoice.value.expensesTravelAdjusted || 0) * (invoice.value.expensesTravelRate || 0.65)
+    },
+    { immediate: true }
+)
 
-        // Calculate total expenses
-        if (invoice.value.expensesPackageAmount !== null) {
-            invoice.value.expensesTotalExpenses = invoice.value.expensesPackageAmount || 0
-        } else if ((invoice.value.expensesPackagePercentage || 0) > 0) {
+// Calculate total expenses: package fixed amount
+watch(
+    () => invoice.value.expensesPackageAmount,
+    (amount) => {
+        if (amount !== null) {
+            invoice.value.expensesTotalExpenses = amount || 0
+        }
+    },
+    { immediate: true }
+)
+
+// Calculate total expenses: package percentage
+watch(
+    [() => invoice.value.expensesPackagePercentage, () => invoice.value.feesFinalTotal],
+    () => {
+        if ((invoice.value.expensesPackagePercentage || 0) > 0) {
             invoice.value.expensesTotalExpenses =
                 ((invoice.value.feesFinalTotal || 0) *
                     (invoice.value.expensesPackagePercentage || 0)) /
                 100
-        } else {
+        }
+    },
+    { immediate: true }
+)
+
+// Calculate total expenses: sum of individual expenses
+watch(
+    [
+        () => invoice.value.expensesTravelAmount,
+        () => invoice.value.expensesOtherAmount,
+        () => invoice.value.expensesThirdPartyAmount,
+        () => invoice.value.expensesPackageAmount,
+    ],
+    () => {
+        if (invoice.value.expensesPackageAmount === null) {
             invoice.value.expensesTotalExpenses =
                 (invoice.value.expensesTravelAmount || 0) +
                 (invoice.value.expensesOtherAmount || 0) +
@@ -800,8 +814,8 @@ const toggleDiscount = () => {
     } else {
         // Apply default discount based on current type
         if (discountType.value === "percentage") {
-            invoice.value.feesDiscountPercentage = 4
-            invoice.value.feesDiscountAmount = (invoice.value.feesFinalTotal || 0) * 0.04
+            invoice.value.feesDiscountPercentage = 10
+            invoice.value.feesDiscountAmount = (invoice.value.feesFinalTotal || 0) * 0.1
         } else {
             invoice.value.feesDiscountAmount = 100
             invoice.value.feesDiscountPercentage = 0
@@ -816,8 +830,8 @@ const setDiscountType = (type: "percentage" | "fixed") => {
     if (type === "percentage") {
         // Convert to percentage if was fixed
         if (!invoice.value.feesDiscountPercentage || invoice.value.feesDiscountPercentage === 0) {
-            invoice.value.feesDiscountPercentage = 4
-            invoice.value.feesDiscountAmount = (invoice.value.feesFinalTotal || 0) * 0.04
+            invoice.value.feesDiscountPercentage = 10
+            invoice.value.feesDiscountAmount = (invoice.value.feesFinalTotal || 0) * 0.1
         }
     } else {
         // Convert to fixed if was percentage
@@ -855,8 +869,8 @@ const togglePackage = () => {
     } else {
         // Apply default package based on current type
         if (packageType.value === "percentage") {
-            invoice.value.expensesPackagePercentage = 10
-            invoice.value.expensesPackageAmount = (invoice.value.feesFinalTotal || 0) * 0.1
+            invoice.value.expensesPackagePercentage = 4
+            invoice.value.expensesPackageAmount = (invoice.value.feesFinalTotal || 0) * 0.04
         } else {
             invoice.value.expensesPackageAmount = 500
             invoice.value.expensesPackagePercentage = 0
@@ -871,8 +885,8 @@ const setPackageType = (type: "percentage" | "fixed") => {
     if (type === "percentage") {
         // Convert to percentage if was fixed
         if (invoice.value.expensesPackagePercentage !== null) {
-            invoice.value.expensesPackagePercentage = 10
-            invoice.value.expensesPackageAmount = (invoice.value.feesFinalTotal || 0) * 0.1
+            invoice.value.expensesPackagePercentage = 4
+            invoice.value.expensesPackageAmount = (invoice.value.feesFinalTotal || 0) * 0.04
         }
     } else {
         // Convert to fixed if was percentage

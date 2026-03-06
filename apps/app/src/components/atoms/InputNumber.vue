@@ -31,7 +31,7 @@ const inputRef = ref<HTMLInputElement | null>(null)
 
 const computedClass = computed(() => {
     if (type === "percentage") {
-        return "w-19 p-1 border border-gray-300 rounded"
+        return "w-16 p-1 border border-gray-300 rounded"
     }
     if (type === "amount") {
         return "w-24 p-1 border border-gray-300 rounded"
@@ -39,7 +39,7 @@ const computedClass = computed(() => {
     if (type === "distance") {
         return "w-16 p-1 border border-gray-300 rounded"
     }
-    return "w-24 p-1 border border-gray-300 rounded"
+    return "w-20 p-1 border border-gray-300 rounded"
 })
 
 const stepValue = computed(() => {

@@ -297,7 +297,7 @@
 
             <table
                 class="fac w-[70%] mx-auto border border-gray-300 border-collapse"
-                v-if="shouldShowActivitySections && (invoice.expensesPackageAmount || 0) > 0"
+                v-if="shouldShowActivitySections && (invoice.expensesTotalExpenses || 0) > 0"
             >
                 <caption class="sub text-left font-bold p-1 text-sm">
                     Frais
@@ -306,14 +306,17 @@
                     <tr
                         v-if="
                             invoice.expensesPackagePercentage !== null &&
-                            invoice.expensesPackagePercentage !== null
+                            invoice.expensesTotalExpenses !== null
                         "
                     >
                         <td class="border border-gray-300 p-1 text-sm" colspan="2">
-                            Frais BEG au %
+                            Frais BEG forfait
                         </td>
                         <td class="text-right border border-gray-300 p-1 text-sm w-1/4">
-                            {{ invoice.expensesPackagePercentage }}%
+                            <template v-if="invoice.expensesPackagePercentage !== 0">
+                                {{ invoice.expensesPackagePercentage }}%
+                            </template>
+                            <template v-else>{{ invoice.expensesPackageAmount }} CHF</template>
                         </td>
                         <td class="fac4 text-right border border-gray-300 p-1 text-sm w-1/4">
                             {{ formatCurrency(invoice.expensesPackageAmount || 0) }}
