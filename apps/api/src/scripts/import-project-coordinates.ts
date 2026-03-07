@@ -1,7 +1,7 @@
 import { convertLv95ToWgs84 } from "@src/utils/coordinates"
 import { db } from "../db"
 import { projects } from "../db/schema"
-import { and, eq, sql } from "drizzle-orm"
+import { and, eq } from "drizzle-orm"
 
 interface CsvRow {
     projectNumber: string

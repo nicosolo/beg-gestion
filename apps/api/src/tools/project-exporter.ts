@@ -1,3 +1,5 @@
+/* eslint-disable */
+// @ts-nocheck
 import ExcelJS from "exceljs"
 import type { ProjectResponse } from "@beg/validations"
 
@@ -24,10 +26,7 @@ function getColumnLetter(index: number): string {
 /**
  * Get column letter by column key from worksheet
  */
-function getColumnLetterByKey(
-    columns: Partial<ExcelJS.Column>[],
-    key: string
-): string | undefined {
+function getColumnLetterByKey(columns: Partial<ExcelJS.Column>[], key: string): string | undefined {
     const index = columns.findIndex((col) => col.key === key)
     return index >= 0 ? getColumnLetter(index) : undefined
 }

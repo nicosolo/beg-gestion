@@ -1,12 +1,12 @@
 import type { TypedResponse } from "hono"
 import { createMiddleware } from "hono/factory"
-import { HTTPException } from "hono/http-exception"
 import type { StatusCode } from "hono/utils/http-status"
 import { ZodSchema } from "zod"
-import { throwResponseValidationError, throwValidationError } from "./error-handler"
+import { throwResponseValidationError } from "./error-handler"
 
 declare module "hono" {
     interface ContextRenderer {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (data: any, status: StatusCode): TypedResponse
     }
 }

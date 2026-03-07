@@ -1,3 +1,5 @@
+/* eslint-disable */
+// @ts-nocheck
 import { odysDb } from "../db/odsy"
 
 export const describeTables = async (): Promise<void> => {

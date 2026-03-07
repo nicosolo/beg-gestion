@@ -207,9 +207,9 @@ export const projectRoutes = new Hono<{ Variables: Variables }>()
                     throw throwNotFound("Project not found")
                 }
                 return c.render(project as ProjectResponse, 201)
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error("Error creating project:", error)
-                if (error.message === "Project number already exists") {
+                if (error instanceof Error && error.message === "Project number already exists") {
                     return c.json({ error: error.message }, 409)
                 }
                 return c.json({ error: "Failed to create project" }, 500)

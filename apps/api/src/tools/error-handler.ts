@@ -1,6 +1,6 @@
 import type { Context } from "hono"
 import { HTTPException } from "hono/http-exception"
-import type { StatusCode } from "hono/utils/http-status"
+import type { ContentfulStatusCode, StatusCode } from "hono/utils/http-status"
 import {
     ErrorCode,
     createApiError,
@@ -16,7 +16,7 @@ export class ApiException extends HTTPException {
         message: string,
         public details?: ValidationErrorDetail[]
     ) {
-        super(statusCode as any, { message })
+        super(statusCode as ContentfulStatusCode, { message })
     }
 }
 
@@ -89,6 +89,7 @@ export async function errorHandler(err: Error, c: Context) {
     if (err instanceof ApiException) {
         const errorResponse = createApiError(err.errorCode, err.message, err.details)
         console.log(errorResponse)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return c.json(errorResponse, err.statusCode as any)
     }
 
@@ -107,6 +108,7 @@ export async function errorHandler(err: Error, c: Context) {
     if (err instanceof HTTPException) {
         const errorResponse = createApiError(ErrorCode.UNKNOWN_ERROR, err.message)
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return c.json(errorResponse, err.status as any)
     }
 

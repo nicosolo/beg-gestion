@@ -10,7 +10,6 @@ import {
     rateClassFilterSchema,
 } from "@beg/validations"
 import { rateRepository } from "../db/repositories/rate.repository"
-import { z } from "zod"
 import { authMiddleware } from "@src/tools/auth-middleware"
 import { responseValidator } from "@src/tools/response-validator"
 import { throwNotFound, throwDuplicateEntry } from "@src/tools/error-handler"

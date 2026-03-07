@@ -139,7 +139,7 @@ export const locationRepository = {
     },
 
     update: async (id: number, data: LocationUpdate): Promise<Location | null> => {
-        const updateData: any = {}
+        const updateData: Partial<typeof locations.$inferInsert> = {}
 
         if (data.name !== undefined) updateData.name = data.name
         if (data.country !== undefined) updateData.country = data.country

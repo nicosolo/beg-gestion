@@ -656,7 +656,7 @@ export const invoiceRepository = {
 
         // Start transaction
         return await db.transaction(async (tx) => {
-            const updateData: any = {
+            const updateData: Partial<typeof invoices.$inferInsert> = {
                 updatedAt: new Date(),
             }
 

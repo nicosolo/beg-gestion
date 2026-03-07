@@ -17,11 +17,6 @@ import { responseValidator } from "@src/tools/response-validator"
 import type { Variables } from "../types/global"
 import { roleMiddleware, hasRole } from "@src/tools/role-middleware"
 
-// User ID param schema
-const userIdParamSchema = z.object({
-    userId: z.coerce.number(),
-})
-
 // Create the app and apply auth middleware to all routes
 export const workloadRoutes = new Hono<{ Variables: Variables }>()
     .use("/*", authMiddleware)

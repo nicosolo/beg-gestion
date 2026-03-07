@@ -34,7 +34,7 @@ export const verifyToken = (
 ): { id: number; email: string; role: UserRole } | null => {
     try {
         return jwt.verify(token, JWT_SECRET) as { id: number; email: string; role: UserRole }
-    } catch (error) {
+    } catch {
         return null
     }
 }

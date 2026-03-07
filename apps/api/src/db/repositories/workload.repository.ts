@@ -1,6 +1,6 @@
 import { db } from "../index"
 import { workloads, users } from "../schema"
-import { eq, and, gte, lte, sql, desc } from "drizzle-orm"
+import { eq, and, gte, lte, desc } from "drizzle-orm"
 import { ApiException } from "@src/tools/error-handler"
 
 export const workloadRepository = {

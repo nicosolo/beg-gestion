@@ -186,7 +186,7 @@ export async function buildActivitiesWorkbook(
         )
 
         // Create a worksheet for each user
-        for (const [userId, { userName, activities: userActivities }] of Object.entries(
+        for (const [, { userName, activities: userActivities }] of Object.entries(
             activitiesByUser
         )) {
             const sheetName = userName.substring(0, 31) // Excel sheet name limit

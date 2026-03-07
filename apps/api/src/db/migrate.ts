@@ -4,11 +4,7 @@ import { existsSync } from "node:fs"
 import { dirname } from "node:path"
 import { mkdir } from "node:fs/promises"
 import { DB_FILE_PATH } from "@src/config"
-import { exec } from "node:child_process"
-import { promisify } from "node:util"
 import { migrate } from "drizzle-orm/bun-sqlite/migrator"
-
-const execAsync = promisify(exec)
 
 export async function runMigrations() {
     try {

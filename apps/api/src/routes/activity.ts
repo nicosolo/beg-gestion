@@ -254,7 +254,7 @@ export const activityRoutes = new Hono<{ Variables: Variables }>()
                         (key) =>
                             key !== "projectId" &&
                             key !== "billed" &&
-                            (activityData as any)[key] !== undefined
+                            (activityData as Record<string, unknown>)[key] !== undefined
                     )
                     if (changedKeys.length > 0) {
                         throwActivityLocked(

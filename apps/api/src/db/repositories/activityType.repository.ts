@@ -105,7 +105,7 @@ export const activityTypeRepository = {
         id: number,
         activityTypeData: Partial<ActivityTypeUpdateInput>
     ): Promise<ActivityTypeResponse> => {
-        const updateData: any = {}
+        const updateData: Partial<typeof activityTypes.$inferInsert> = {}
 
         if (activityTypeData.name) updateData.name = activityTypeData.name
         if (activityTypeData.code) updateData.code = activityTypeData.code

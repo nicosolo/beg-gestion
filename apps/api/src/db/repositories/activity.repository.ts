@@ -1,4 +1,4 @@
-import { and, eq, sql, desc, asc, gte, lte, or } from "drizzle-orm"
+import { and, eq, sql, desc, asc, gte, lte, or, type SQL } from "drizzle-orm"
 import { db } from "../index"
 import { activities, activityTypes, projects, users } from "../schema"
 import type { ActivityFilter } from "@beg/validations"
@@ -118,7 +118,7 @@ const buildFilterComponents = (filter: ActivityFilter, user?: Variables["user"])
         invoiceId,
     } = filter
 
-    const whereConditions: any[] = []
+    const whereConditions: (SQL | undefined)[] = []
     if (userId) whereConditions.push(eq(activities.userId, userId))
     if (projectId) whereConditions.push(eq(activities.projectId, projectId))
     if (fromDate) whereConditions.push(gte(activities.date, fromDate))

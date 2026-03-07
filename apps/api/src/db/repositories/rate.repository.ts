@@ -6,7 +6,6 @@ import type {
     RateClassCreateInput,
     RateClassUpdateInput,
     ClassSchema,
-    ActivityRateUser,
 } from "@beg/validations"
 
 export const rateRepository = {
@@ -88,7 +87,7 @@ export const rateRepository = {
         id: number,
         rateData: Partial<RateClassUpdateInput>
     ): Promise<RateClassSchema> => {
-        const updateData: any = {}
+        const updateData: Partial<typeof rateClasses.$inferInsert> = {}
 
         if (rateData.class) updateData.class = rateData.class
         if (rateData.year) updateData.year = rateData.year

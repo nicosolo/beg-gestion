@@ -115,7 +115,7 @@ const parseInvoiceRequestBody = async (
         let parsedPayload: unknown
         try {
             parsedPayload = JSON.parse(payloadRaw)
-        } catch (error) {
+        } catch {
             throwValidationError("Invalid invoice payload format")
         }
 
@@ -256,10 +256,10 @@ export const invoiceRoutes = new Hono<{ Variables: Variables }>()
                 invoiceFiles.push(invoice.legacyInvoicePath)
                 invoiceFiles.push(invoice.legacyInvoicePath.replace("fab", "html"))
             }
-            invoice.offers?.forEach((o: any) => o.file && invoiceFiles.push(o.file))
-            invoice.adjudications?.forEach((a: any) => a.file && invoiceFiles.push(a.file))
-            invoice.situations?.forEach((s: any) => s.file && invoiceFiles.push(s.file))
-            invoice.documents?.forEach((d: any) => d.file && invoiceFiles.push(d.file))
+            invoice.offers?.forEach((o) => o.file && invoiceFiles.push(o.file))
+            invoice.adjudications?.forEach((a) => a.file && invoiceFiles.push(a.file))
+            invoice.situations?.forEach((s) => s.file && invoiceFiles.push(s.file))
+            invoice.documents?.forEach((d) => d.file && invoiceFiles.push(d.file))
 
             // Find matching file path
             const matchedFile = invoiceFiles.find((f) => matchesStoredPath(f, normalizedRequested))

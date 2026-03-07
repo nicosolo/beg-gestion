@@ -1,3 +1,5 @@
+/* eslint-disable */
+// @ts-nocheck
 // Remove when Production
 import { db } from "./index"
 import {

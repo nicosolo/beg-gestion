@@ -9,8 +9,6 @@ import {
 } from "@beg/validations"
 import { activityRepository } from "../db/repositories/activity.repository"
 import { projectRepository } from "../db/repositories/project.repository"
-import { rateRepository } from "../db/repositories/rate.repository"
-import { vatRateRepository } from "../db/repositories/vatRate.repository"
 import { authMiddleware } from "../tools/auth-middleware"
 import { responseValidator } from "../tools/response-validator"
 import type { Variables } from "../types/global"

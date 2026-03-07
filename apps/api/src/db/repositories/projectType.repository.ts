@@ -68,7 +68,7 @@ export const projectTypeRepository = {
         id: number,
         projectTypeData: Partial<ProjectTypeUpdateInput>
     ): Promise<ProjectTypeSchema> => {
-        const updateData: any = {}
+        const updateData: Partial<typeof projectTypes.$inferInsert> = {}
 
         if (projectTypeData.name) updateData.name = projectTypeData.name
 

@@ -347,8 +347,8 @@ export const projectRepository = {
                 return acc
             },
             {
-                managersMap: new Map<number, any[]>(),
-                membersMap: new Map<number, any[]>(),
+                managersMap: new Map<number, { id: number; firstName: string; lastName: string; initials: string }[]>(),
+                membersMap: new Map<number, { id: number; firstName: string; lastName: string; initials: string }[]>(),
             }
         )
 
@@ -751,7 +751,7 @@ export const projectRepository = {
 
     update: async (id: number, data: ProjectUpdateInput): Promise<number | null> => {
         // Build update object, filtering out undefined values (excluding projectManagers and projectMembers)
-        const updateData: any = {}
+        const updateData: Partial<typeof projects.$inferInsert> = {}
         if (data.projectNumber !== undefined) updateData.projectNumber = data.projectNumber
         if (data.subProjectName !== undefined)
             updateData.subProjectName = data.subProjectName || null
