@@ -73,6 +73,8 @@ export const clientRepository = {
             .insert(clients)
             .values({
                 name: data.name,
+                createdAt: new Date(),
+                updatedAt: new Date(),
             })
             .returning({
                 id: clients.id,
@@ -108,7 +110,8 @@ export const clientRepository = {
         const [result] = await db
             .select({ count: sql<number>`count(*)` })
             .from(invoices)
-            .where(eq(invoices.clientId, id))
+            .innerJoin(projects, eq(invoices.projectId, projects.id))
+            .where(eq(projects.clientId, id))
         return result.count > 0
     },
 
