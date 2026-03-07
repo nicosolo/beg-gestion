@@ -212,6 +212,13 @@ Lint and type-check run on the host (not in Docker):
 - `bun run lint:check:app` / `bun run lint:check:api` — lint without fix
 - `bun run type-check:app` / `bun run type-check:api` — type-check
 
+## Testing
+
+- **IMPORTANT**: After any API modification (routes, repositories, tools, middleware), run tests: `docker compose exec api bun test --timeout 30000`
+- Run a specific test file: `docker compose exec api bun test src/routes/__tests__/user.test.ts`
+- Run tests matching a pattern: `docker compose exec api bun test activity`
+- Tests use in-memory SQLite with `mock.module` to replace the DB singleton — see `src/__tests__/helpers/setup.ts`
+
 ## Tasks
 
 To create tasks add the name of the feature as the file name and the date for the folder @tasks/{YYYY-MM-DD}/{feature_name}.md

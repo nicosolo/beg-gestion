@@ -32,8 +32,7 @@ function getColumnLetterByKey(columns: Partial<ExcelJS.Column>[], key: string): 
 function createWorksheet(
     workbook: ExcelJS.Workbook,
     sheetName: string,
-    projects: ProjectResponse[],
-    options: ProjectExportOptions = {}
+    projects: ProjectResponse[]
 ) {
     const worksheet = workbook.addWorksheet(sheetName)
 
@@ -73,7 +72,7 @@ function createWorksheet(
             projectNumber: project.projectNumber ?? "",
             name: project.name ?? "",
             manager: project.projectManagers?.length
-                ? project.projectManagers.map(m => `${m.firstName} ${m.lastName}`).join(", ")
+                ? project.projectManagers.map((m) => `${m.firstName} ${m.lastName}`).join(", ")
                 : "",
             client: project.client?.name ?? "",
             engineer: project.engineer?.name ?? "",
@@ -167,7 +166,9 @@ export async function buildProjectsWorkbook(
             {} as Record<string | number, { managerName: string; projects: ProjectResponse[] }>
         )
 
-        for (const [, { managerName, projects: managerProjects }] of Object.entries(projectsByManager)) {
+        for (const [, { managerName, projects: managerProjects }] of Object.entries(
+            projectsByManager
+        )) {
             const sheetName = managerName.substring(0, 31)
             createWorksheet(workbook, sheetName, managerProjects, options)
         }
