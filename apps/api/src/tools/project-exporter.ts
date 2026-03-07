@@ -1,5 +1,3 @@
-/* eslint-disable */
-// @ts-nocheck
 import ExcelJS from "exceljs"
 import type { ProjectResponse } from "@beg/validations"
 
@@ -74,8 +72,8 @@ function createWorksheet(
         worksheet.addRow({
             projectNumber: project.projectNumber ?? "",
             name: project.name ?? "",
-            manager: project.projectManager
-                ? `${project.projectManager.firstName} ${project.projectManager.lastName}`
+            manager: project.projectManagers?.length
+                ? project.projectManagers.map(m => `${m.firstName} ${m.lastName}`).join(", ")
                 : "",
             client: project.client?.name ?? "",
             engineer: project.engineer?.name ?? "",
@@ -142,34 +140,35 @@ export async function buildProjectsWorkbook(
     const workbook = new ExcelJS.Workbook()
 
     if (options.perUser) {
-        // Group projects by manager
         const projectsByManager = projects.reduce(
             (acc, project) => {
-                const managerId = project.projectManager?.id
-                const managerName = project.projectManager
-                    ? `${project.projectManager.firstName} ${project.projectManager.lastName} (${project.projectManager.initials})`
-                    : "Sans responsable"
+                const managers = project.projectManagers ?? []
 
-                const key = managerId ?? "no-manager"
-
-                if (!acc[key]) {
-                    acc[key] = {
-                        managerName,
-                        projects: [],
+                if (managers.length === 0) {
+                    const key = "no-manager"
+                    if (!acc[key]) {
+                        acc[key] = { managerName: "Sans responsable", projects: [] }
                     }
+                    acc[key].projects.push(project)
+                    return acc
                 }
 
-                acc[key].projects.push(project)
+                for (const manager of managers) {
+                    const key = manager.id
+                    const managerName = `${manager.firstName} ${manager.lastName} (${manager.initials})`
+                    if (!acc[key]) {
+                        acc[key] = { managerName, projects: [] }
+                    }
+                    acc[key].projects.push(project)
+                }
+
                 return acc
             },
             {} as Record<string | number, { managerName: string; projects: ProjectResponse[] }>
         )
 
-        // Create a worksheet for each manager
-        for (const [managerId, { managerName, projects: managerProjects }] of Object.entries(
-            projectsByManager
-        )) {
-            const sheetName = managerName.substring(0, 31) // Excel sheet name limit
+        for (const [, { managerName, projects: managerProjects }] of Object.entries(projectsByManager)) {
+            const sheetName = managerName.substring(0, 31)
             createWorksheet(workbook, sheetName, managerProjects, options)
         }
     } else {
