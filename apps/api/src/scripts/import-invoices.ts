@@ -31,10 +31,6 @@ interface FabData {
     datas: Record<string, string>
 }
 
-interface GridRow {
-    [key: string]: string
-}
-
 interface RateClassData {
     rateClass: string
     baseHours: number
@@ -132,7 +128,7 @@ function convertWindowsPath(windowsPath: string): string | null {
     if (!windowsPath || windowsPath.trim() === "") return null
 
     // Replace N:\Mandats\ with /mandats/
-    let unixPath = windowsPath
+    const unixPath = windowsPath
         .replace(/^[A-Za-z]:\\Mandats\\/i, MANDATS_BASE_PATH + "/")
         .replace(/\\/g, "/")
 
@@ -377,7 +373,6 @@ async function importInvoiceFromFab(fabPath: string): Promise<boolean> {
         const projectId = project.id
 
         const invoiceNumber = generateInvoiceNumber(path.basename(fabPath))
-        const reference = fabData.internal["Code"] || ""
 
         // Check for existing invoice and delete if found (replace mode)
         const existingInvoice = await db

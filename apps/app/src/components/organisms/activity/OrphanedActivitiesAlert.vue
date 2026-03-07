@@ -77,7 +77,7 @@ const handleAddMember = async (item: OrphanedActivityGroup) => {
         )
         // Refresh the list
         await fetchOrphaned()
-    } catch (error) {
+    } catch {
         errorAlert(t("home.orphanedActivities.addedError"))
     } finally {
         addingMember.value = null

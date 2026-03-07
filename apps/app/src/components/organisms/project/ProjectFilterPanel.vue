@@ -151,7 +151,6 @@ import Checkbox from "@/components/atoms/Checkbox.vue"
 import Input from "@/components/atoms/Input.vue"
 import { debounce } from "@/utils/debounce"
 import { getYearRange } from "@/composables/utils/useDateRangePresets"
-import { useAuthStore } from "@/stores/auth"
 
 export type ProjectFilterModel = Omit<ProjectFilter, "page" | "limit" | "accountId">
 interface ProjectFilterProps {
@@ -161,7 +160,6 @@ interface ProjectFilterProps {
     showNameInput?: boolean
 }
 
-const { isRole } = useAuthStore()
 const { t } = useI18n()
 
 const statusOptions = computed(() => [

@@ -68,7 +68,10 @@ watch(
 
 // Emit changes
 const handleChange = (value: string | number | undefined) => {
-    emit("update:modelValue", typeof value === 'string' ? parseInt(value) : value as number | undefined)
+    emit(
+        "update:modelValue",
+        typeof value === "string" ? parseInt(value) : (value as number | undefined)
+    )
 }
 
 // Fetch companies for autocomplete

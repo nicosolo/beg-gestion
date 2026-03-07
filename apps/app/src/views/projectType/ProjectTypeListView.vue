@@ -79,7 +79,7 @@ const { put: updateProjectType, loading: updatingProjectType } = useUpdateProjec
 const { delete: deleteProjectTypeApi, loading: deletingProjectType } = useDeleteProjectType()
 
 // Alert composable
-const { successAlert, errorAlert } = useAlert()
+const { successAlert } = useAlert()
 
 // State
 const showDialog = ref(false)
@@ -158,7 +158,7 @@ const deleteProjectType = async () => {
         await fetchProjectTypes({}) // Reload data
         showDeleteDialog.value = false
         projectTypeToDelete.value = null
-    } catch (error) {
+    } catch {
         showDeleteDialog.value = false
     }
 }

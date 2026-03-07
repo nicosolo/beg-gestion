@@ -5,7 +5,10 @@
     "scripts": {
         "dev": "vite",
         "build": "vue-tsc && vite build",
-        "preview": "vite preview"
+        "preview": "vite preview",
+        "lint": "eslint . --fix",
+        "lint:check": "eslint .",
+        "type-check": "vue-tsc --build --force"
     },
     "dependencies": {
         "@beg/api": "workspace:*",

@@ -49,8 +49,8 @@ async function updateProjectCoordinates(row: CsvRow) {
         return
     }
 
-    let easting = row.easting
-    let northing = row.northing
+    const easting = row.easting
+    const northing = row.northing
     let latitude = null
     let longitude = null
 

@@ -57,10 +57,7 @@ export function getYearRange(
     return { from: firstDay, to: lastDay }
 }
 
-export function shiftDayRange(
-    currentFrom: Date | undefined,
-    direction: number
-): DateRangeInterval {
+export function shiftDayRange(currentFrom: Date | undefined, direction: number): DateRangeInterval {
     const base = currentFrom ? new Date(currentFrom) : new Date()
     base.setDate(base.getDate() + direction)
     return getTodayRange(base)

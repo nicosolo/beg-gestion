@@ -28,6 +28,16 @@ export const guessMimeType = (fileName: string) => {
             return "text/plain"
         case "png":
             return "image/png"
+        case "webp":
+            return "image/webp"
+        case "heic":
+            return "image/heic"
+        case "heif":
+            return "image/heif"
+        case "tiff":
+            return "image/tiff"
+        case "bmp":
+            return "image/bmp"
         case "jpg":
         case "jpeg":
             return "image/jpeg"
@@ -38,11 +48,10 @@ export const guessMimeType = (fileName: string) => {
     }
 }
 
-export const contentDispositionInline = (fileName: string) => {
-    // ASCII-only fallback for filename param (non-ASCII chars replaced)
+export const contentDispositionAttachment = (fileName: string) => {
     const asciiFallback = fileName.replace(/[^\x20-\x7E]/g, "_").replace(/"/g, '\\"')
     const encoded = encodeURIComponent(fileName)
-    return `inline; filename="${asciiFallback}"; filename*=UTF-8''${encoded}`
+    return `attachment; filename="${asciiFallback}"; filename*=UTF-8''${encoded}`
 }
 
 export const matchesStoredPath = (stored: string | null | undefined, requested: string) => {
@@ -59,5 +68,8 @@ export const matchesStoredPath = (stored: string | null | undefined, requested: 
 export const pathIsWithin = (candidate: string, baseDir: string) => {
     const normalizedCandidate = path.normalize(candidate)
     const normalizedBase = path.normalize(baseDir)
-    return normalizedCandidate === normalizedBase || normalizedCandidate.startsWith(`${normalizedBase}${path.sep}`)
+    return (
+        normalizedCandidate === normalizedBase ||
+        normalizedCandidate.startsWith(`${normalizedBase}${path.sep}`)
+    )
 }

@@ -92,7 +92,7 @@ const { put: updateActivityType, loading: updatingActivityType } = useUpdateActi
 const { delete: deleteActivityTypeApi, loading: deletingActivityType } = useDeleteActivityType()
 
 // Alert composable
-const { successAlert, errorAlert } = useAlert()
+const { successAlert } = useAlert()
 
 // State
 const showDialog = ref(false)
@@ -138,7 +138,13 @@ const closeDialog = () => {
 }
 
 // Save handler
-const handleSave = async (data: { name: string; code: string; billable: boolean; adminOnly: boolean; applyClasses: boolean }) => {
+const handleSave = async (data: {
+    name: string
+    code: string
+    billable: boolean
+    adminOnly: boolean
+    applyClasses: boolean
+}) => {
     if (selectedActivityType.value) {
         // Update existing activity type
         await updateActivityType({

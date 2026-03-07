@@ -104,7 +104,7 @@ import type { Client, ClientFilter } from "@beg/validations"
 
 const { t } = useI18n()
 const authStore = useAuthStore()
-const { successAlert, errorAlert } = useAlert()
+const { successAlert } = useAlert()
 
 // Check if user is admin
 const isAdmin = computed(() => authStore.isRole("admin"))

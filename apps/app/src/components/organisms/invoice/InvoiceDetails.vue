@@ -132,7 +132,7 @@
                                             class="w-20"
                                         />
                                         <span v-if="discountType === 'percentage'" class="text-sm"
-                                            >%</span
+                                        >%</span
                                         >
                                         <InputNumber
                                             v-if="discountType === 'fixed'"
@@ -147,7 +147,7 @@
                                 </td>
                                 <td class="px-4 py-2 text-right text-red-600">
                                     <span v-if="hasDiscount"
-                                        >- {{ formatCurrency(discountAmount) }}</span
+                                    >- {{ formatCurrency(discountAmount) }}</span
                                     >
                                 </td>
                             </tr>
@@ -305,7 +305,7 @@
                                             class="w-20"
                                         />
                                         <span v-if="packageType === 'percentage'" class="text-sm"
-                                            >%</span
+                                        >%</span
                                         >
                                         <InputNumber
                                             v-if="packageType === 'fixed'"
@@ -488,18 +488,18 @@
                 :initial-filter="
                     isNewInvoice
                         ? {
-                              projectId: invoice.projectId,
-                              includeBilled: false,
-                              includeUnbilled: true,
-                              fromDate: undefined,
-                              toDate: undefined,
-                          }
+                            projectId: invoice.projectId,
+                            includeBilled: false,
+                            includeUnbilled: true,
+                            fromDate: undefined,
+                            toDate: undefined,
+                        }
                         : {
-                              invoiceId: parseInt(invoice.id),
-                              limit: 30,
-                              fromDate: undefined,
-                              toDate: undefined,
-                          }
+                            invoiceId: parseInt(invoice.id),
+                            limit: 30,
+                            fromDate: undefined,
+                            toDate: undefined,
+                        }
                 "
                 :show-project-filter="false"
                 :hide-columns="['project', 'billed', 'disbursement', 'actions']"
@@ -515,7 +515,7 @@
 </template>
 
 <script setup lang="ts">
-import { type Invoice, type ActivityResponse } from "@beg/validations"
+import { type Invoice } from "@beg/validations"
 import AccordionPanel from "../../molecules/AccordionPanel.vue"
 import { useFormat } from "@/composables/utils/useFormat"
 import { computed, ref, onMounted, watch } from "vue"
@@ -544,23 +544,22 @@ const invoice = useVModel(props, "modelValue", emit)
 
 const colWidths = ["25%", "15%", "16%", "20%", "24%"]
 
-const { get: fetchRates, loading: fetchRatesLoading, data: ratesData } = useFetchRates()
-const { get: fetchVatRates, loading: fetchVatRatesLoading, data: vatRates } = useFetchVatRates()
+const { get: fetchRates, data: ratesData } = useFetchRates()
+const { get: fetchVatRates, data: vatRates } = useFetchVatRates()
 
 const allRatesForYears = computed(() => {
-    if (ratesData.value) {
-        // Group rates by year and class
-        const ratesByYear: Record<number, Record<string, number>> = {}
+    if (!ratesData.value) return {}
 
-        for (const rate of ratesData.value || []) {
-            if (!ratesByYear[rate.year]) {
-                ratesByYear[rate.year] = {}
-            }
-            ratesByYear[rate.year][rate.class] = rate.amount
+    const ratesByYear: Record<number, Record<string, number>> = {}
+
+    for (const rate of ratesData.value) {
+        if (!ratesByYear[rate.year]) {
+            ratesByYear[rate.year] = {}
         }
-
-        return ratesByYear
+        ratesByYear[rate.year][rate.class] = rate.amount
     }
+
+    return ratesByYear
 })
 const isNewInvoice = computed(() => !invoice.value.id || invoice.value.id === "")
 
@@ -580,8 +579,8 @@ const yearOptions = computed(() => [
 
 const vatYearOptions = computed(() => [
     { label: t("common.change"), value: null },
-    ...(vatRates.value
-        ?.sort((a, b) => b.year - a.year)
+    ...([...(vatRates.value || [])]
+        .sort((a, b) => b.year - a.year)
         .map((vr) => ({
             label: String(vr.year),
             value: vr.year,
@@ -785,7 +784,7 @@ const updateRemarks = (field: string, value: string) => {
     }
     const flatField = fieldMap[field]
     if (flatField) {
-        // @ts-ignore
+        // @ts-expect-error dynamic field access
         invoice.value[flatField] = value
     }
 }

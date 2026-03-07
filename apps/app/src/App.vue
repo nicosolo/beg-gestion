@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router"
 import { useI18n } from "vue-i18n"
-import { ref, computed, watch, onMounted, KeepAlive } from "vue"
+import { ref, computed, watch, onMounted } from "vue"
 import {
     Bars3Icon,
     XMarkIcon,

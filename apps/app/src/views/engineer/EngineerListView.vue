@@ -105,12 +105,12 @@ import { useRouter } from "vue-router"
 
 const { t } = useI18n()
 const authStore = useAuthStore()
-const { successAlert, errorAlert } = useAlert()
+const { successAlert } = useAlert()
 
 // Check if user is admin
 const isAdmin = computed(() => authStore.isRole("admin"))
 const router = useRouter()
-if (!isAdmin) {
+if (!isAdmin.value) {
     router.push({ name: "home" })
 }
 // Table columns

@@ -20,11 +20,8 @@
                         <Badge v-else-if="projectData?.ended" variant="muted" size="md">
                             {{ $t("projects.markAsEnded") }}
                         </Badge>
-                        <Badge
-                            v-else-if="projectData?.status === 'offer'"
-                            variant="info"
-                            size="md"
-                        >
+
+                        <Badge v-else-if="projectData?.status === 'offer'" variant="info" size="md">
                             {{ $t("projects.status.offer") }}
                         </Badge>
                         <Badge
@@ -200,7 +197,7 @@
                                     <div
                                         v-if="
                                             projectData.projectManagers &&
-                                            projectData.projectManagers.length > 0
+                                                projectData.projectManagers.length > 0
                                         "
                                         class="col-span-2"
                                     >
@@ -222,7 +219,7 @@
                                     <div
                                         v-if="
                                             projectData.projectMembers &&
-                                            projectData.projectMembers.length > 0
+                                                projectData.projectMembers.length > 0
                                         "
                                         class="col-span-2"
                                     >
@@ -273,7 +270,7 @@
                                         <div
                                             v-if="
                                                 projectData.latitude !== null &&
-                                                projectData.longitude !== null
+                                                    projectData.longitude !== null
                                             "
                                             class="mt-2 col-span-3"
                                         >
@@ -441,7 +438,7 @@ const showTimeEntryModal = ref(false)
 
 // API client
 const { get: fetchProject, loading, data: projectData } = useFetchProject()
-const { fetchProjectFolder, projectFolder, canOpen: canOpenFolder, openProjectFolder } = useOpenProjectFolder()
+const { fetchProjectFolder, canOpen: canOpenFolder, openProjectFolder } = useOpenProjectFolder()
 const { formatNumber, formatDate } = useFormat()
 const { isTauri } = useTauri()
 const mapLink = computed(() =>
@@ -535,5 +532,4 @@ const handleTimeEntrySaved = async () => {
     // Switch to activities tab to show the new entry
     activeTab.value = "activities"
 }
-
 </script>

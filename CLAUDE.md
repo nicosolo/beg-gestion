@@ -203,6 +203,15 @@ NEVER proactively create documentation files (\*.md) or README files. Only creat
 - For database operations, use: `docker compose exec api bun run db:[command]`
 - For build operations, use: `docker compose exec [api|app] bun run build`
 
+## Code Quality
+
+Lint and type-check run on the host (not in Docker):
+
+- `bun run lint:app` — lint & fix frontend
+- `bun run lint:api` — lint & fix API
+- `bun run lint:check:app` / `bun run lint:check:api` — lint without fix
+- `bun run type-check:app` / `bun run type-check:api` — type-check
+
 ## Tasks
 
 To create tasks add the name of the feature as the file name and the date for the folder @tasks/{YYYY-MM-DD}/{feature_name}.md

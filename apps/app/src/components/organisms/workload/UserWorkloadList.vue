@@ -64,7 +64,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1"
-                            >Charge (%)</label
+                        >Charge (%)</label
                         >
                         <input
                             type="number"
@@ -82,8 +82,8 @@
                             @click="createBulkWorkloads"
                             :disabled="
                                 loadingBulkCreate ||
-                                !bulkCreateData.year ||
-                                !bulkCreateData.workload
+                                    !bulkCreateData.year ||
+                                    !bulkCreateData.workload
                             "
                         >
                             <LoadingSpinner
@@ -121,7 +121,7 @@
                 <div class="flex items-end gap-3">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1"
-                            >Nouvelle charge (%)</label
+                        >Nouvelle charge (%)</label
                         >
                         <input
                             type="number"
@@ -371,9 +371,9 @@ const props = defineProps<{
     userId: number
 }>()
 
-const { get: getWorkloads, data: workloadsData, loading } = useFetchWorkloadList()
+const { get: getWorkloads, data: workloadsData } = useFetchWorkloadList()
 const { put: updateWorkload, loading: loadingUpdate } = useUpdateWorkload()
-const { delete: removeWorkload, loading: loadingDelete } = useDeleteWorkload()
+const { delete: removeWorkload } = useDeleteWorkload()
 const { post: bulkCreateWorkloads, loading: loadingBulkCreate } = useBulkCreateWorkloads()
 
 const workloads = ref<WorkloadResponse[]>([])

@@ -18,8 +18,8 @@
                     {{ $t("projects.status.draft") }}
                 </Badge>
                 <span class="text-md font-medium mr-2"
-                    >{{ item.projectNumber
-                    }}{{ item.subProjectName ? ` ${item.subProjectName}` : "" }}</span
+                >{{ item.projectNumber
+                }}{{ item.subProjectName ? ` ${item.subProjectName}` : "" }}</span
                 >
                 <Badge v-if="item.ended" variant="muted" class="mr-2">
                     {{ $t("projects.ended") }}

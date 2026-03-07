@@ -34,7 +34,7 @@ export const useAppSettingsStore = defineStore("appSettings", () => {
 
         try {
             const settings = {
-                basePath: basePath.value
+                basePath: basePath.value,
             }
             localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
         } catch (error) {
@@ -81,6 +81,6 @@ export const useAppSettingsStore = defineStore("appSettings", () => {
         // Actions
         setBasePath,
         resetToDefault,
-        getAbsolutePath
+        getAbsolutePath,
     }
 })

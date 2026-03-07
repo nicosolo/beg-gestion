@@ -88,7 +88,7 @@ const handleProjectSelect = async (projectId?: number) => {
 
     try {
         await router.push({ name: "project-view", params: { id: projectId } })
-    } catch (_error) {
+    } catch {
         // Ignore navigation duplication or aborted navigations
     } finally {
         selectedProjectId.value = undefined

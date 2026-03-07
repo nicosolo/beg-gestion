@@ -26,8 +26,7 @@ interface FormFieldProps {
     required?: boolean
 }
 
-const { label, modelValue, type, placeholder, disabled, labelClassName, required } =
-    defineProps<FormFieldProps>()
+const { label, labelClassName, required } = defineProps<FormFieldProps>()
 
 defineEmits<{
     (e: "update:modelValue", value: string): void

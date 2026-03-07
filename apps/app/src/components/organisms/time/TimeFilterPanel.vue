@@ -201,7 +201,7 @@ const emit = defineEmits<{
 const localFilter = ref<ActivityFilter>({ ...filter })
 
 // Fetch data for dropdowns
-const { get: fetchUsers, loading: loadingUsers, data: usersData } = useFetchUsers()
+const { get: fetchUsers, data: usersData } = useFetchUsers()
 
 const userOptions = ref<Array<{ label: string; value: number }>>([])
 

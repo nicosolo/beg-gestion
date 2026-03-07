@@ -83,7 +83,7 @@ const { put: updateRate, loading: updatingRate } = useUpdateRate()
 const { delete: deleteRate, loading: deletingRate } = useDeleteRate()
 
 // Alert composable
-const { successAlert, errorAlert } = useAlert()
+const { successAlert } = useAlert()
 
 // State
 const showDialog = ref(false)
@@ -164,7 +164,7 @@ const deleteTariff = async () => {
         await fetchRates({}) // Reload data
         showDeleteDialog.value = false
         tariffToDelete.value = null
-    } catch (error) {
+    } catch {
         showDeleteDialog.value = false
     }
 }

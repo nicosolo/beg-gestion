@@ -14,7 +14,12 @@ import {
 import { invoiceRepository } from "../db/repositories/invoice.repository"
 import { authMiddleware } from "@src/tools/auth-middleware"
 import { responseValidator } from "@src/tools/response-validator"
-import { throwNotFound, throwForbidden, throwValidationError, parseZodError } from "@src/tools/error-handler"
+import {
+    throwNotFound,
+    throwForbidden,
+    throwValidationError,
+    parseZodError,
+} from "@src/tools/error-handler"
 import type { Variables } from "@src/types/global"
 import { roleMiddleware, hasRole } from "@src/tools/role-middleware"
 import { z, ZodError } from "zod"
@@ -145,37 +150,42 @@ const hasUploadedFiles = (files: UploadedInvoiceFiles) => {
     )
 }
 
+type CollectionKey = "offers" | "adjudications" | "situations" | "documents"
+type InvoiceData = Record<string, unknown>
+
 const persistUploadedFiles = async (
     invoiceData: InvoiceCreateInput | InvoiceUpdateInput,
     files: UploadedInvoiceFiles
 ) => {
     if (!hasUploadedFiles(files)) return
 
+    const data = invoiceData as InvoiceData
     const folderId = crypto.randomUUID()
 
     if (files.invoiceDocument) {
-        const dbPath = await storeFile(files.invoiceDocument, "invoice", folderId)
-        ;(invoiceData as any).invoiceDocument = dbPath
+        data.invoiceDocument = await storeFile(files.invoiceDocument, "invoice", folderId)
     }
 
-    const collections = [
-        { key: "offers" as const, filesMap: files.offers },
-        { key: "adjudications" as const, filesMap: files.adjudications },
-        { key: "situations" as const, filesMap: files.situations },
-        { key: "documents" as const, filesMap: files.documents },
-    ] as const
+    const collections: { key: CollectionKey; filesMap: Record<number, File> }[] = [
+        { key: "offers", filesMap: files.offers },
+        { key: "adjudications", filesMap: files.adjudications },
+        { key: "situations", filesMap: files.situations },
+        { key: "documents", filesMap: files.documents },
+    ]
 
     for (const { key, filesMap } of collections) {
-        const items = Array.isArray(invoiceData[key]) ? [...invoiceData[key]!] : []
+        const source = data[key]
+        const items = Array.isArray(source) ? [...source] : []
         for (const [indexKey, file] of Object.entries(filesMap)) {
             const index = Number(indexKey)
             if (!file) continue
-            const existing = items[index] ? { ...items[index] } : ({} as any)
-            const dbPath = await storeFile(file, "invoice", folderId)
-            existing.file = dbPath
+            const existing: Record<string, unknown> = items[index]
+                ? { ...(items[index] as Record<string, unknown>) }
+                : {}
+            existing.file = await storeFile(file, "invoice", folderId)
             items[index] = existing
         }
-        ;(invoiceData as any)[key] = items
+        data[key] = items
     }
 }
 
@@ -256,7 +266,6 @@ export const invoiceRoutes = new Hono<{ Variables: Variables }>()
             if (!matchedFile) {
                 throwNotFound("Invoice document")
             }
-
             return serveFile(matchedFile, fileBaseName(normalizedRequested))
         }
     )

@@ -74,7 +74,7 @@
                     </div>
                     <div>
                         <Label
-                            >{{ $t("time.columns.activityType") }}
+                        >{{ $t("time.columns.activityType") }}
                             <span class="text-red-500">*</span></Label
                         >
                         <ActivityTypeSelect
@@ -90,7 +90,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <div>
                         <Label for="duration"
-                            >{{ $t("time.columns.duration") }}
+                        >{{ $t("time.columns.duration") }}
                             <span class="text-red-500">*</span></Label
                         >
                         <InputNumber

@@ -30,7 +30,10 @@
 
                             <!-- Directory suggestions dropdown -->
                             <div
-                                v-if="showDirectorySuggestions && (directoryItems.length > 0 || isLoadingDirectories)"
+                                v-if="
+                                    showDirectorySuggestions &&
+                                        (directoryItems.length > 0 || isLoadingDirectories)
+                                "
                                 class="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto"
                             >
                                 <!-- Loading state -->
@@ -49,7 +52,7 @@
                                     @mouseenter="focusedSuggestionIndex = index"
                                     :class="[
                                         'w-full px-3 py-2 text-left hover:bg-gray-100 focus:outline-none',
-                                        focusedSuggestionIndex === index ? 'bg-gray-100' : ''
+                                        focusedSuggestionIndex === index ? 'bg-gray-100' : '',
                                     ]"
                                 >
                                     <div class="flex items-center">
@@ -78,7 +81,7 @@
                                 'px-3 py-2 rounded-md text-sm',
                                 testResult.success
                                     ? 'bg-green-50 text-green-800 border border-green-200'
-                                    : 'bg-red-50 text-red-800 border border-red-200'
+                                    : 'bg-red-50 text-red-800 border border-red-200',
                             ]"
                         >
                             {{ testResult.message }}
@@ -123,7 +126,7 @@ import Button from "@/components/atoms/Button.vue"
 import {
     Cog6ToothIcon as IconSettings,
     FolderIcon as IconFolder,
-    CheckIcon as IconCheck
+    CheckIcon as IconCheck,
 } from "@heroicons/vue/24/outline"
 import { ArrowPathIcon as Spinner } from "@heroicons/vue/24/solid"
 
@@ -164,24 +167,24 @@ const fetchDirectories = async (searchPath: string) => {
         let pathToList = searchPath
 
         // If typing a new segment, list parent directory
-        if (searchPath && !searchPath.endsWith('/') && !searchPath.endsWith('\\')) {
-            const lastSlash = Math.max(searchPath.lastIndexOf('/'), searchPath.lastIndexOf('\\'))
+        if (searchPath && !searchPath.endsWith("/") && !searchPath.endsWith("\\")) {
+            const lastSlash = Math.max(searchPath.lastIndexOf("/"), searchPath.lastIndexOf("\\"))
             if (lastSlash > 0) {
                 pathToList = searchPath.substring(0, lastSlash + 1)
             }
         }
 
         const directories = await invoke<string[]>("list_directories", {
-            path: pathToList
+            path: pathToList,
         })
 
         // Filter directories based on search if typing beyond parent path
         const search = searchPath.toLowerCase()
-        const filtered = directories.filter(dir =>
-            dir.toLowerCase().includes(search) || search.includes(dir.toLowerCase())
+        const filtered = directories.filter(
+            (dir) => dir.toLowerCase().includes(search) || search.includes(dir.toLowerCase())
         )
 
-        directoryItems.value = filtered.map(path => ({ path }))
+        directoryItems.value = filtered.map((path) => ({ path }))
     } catch (error) {
         console.error("Failed to fetch directories:", error)
         directoryItems.value = []
@@ -294,7 +297,7 @@ const testPath = async () => {
 
         // Check if the path actually exists using Tauri command
         const pathExists = await invoke<boolean>("check_path_exists", {
-            path: path
+            path: path,
         })
 
         if (pathExists) {

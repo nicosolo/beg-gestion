@@ -9,7 +9,7 @@
                 <!-- Prénom -->
                 <div>
                     <label for="firstname" class="block text-sm font-medium text-gray-700 mb-1"
-                        >Prénom</label
+                    >Prénom</label
                     >
                     <input
                         type="text"
@@ -23,7 +23,7 @@
                 <!-- Nom -->
                 <div>
                     <label for="lastname" class="block text-sm font-medium text-gray-700 mb-1"
-                        >Nom</label
+                    >Nom</label
                     >
                     <input
                         type="text"
@@ -37,7 +37,7 @@
                 <!-- Email -->
                 <div>
                     <label for="email" class="block text-sm font-medium text-gray-700 mb-1"
-                        >Email</label
+                    >Email</label
                     >
                     <input
                         type="email"
@@ -51,7 +51,7 @@
                 <!-- Initiales -->
                 <div>
                     <label for="initials" class="block text-sm font-medium text-gray-700 mb-1"
-                        >Initiales</label
+                    >Initiales</label
                     >
                     <input
                         type="text"
@@ -65,7 +65,7 @@
                 <!-- Rôle -->
                 <div>
                     <label for="role" class="block text-sm font-medium text-gray-700 mb-1"
-                        >Rôle</label
+                    >Rôle</label
                     >
                     <select
                         id="role"
@@ -85,7 +85,7 @@
                 <!-- Mot de passe -->
                 <div>
                     <label for="password" class="block text-sm font-medium text-gray-700 mb-1"
-                        >Mot de passe</label
+                    >Mot de passe</label
                     >
                     <input
                         type="password"
@@ -105,7 +105,7 @@
                     <label
                         for="collaboratorType"
                         class="block text-sm font-medium text-gray-700 mb-1"
-                        >Type de collaborateur</label
+                    >Type de collaborateur</label
                     >
                     <select
                         id="collaboratorType"
@@ -219,7 +219,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from "vue"
+import { ref, computed, onMounted } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { useI18n } from "vue-i18n"
 import Button from "@/components/atoms/Button.vue"
@@ -353,9 +353,7 @@ const initializeDefaultClasses = () => {
 
         if (!activityClasses.value[activity.id]) {
             const presetClass =
-                presetKey && activity.classPresets
-                    ? activity.classPresets[presetKey]
-                    : null
+                presetKey && activity.classPresets ? activity.classPresets[presetKey] : null
             activityClasses.value[activity.id] = (presetClass ?? "C") as ClassSchema
         }
     })

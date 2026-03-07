@@ -309,7 +309,6 @@ import { ref, computed, onMounted, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { useI18n } from "vue-i18n"
 import { useAlert } from "@/composables/utils/useAlert"
-import { useAuthStore } from "@/stores/auth"
 import Button from "@/components/atoms/Button.vue"
 import FormField from "@/components/molecules/FormField.vue"
 import FormLayout from "@/components/templates/FormLayout.vue"
@@ -409,10 +408,6 @@ const SUB_PROJECT_NAMES = [
 const route = useRoute()
 const router = useRouter()
 const { successAlert, errorAlert } = useAlert()
-const authStore = useAuthStore()
-// Get current user
-const user = computed(() => authStore.user)
-
 // Determine if we're creating a new project or editing an existing one
 const projectId = computed(() => (route.params.id ? parseInt(route.params.id as string) : null))
 const isNewProject = computed(() => !projectId.value)

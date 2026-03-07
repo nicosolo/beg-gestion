@@ -118,13 +118,13 @@ import LoadingOverlay from "@/components/atoms/LoadingOverlay.vue"
 import LocationEditModal from "@/components/organisms/location/LocationEditModal.vue"
 import { useFetchLocationList, useDeleteLocation } from "@/composables/api/useLocation"
 import { useAuthStore } from "@/stores/auth"
-import { COUNTRIES, SWISS_CANTONS, type Location, type LocationFilter } from "@beg/validations"
+import { SWISS_CANTONS, type Location, type LocationFilter } from "@beg/validations"
 import Card from "@/components/atoms/Card.vue"
 import { useAlert } from "@/composables/utils/useAlert"
 
 const { t } = useI18n()
 const authStore = useAuthStore()
-const { successAlert, errorAlert } = useAlert()
+const { successAlert } = useAlert()
 // Check if user is admin
 const isAdmin = computed(() => authStore.isRole("admin"))
 

@@ -74,7 +74,6 @@
 
 <script setup lang="ts">
 import LoadingSpinner from "@/components/atoms/LoadingSpinner.vue"
-import Card from "@/components/atoms/Card.vue"
 
 interface FormLayoutProps {
     title: string

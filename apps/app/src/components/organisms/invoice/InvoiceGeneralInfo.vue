@@ -109,7 +109,7 @@
                         <DocumentUploadField
                             :required="
                                 invoice.billingMode === 'accordingToInvoice' &&
-                                !invoice.invoiceDocument
+                                    !invoice.invoiceDocument
                             "
                             :file-name="invoice.invoiceDocument"
                             :display-name="invoiceDocumentDisplayName"
@@ -245,7 +245,6 @@
 <script setup lang="ts">
 import { type Invoice } from "@beg/validations"
 import { computed, watch } from "vue"
-import { useI18n } from "vue-i18n"
 import Input from "@/components/atoms/Input.vue"
 import Select from "@/components/atoms/Select.vue"
 import Textarea from "@/components/atoms/Textarea.vue"
@@ -277,7 +276,6 @@ const emit = defineEmits<{
     "invoice-document-change": [value: File | null]
 }>()
 
-const { t } = useI18n()
 const { buildFileUrl, downloadInvoiceFile, extractFileName } = useInvoiceDocuments()
 
 const handleInvoiceDocDrop = (files: ResolvedFile[]) => {

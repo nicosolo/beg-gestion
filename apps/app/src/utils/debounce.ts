@@ -1,7 +1,7 @@
 /**
  * Creates a debounced version of a function that delays invoking the function
  * until after `delay` milliseconds have elapsed since the last time it was invoked.
- * 
+ *
  * @param fn The function to debounce
  * @param delay The number of milliseconds to delay
  * @returns A debounced version of the function
@@ -27,7 +27,7 @@ export function debounce<T extends (...args: any[]) => any>(
 /**
  * Creates a debounced version of an async function that delays invoking the function
  * until after `delay` milliseconds have elapsed since the last time it was invoked.
- * 
+ *
  * @param fn The async function to debounce
  * @param delay The number of milliseconds to delay
  * @returns A debounced version of the async function

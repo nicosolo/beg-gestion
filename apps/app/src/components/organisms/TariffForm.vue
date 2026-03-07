@@ -64,7 +64,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue"
 import Button from "@/components/atoms/Button.vue"
-import LoadingSpinner from "@/components/atoms/LoadingSpinner.vue"
 import type { RateClassSchema, ClassSchema } from "@beg/validations"
 
 interface Props {

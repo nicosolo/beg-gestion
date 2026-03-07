@@ -114,7 +114,7 @@ import { useAuthStore } from "@/stores/auth"
 import { useExcelExport } from "@/composables/utils/useExcelExport"
 
 // Initialize i18n
-const { t } = useI18n()
+useI18n()
 
 // Excel export
 const { exportToExcel } = useExcelExport()
@@ -208,14 +208,14 @@ const nextPage = () => {
 }
 
 // Watch for page size changes
-watch(pageSize, (newValue) => {
+watch(pageSize, () => {
     currentPage.value = 1
     loadProjects()
 })
 // Watch for page size changes
 watch(
     filter,
-    (newValue) => {
+    () => {
         currentPage.value = 1
         loadProjects()
     },

@@ -33,9 +33,9 @@
             <div
                 v-if="
                     mode === 'async' &&
-                    minSearchLength &&
-                    searchTerm.length > 0 &&
-                    searchTerm.length < minSearchLength
+                        minSearchLength &&
+                        searchTerm.length > 0 &&
+                        searchTerm.length < minSearchLength
                 "
                 class="px-3 py-2 text-gray-500"
             >

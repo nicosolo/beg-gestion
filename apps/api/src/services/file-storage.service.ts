@@ -5,7 +5,7 @@ import { Readable } from "node:stream"
 import { FILE_STORAGE, PROJECT_BASE_DIR } from "@src/config"
 import {
     guessMimeType,
-    contentDispositionInline,
+    contentDispositionAttachment,
     normalizeStoredPath,
     fileBaseName,
 } from "@src/tools/file-utils"
@@ -118,11 +118,10 @@ export async function serveFile(dbPath: string, displayName?: string): Promise<R
     const fileName = displayName || fileBaseName(dbPath)
     const nodeStream = createReadStream(absolutePath)
     const webStream = Readable.toWeb(nodeStream) as unknown as ReadableStream
-
     const headers = new Headers({
         "Content-Type": guessMimeType(fileName),
         "Content-Length": fileStats.size.toString(),
-        "Content-Disposition": contentDispositionInline(fileName),
+        "Content-Disposition": contentDispositionAttachment(fileName),
     })
 
     return new Response(webStream, { headers })

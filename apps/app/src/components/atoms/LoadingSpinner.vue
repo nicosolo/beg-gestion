@@ -23,27 +23,27 @@
 
 <script setup lang="ts">
 interface Props {
-    size?: 'sm' | 'md' | 'lg' | 'xl'
-    color?: 'gray' | 'blue' | 'white' | 'indigo'
+    size?: "sm" | "md" | "lg" | "xl"
+    color?: "gray" | "blue" | "white" | "indigo"
     className?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
-    size: 'md',
-    color: 'gray'
+    size: "md",
+    color: "gray",
 })
 
 const sizeClass = {
-    sm: 'h-4 w-4',
-    md: 'h-5 w-5',
-    lg: 'h-6 w-6',
-    xl: 'h-8 w-8'
+    sm: "h-4 w-4",
+    md: "h-5 w-5",
+    lg: "h-6 w-6",
+    xl: "h-8 w-8",
 }[props.size]
 
 const colorClass = {
-    gray: 'text-gray-400',
-    blue: 'text-blue-500',
-    white: 'text-white',
-    indigo: 'text-indigo-600'
+    gray: "text-gray-400",
+    blue: "text-blue-500",
+    white: "text-white",
+    indigo: "text-indigo-600",
 }[props.color]
 </script>

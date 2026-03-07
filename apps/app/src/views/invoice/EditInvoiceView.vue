@@ -50,12 +50,24 @@
                 </div>
             </div>
             <!-- Locked invoice banner -->
-            <div v-if="isLocked && !isNewInvoice" class="bg-yellow-50 border border-yellow-300 rounded-md p-3 mb-4 flex items-center justify-between">
+            <div
+                v-if="isLocked && !isNewInvoice"
+                class="bg-yellow-50 border border-yellow-300 rounded-md p-3 mb-4 flex items-center justify-between"
+            >
                 <span class="text-sm text-yellow-800 font-medium">
-                    Cette facture est verrouillée ({{ invoice?.status === 'sent' ? 'envoyée' : 'visée' }}) et ne peut pas être modifiée.
+                    Cette facture est verrouillée ({{
+                        invoice?.status === "sent" ? "envoyée" : "visée"
+                    }}) et ne peut pas être modifiée.
                 </span>
-                <label v-if="isRole('admin')" class="flex items-center gap-2 text-sm text-yellow-800 cursor-pointer">
-                    <input type="checkbox" v-model="adminUnlock" class="h-4 w-4 rounded border-gray-300 text-yellow-600 focus:ring-yellow-500" />
+                <label
+                    v-if="isRole('admin')"
+                    class="flex items-center gap-2 text-sm text-yellow-800 cursor-pointer"
+                >
+                    <input
+                        type="checkbox"
+                        v-model="adminUnlock"
+                        class="h-4 w-4 rounded border-gray-300 text-yellow-600 focus:ring-yellow-500"
+                    />
                     Déverrouiller (admin)
                 </label>
             </div>
@@ -135,7 +147,6 @@ import { useAlert } from "@/composables/utils/useAlert"
 import { useAuthStore } from "@/stores/auth"
 import { parseApiError, ApiError } from "@/utils/api-error"
 import { useUnsavedChanges } from "@/composables/utils/useUnsavedChanges"
-import { useAppSettingsStore } from "@/stores/appSettings"
 
 const route = useRoute()
 const router = useRouter()
@@ -154,8 +165,12 @@ const { delete: deleteInvoice, loading: deleteLoading } = useDeleteInvoice()
 const { get: fetchProject, loading: fetchProjectLoading, data: projectResponse } = useFetchProject()
 
 const { get: fetchUnbilledActivities, loading: fetchUnbilledLoading } = useFetchUnbilledActivities()
-const { fetchProjectFolder, projectFolder, canOpen: canOpenFolder, absolutePath: projectFolderPath, openProjectFolder } = useOpenProjectFolder()
-const appSettingsStore = useAppSettingsStore()
+const {
+    fetchProjectFolder,
+    canOpen: canOpenFolder,
+    absolutePath: projectFolderPath,
+    openProjectFolder,
+} = useOpenProjectFolder()
 const authStore = useAuthStore()
 const { isRole } = authStore
 
@@ -610,7 +625,9 @@ const handleDuplicate = () => {
     })
 
     if (hasUnsavedChanges.value) {
-        const answer = window.confirm("Vous avez des modifications non enregistrées. Voulez-vous vraiment dupliquer ?")
+        const answer = window.confirm(
+            "Vous avez des modifications non enregistrées. Voulez-vous vraiment dupliquer ?"
+        )
         if (!answer) return
     }
     isUpdatingFromApi.value = true

@@ -90,7 +90,7 @@
                         class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                         <option v-for="cls in rateClasses" :key="cls ?? 'none'" :value="cls">
-                            {{ cls ?? '—' }}
+                            {{ cls ?? "—" }}
                         </option>
                     </select>
                 </div>
@@ -107,9 +107,7 @@
                     type="checkbox"
                     class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
-                <span class="ml-2 text-sm font-medium text-gray-700">
-                    Appliquer les classes
-                </span>
+                <span class="ml-2 text-sm font-medium text-gray-700"> Appliquer les classes </span>
             </label>
             <p class="text-xs text-gray-500 mt-1">
                 Attribue les classes aux collaborateurs selon leurs types

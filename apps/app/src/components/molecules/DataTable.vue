@@ -19,10 +19,7 @@
                     ]"
                     @click="handleSort(column)"
                 >
-                    <TruncateWithTooltip
-                        :content="column.label"
-                        placement="bottom"
-                    >
+                    <TruncateWithTooltip :content="column.label" placement="bottom">
                         <div class="flex items-center space-x-2 min-w-0">
                             <span class="truncate">{{ column.label }}</span>
                             <span v-if="column.sortKey" class="ml-auto flex-shrink-0">
@@ -239,9 +236,7 @@ const breakpointValues: Record<string, string> = {
     lg: "1024px",
     xl: "1280px",
 }
-const isDesktop = useMediaQuery(
-    `(min-width: ${breakpointValues[mobileBreakpoint]})`
-)
+const isDesktop = useMediaQuery(`(min-width: ${breakpointValues[mobileBreakpoint]})`)
 
 // Internal selection state
 const internalSelection = ref<Set<string | number>>(new Set())

@@ -278,7 +278,7 @@ const formatDateValue = (value: InvoiceDocumentEntry["date"]) => {
     if (!(value instanceof Date)) {
         try {
             value = new Date(value)
-        } catch (e) {}
+        } catch {}
     }
     if (!(value instanceof Date)) {
         return value

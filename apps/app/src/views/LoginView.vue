@@ -41,7 +41,7 @@ async function handleLogin() {
 }
 
 onMounted(() => {
-    document.title = 'BEG - Connexion'
+    document.title = "BEG - Connexion"
 })
 </script>
 

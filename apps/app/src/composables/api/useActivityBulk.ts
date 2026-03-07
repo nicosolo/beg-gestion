@@ -8,7 +8,7 @@ const activityBulkUpdateSchema = z.object({
     updates: z.object({
         billed: z.boolean().optional(),
         disbursement: z.boolean().optional(),
-    })
+    }),
 })
 
 export function useBulkUpdateActivities() {

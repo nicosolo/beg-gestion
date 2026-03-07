@@ -17,7 +17,6 @@ import {
     type ProjectResponse,
     type ProjectCreateInput,
     type ProjectUpdateInput,
-    ErrorCode,
 } from "@beg/validations"
 
 export const projectRepository = {
@@ -426,7 +425,7 @@ export const projectRepository = {
     },
 
     findById: async (id: number): Promise<ProjectResponse | null> => {
-        let query = db
+        const query = db
             .select({
                 id: projects.id,
                 projectNumber: projects.projectNumber,
