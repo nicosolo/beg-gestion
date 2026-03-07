@@ -1,15 +1,9 @@
 <template>
     <LoadingOverlay :loading="loading">
         <div class="container mx-auto">
-            <div
-                class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6"
-            >
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
                 <h1 class="text-2xl font-bold">Types de mandat</h1>
-                <Button
-                    variant="primary"
-                    @click="openCreateDialog"
-                    class="w-full sm:w-auto"
-                >
+                <Button variant="primary" @click="openCreateDialog" class="w-full sm:w-auto">
                     Nouveau type
                 </Button>
             </div>
@@ -100,9 +94,9 @@ const dialogTitle = computed(() =>
 )
 
 const columns = [
-    { key: "id", label: "ID", width: "20%" },
-    { key: "name", label: "Type de mandat", width: "60%" },
-    { key: "actions", label: "Actions", width: "20%", actions: true },
+    { key: "id", label: "ID", size: "id" as const },
+    { key: "name", label: "Type de mandat", size: "flex" as const },
+    { key: "actions", label: "Actions", size: "action" as const, actions: true },
 ]
 
 // Load project types on mount

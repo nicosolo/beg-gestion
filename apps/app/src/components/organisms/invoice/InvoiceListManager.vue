@@ -30,6 +30,7 @@
                 :loading="loading"
                 :sort="currentSort"
                 @sort-change="onSortChange"
+                mobile-breakpoint="xl"
             >
                 <template #cell:invoiceNumber="{ item }">
                     {{ item.invoiceNumber || item.reference || "-" }}

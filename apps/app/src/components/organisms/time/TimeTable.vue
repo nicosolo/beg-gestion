@@ -74,6 +74,7 @@
             v-model="selectedRows"
             @selection-change="handleSelectionChange"
             :selectable="!disableSelection"
+            mobile-breakpoint="xl"
         >
             <template #cell:user="{ item }">
                 {{ item.user ? `${item.user.initials}` : "-" }}

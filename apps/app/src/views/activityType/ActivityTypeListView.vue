@@ -13,6 +13,7 @@
                 :columns="columns"
                 item-key="id"
                 empty-message="Aucun type d'activité trouvé"
+                mobile-breakpoint="lg"
             >
                 <template #cell:billable="{ item }">
                     <span :class="item.billable ? 'text-green-600' : 'text-red-600'">
@@ -106,12 +107,12 @@ const dialogTitle = computed(() =>
 )
 
 const columns = [
-    { key: "id", label: "ID", width: "10%" },
-    { key: "name", label: "Nom", width: "25%" },
-    { key: "code", label: "Code", width: "15%" },
-    { key: "billable", label: "Facturable", width: "15%" },
-    { key: "adminOnly", label: "Admin", width: "15%" },
-    { key: "actions", label: "Actions", width: "20%", actions: true },
+    { key: "id", label: "ID", size: "id" as const },
+    { key: "name", label: "Nom", size: "flex" as const },
+    { key: "code", label: "Code", size: "sm" as const },
+    { key: "billable", label: "Facturable", size: "sm" as const },
+    { key: "adminOnly", label: "Admin", size: "sm" as const },
+    { key: "actions", label: "Actions", size: "action" as const, actions: true },
 ]
 
 // Load activity types on mount

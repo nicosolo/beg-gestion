@@ -6,7 +6,8 @@
         <div v-else>
             <!-- Header row (visible only on desktop) -->
             <div
-                class="hidden md:grid border-b border-gray-200 sticky top-12 bg-white z-[5]"
+                v-if="isDesktop"
+                class="grid border-b border-gray-200 sticky top-12 bg-white z-[5]"
                 :style="{ gridTemplateColumns }"
             >
                 <div
@@ -33,7 +34,7 @@
             </div>
 
             <!-- Data rows -->
-            <div class="divide-y divide-gray-200 md:divide-y md:divide-gray-200">
+            <div class="divide-y divide-gray-200">
                 <component
                     v-for="(item, index) in items"
                     :key="getItemKey(item, index)"
@@ -51,7 +52,7 @@
                     @click="handleRowClick(item, index, $event)"
                     @mousedown="handleMouseDown($event)"
                 >
-                    <div class="flex flex-col md:hidden shadow-sm">
+                    <div v-if="!isDesktop" class="flex flex-col shadow-sm">
                         <!-- Mobile view keeps existing layout -->
                         <div
                             v-for="column in columns"
@@ -83,7 +84,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="hidden md:grid" :style="{ gridTemplateColumns }">
+                    <div v-if="isDesktop" class="grid" :style="{ gridTemplateColumns }">
                         <div
                             v-for="column in columns"
                             :key="column.key"
@@ -109,7 +110,7 @@
             <!-- Footer row with totals -->
             <div v-if="showFooter" class="border-t-3 border-gray-300 bg-gray-50">
                 <!-- Mobile footer -->
-                <div class="flex flex-col md:hidden">
+                <div v-if="!isDesktop" class="flex flex-col">
                     <div
                         v-for="column in columns"
                         :key="`total-mobile-${column.key}`"
@@ -126,7 +127,7 @@
                     </div>
                 </div>
                 <!-- Desktop footer with grid -->
-                <div class="hidden md:grid" :style="{ gridTemplateColumns }">
+                <div v-if="isDesktop" class="grid" :style="{ gridTemplateColumns }">
                     <div
                         v-for="column in columns"
                         :key="`total-${column.key}`"
@@ -143,6 +144,7 @@
 <script setup lang="ts" generic="T = unknown">
 import { computed, ref, watch } from "vue"
 import { RouterLink } from "vue-router"
+import { useMediaQuery } from "@vueuse/core"
 import SortIcon from "../atoms/SortIcon.vue"
 import TruncateWithTooltip from "../atoms/TruncateWithTooltip.vue"
 import type { RouteLocationRaw } from "vue-router"
@@ -208,6 +210,7 @@ interface Props<T = unknown> {
     selectable?: boolean
     modelValue?: Set<string | number>
     rowLink?: (item: T) => RouteLocationRaw | undefined
+    mobileBreakpoint?: "sm" | "md" | "lg" | "xl"
 }
 const emit = defineEmits<{
     (e: "sort-change", sort: { key: string; direction: "asc" | "desc" }): void
@@ -227,7 +230,18 @@ const {
     selectable = false,
     modelValue,
     rowLink,
+    mobileBreakpoint = "md",
 } = defineProps<Props<T>>()
+
+const breakpointValues: Record<string, string> = {
+    sm: "640px",
+    md: "768px",
+    lg: "1024px",
+    xl: "1280px",
+}
+const isDesktop = useMediaQuery(
+    `(min-width: ${breakpointValues[mobileBreakpoint]})`
+)
 
 // Internal selection state
 const internalSelection = ref<Set<string | number>>(new Set())

@@ -7,6 +7,7 @@
         @sort-change="handleSortChange"
         :emptyMessage="$t('projects.noProjectsFound')"
         :row-class="getRowClass"
+        mobile-breakpoint="lg"
     >
         <template #cell:name="{ item }">
             <div>

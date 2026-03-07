@@ -1,15 +1,9 @@
 <template>
     <LoadingOverlay :loading="loading">
         <div class="container mx-auto">
-            <div
-                class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6"
-            >
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
                 <h1 class="text-2xl font-bold">Liste des tarifs</h1>
-                <Button
-                    variant="primary"
-                    @click="openCreateDialog"
-                    class="w-full sm:w-auto"
-                >
+                <Button variant="primary" @click="openCreateDialog" class="w-full sm:w-auto">
                     Nouveau tarif
                 </Button>
             </div>
@@ -68,7 +62,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue"
 import Button from "@/components/atoms/Button.vue"
-import DataTable from "@/components/molecules/DataTable.vue"
+import DataTable, { type Column } from "@/components/molecules/DataTable.vue"
 import Dialog from "@/components/molecules/Dialog.vue"
 import ConfirmDialog from "@/components/molecules/ConfirmDialog.vue"
 import LoadingOverlay from "@/components/atoms/LoadingOverlay.vue"
@@ -101,17 +95,17 @@ const tariffToDelete = ref<RateClassSchema | null>(null)
 const savingRate = computed(() => creatingRate.value || updatingRate.value)
 const dialogTitle = computed(() => (selectedTariff.value ? "Modifier le tarif" : "Nouveau tarif"))
 
-const columns = [
-    { key: "id", label: "ID", width: "10%" },
-    { key: "class", label: "Classe", width: "25%" },
-    { key: "year", label: "Année", width: "25%" },
-    { key: "amount", label: "Tarif", width: "25%" },
-    { key: "actions", label: "Actions", width: "15%", actions: true },
+const columns: Column[] = [
+    { key: "id", label: "ID", size: "id" as const },
+    { key: "class", label: "Classe", size: "flex" as const },
+    { key: "year", label: "Année", size: "sm" as const },
+    { key: "amount", label: "Tarif", size: "amount" as const },
+    { key: "actions", label: "Actions", size: "action" as const, actions: true },
 ]
 
 // Load rates on mount
 onMounted(async () => {
-    document.title = 'BEG - Tarifs'
+    document.title = "BEG - Tarifs"
     await fetchRates({})
 })
 
