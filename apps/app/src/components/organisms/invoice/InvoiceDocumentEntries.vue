@@ -34,20 +34,23 @@
                             {{ t("invoice.documents.headers.amount") }}
                         </th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                            {{ t("invoice.documents.headers.remark") }}
-                        </th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                             {{ t("common.actions") }}
                         </th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    <tr v-if="!entries.length">
-                        <td class="px-4 py-3 text-sm text-gray-500" :colspan="showAmount ? 5 : 4">
+                <tbody v-if="!entries.length" class="bg-white">
+                    <tr>
+                        <td class="px-4 py-3 text-sm text-gray-500" :colspan="showAmount ? 4 : 3">
                             {{ emptyStateLabel }}
                         </td>
                     </tr>
-                    <tr v-for="(entry, index) in entries" :key="index">
+                </tbody>
+                <tbody
+                    v-for="(entry, index) in entries"
+                    :key="index"
+                    class="bg-white border-b border-gray-200"
+                >
+                    <tr>
                         <td class="px-4 py-2 text-sm text-gray-900">
                             <DocumentUploadField
                                 :required="!entry.file"
@@ -91,13 +94,6 @@
                             />
                         </td>
                         <td class="px-4 py-2 text-sm text-gray-900">
-                            <Input
-                                type="text"
-                                :modelValue="entry.remark || ''"
-                                @update:modelValue="(value) => updateEntry(index, 'remark', value)"
-                            />
-                        </td>
-                        <td class="px-4 py-2 text-sm text-gray-900">
                             <Button
                                 type="button"
                                 variant="danger"
@@ -106,6 +102,27 @@
                             >
                                 X
                             </Button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td
+                            :colspan="showAmount ? 4 : 3"
+                            class="px-4 pb-3 pt-0 text-sm text-gray-900"
+                        >
+                            <textarea
+                                class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                rows="2"
+                                :placeholder="t('invoice.documents.headers.remark')"
+                                :value="entry.remark || ''"
+                                @input="
+                                    (e) =>
+                                        updateEntry(
+                                            index,
+                                            'remark',
+                                            (e.target as HTMLTextAreaElement).value
+                                        )
+                                "
+                            />
                         </td>
                     </tr>
                 </tbody>
