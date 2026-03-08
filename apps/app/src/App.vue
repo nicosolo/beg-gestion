@@ -19,6 +19,7 @@ import desktopVersionConfig from "./config/desktop-version.json"
 
 const { t } = useI18n()
 const isSidebarOpen = ref(false)
+const isSettingsOpen = ref(false)
 const { alerts, removeAlert } = useAlert()
 const { isTauri, appVersion, fetchAppVersion, setupDeepLinkListener } = useTauri()
 const route = useRoute()
@@ -188,6 +189,8 @@ const navigation = computed(() =>
     ].filter((item) => item.visible !== false)
 )
 
+const settingsNav = computed(() => navigation.value.find((item) => item.children))
+
 const expandedItems = ref<Record<string, boolean>>({})
 
 // Initialize expandedItems based on current route
@@ -199,19 +202,31 @@ const initializeExpandedItems = () => {
     })
 }
 
-// Watch route changes to update expanded items
+// Watch route changes to update expanded items and close settings dropdown
 watch(
     () => route.name,
     () => {
         initializeExpandedItems()
+        isSettingsOpen.value = false
     }
 )
+
+// Close settings dropdown on outside click
+const onClickOutside = (e: MouseEvent) => {
+    if (isSettingsOpen.value) {
+        const target = e.target as HTMLElement
+        if (!target.closest(".relative")) {
+            isSettingsOpen.value = false
+        }
+    }
+}
 
 // Initialize on mount (for page reload)
 onMounted(() => {
     initializeExpandedItems()
     fetchAppVersion()
     setupDeepLinkListener()
+    document.addEventListener("click", onClickOutside)
 })
 
 const toggleNestedMenu = (itemName: string) => {
@@ -301,6 +316,40 @@ html {
                     >
                         {{ t("navigation.invoices") }}
                     </RouterLink>
+                    <!-- Settings dropdown -->
+                    <div v-if="settingsNav" class="relative">
+                        <button
+                            :class="[
+                                settingsNav.current
+                                    ? 'bg-gray-900 text-white'
+                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+                                'px-3 py-1.5 text-sm font-medium rounded-md inline-flex items-center gap-1',
+                            ]"
+                            @click="isSettingsOpen = !isSettingsOpen"
+                        >
+                            {{ settingsNav.name }}
+                            <ChevronDownIcon class="h-3.5 w-3.5" />
+                        </button>
+                        <div
+                            v-if="isSettingsOpen"
+                            class="absolute right-0 mt-1 w-48 rounded-md bg-white shadow-lg ring-1 ring-black/5 py-1 z-50"
+                        >
+                            <RouterLink
+                                v-for="child in settingsNav.children"
+                                :key="child.name"
+                                :to="child.to"
+                                :class="[
+                                    child.current
+                                        ? 'bg-gray-100 text-gray-900'
+                                        : 'text-gray-700 hover:bg-gray-50',
+                                    'block px-4 py-2 text-sm',
+                                ]"
+                                @click="isSettingsOpen = false"
+                            >
+                                {{ child.name }}
+                            </RouterLink>
+                        </div>
+                    </div>
                 </nav>
 
                 <button
