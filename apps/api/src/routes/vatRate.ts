@@ -12,6 +12,7 @@ import { responseValidator } from "@src/tools/response-validator"
 import type { Variables } from "@src/types/global"
 import { ErrorCode } from "@beg/validations"
 import { ApiException } from "@src/tools/error-handler"
+import { audit } from "@src/tools/audit"
 
 export const vatRateRoutes = new Hono<{ Variables: Variables }>()
     .use("/*", authMiddleware)
@@ -67,6 +68,8 @@ export const vatRateRoutes = new Hono<{ Variables: Variables }>()
             }
 
             const vatRate = await vatRateRepository.create(data)
+            const user = c.get("user")
+            audit(user.id, user.email, "create", "vatRate", vatRate.id, { year: vatRate.year, rate: vatRate.rate })
             return c.render(vatRate, 201)
         }
     )
@@ -103,6 +106,8 @@ export const vatRateRoutes = new Hono<{ Variables: Variables }>()
                 throw new ApiException(404, ErrorCode.NOT_FOUND, "VAT rate not found")
             }
 
+            const user = c.get("user")
+            audit(user.id, user.email, "update", "vatRate", id, { year: vatRate.year, rate: vatRate.rate })
             return c.render(vatRate, 200)
         }
     )
@@ -120,5 +125,7 @@ export const vatRateRoutes = new Hono<{ Variables: Variables }>()
         }
 
         await vatRateRepository.delete(id)
+        const user = c.get("user")
+        audit(user.id, user.email, "delete", "vatRate", id, { year: vatRate.year, rate: vatRate.rate })
         return c.json({ success: true }, 200)
     })

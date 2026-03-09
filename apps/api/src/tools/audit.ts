@@ -1,0 +1,50 @@
+import { db } from "@src/db"
+import { auditLogs } from "@src/db/schema"
+
+export type AuditAction =
+    | "create"
+    | "update"
+    | "delete"
+    | "login_success"
+    | "login_failure"
+
+export type AuditEntity =
+    | "auth"
+    | "activity"
+    | "activityType"
+    | "project"
+    | "invoice"
+    | "client"
+    | "company"
+    | "engineer"
+    | "location"
+    | "user"
+    | "rate"
+    | "projectType"
+    | "vatRate"
+    | "monthlyHours"
+    | "workload"
+
+export function audit(
+    userId: number | null,
+    userEmail: string,
+    action: AuditAction,
+    entity: AuditEntity,
+    entityId?: number | null,
+    meta?: Record<string, unknown>
+) {
+    try {
+        db.insert(auditLogs)
+            .values({
+                userId,
+                userEmail,
+                action,
+                entity,
+                entityId: entityId ?? null,
+                meta: meta ?? null,
+            })
+            .run()
+    } catch {
+        // fire-and-forget — never throw
+    }
+}

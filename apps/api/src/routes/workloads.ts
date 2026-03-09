@@ -16,6 +16,7 @@ import { authMiddleware } from "../tools/auth-middleware"
 import { responseValidator } from "@src/tools/response-validator"
 import type { Variables } from "../types/global"
 import { roleMiddleware, hasRole } from "@src/tools/role-middleware"
+import { audit } from "@src/tools/audit"
 
 // Create the app and apply auth middleware to all routes
 export const workloadRoutes = new Hono<{ Variables: Variables }>()
@@ -81,6 +82,8 @@ export const workloadRoutes = new Hono<{ Variables: Variables }>()
             const workloadData = c.req.valid("json")
 
             const workload = await workloadRepository.create(workloadData)
+            const user = c.get("user")
+            audit(user.id, user.email, "create", "workload", workload.id)
             return c.render(workload as WorkloadResponse, 201)
         }
     )
@@ -97,6 +100,8 @@ export const workloadRoutes = new Hono<{ Variables: Variables }>()
             const workloadsData = c.req.valid("json")
 
             const workloads = await workloadRepository.bulkCreate(workloadsData)
+            const user = c.get("user")
+            audit(user.id, user.email, "create", "workload", null, { count: workloads.length })
             return c.render(workloads as WorkloadArrayResponse, 201)
         }
     )
@@ -120,6 +125,8 @@ export const workloadRoutes = new Hono<{ Variables: Variables }>()
                 return c.json({ error: "Workload not found" }, 404)
             }
 
+            const user = c.get("user")
+            audit(user.id, user.email, "update", "workload", id)
             return c.render(workload as WorkloadResponse, 200)
         }
     )
@@ -134,6 +141,8 @@ export const workloadRoutes = new Hono<{ Variables: Variables }>()
             return c.json({ error: "Workload not found" }, 404)
         }
 
+        const user = c.get("user")
+        audit(user.id, user.email, "delete", "workload", id)
         return c.json({ message: "Workload deleted successfully" }, 200)
     })
 

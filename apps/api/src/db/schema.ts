@@ -494,6 +494,28 @@ export const vatRates = sqliteTable(
     ]
 )
 
+// Audit logs table
+export const auditLogs = sqliteTable(
+    "audit_logs",
+    {
+        id: integer("id").primaryKey({ autoIncrement: true }),
+        userId: integer("userId").references(() => users.id, { onDelete: "set null" }),
+        userEmail: text("userEmail").notNull(),
+        action: text("action").notNull(),
+        entity: text("entity").notNull(),
+        entityId: integer("entityId"),
+        meta: text("meta", { mode: "json" }).$type<Record<string, unknown>>(),
+        createdAt: integer("createdAt", { mode: "timestamp" })
+            .notNull()
+            .$defaultFn(() => new Date()),
+    },
+    (table) => [
+        index("audit_logs_user_idx").on(table.userId),
+        index("audit_logs_entity_idx").on(table.entity),
+        index("audit_logs_created_at_idx").on(table.createdAt),
+    ]
+)
+
 // Workloads table
 export const workloads = sqliteTable(
     "workloads",

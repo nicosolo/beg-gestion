@@ -168,6 +168,12 @@ const navigation = computed(() =>
                     visible: hasAdminAccess.value,
                 },
                 {
+                    name: "Journal",
+                    to: { name: "audit-log-list" },
+                    current: route.name === "audit-log-list",
+                    visible: hasAdminAccess.value,
+                },
+                {
                     name: "Import DB",
                     to: { name: "database-import" },
                     current: route.name === "database-import",

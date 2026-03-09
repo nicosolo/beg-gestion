@@ -23,6 +23,7 @@ import { hasRole } from "@src/tools/role-middleware"
 import { findProjectFolderSingle } from "@src/tools/project-folder-finder"
 import { PROJECT_BASE_DIR } from "@src/config"
 import { buildProjectsWorkbook } from "@src/tools/project-exporter"
+import { audit } from "@src/tools/audit"
 
 export const projectRoutes = new Hono<{ Variables: Variables }>()
     .use("/*", authMiddleware)
@@ -206,6 +207,7 @@ export const projectRoutes = new Hono<{ Variables: Variables }>()
                 if (!project) {
                     throw throwNotFound("Project not found")
                 }
+                audit(user.id, user.email, "create", "project", projectId, { name: project.name })
                 return c.render(project as ProjectResponse, 201)
             } catch (error: unknown) {
                 console.error("Error creating project:", error)
@@ -248,6 +250,7 @@ export const projectRoutes = new Hono<{ Variables: Variables }>()
             if (!project) {
                 throw throwNotFound("Project not found")
             }
+            audit(user.id, user.email, "update", "project", id, { name: project.name })
             return c.render(project as ProjectResponse, 200)
         }
     )

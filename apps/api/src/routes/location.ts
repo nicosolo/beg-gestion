@@ -15,6 +15,7 @@ import { authMiddleware } from "../tools/auth-middleware"
 import { roleMiddleware } from "../tools/role-middleware"
 import { responseValidator } from "../tools/response-validator"
 import { ApiException } from "../tools/error-handler"
+import { audit } from "../tools/audit"
 import type { Variables } from "@src/types/global"
 
 const locationResponseArraySchema = createPageResponseSchema(locationSchema)
@@ -63,6 +64,8 @@ export const locationRoutes = new Hono<{ Variables: Variables }>()
         async (c) => {
             const locationData = c.req.valid("json")
             const newLocation = await locationRepository.create(locationData)
+            const user = c.get("user")
+            audit(user.id, user.email, "create", "location", newLocation.id, { name: newLocation.name })
             return c.render(newLocation, 201)
         }
     )
@@ -92,6 +95,8 @@ export const locationRoutes = new Hono<{ Variables: Variables }>()
                 return c.json({ error: "Failed to update location" }, 500)
             }
 
+            const user = c.get("user")
+            audit(user.id, user.email, "update", "location", id, { name: updatedLocation.name })
             return c.render(updatedLocation, 200)
         }
     )
@@ -129,6 +134,8 @@ export const locationRoutes = new Hono<{ Variables: Variables }>()
                 throw new ApiException(500, ErrorCode.INTERNAL_ERROR, "Failed to delete location")
             }
 
+            const user = c.get("user")
+            audit(user.id, user.email, "delete", "location", id, { name: existingLocation.name })
             return c.render({ success: true }, 204)
         }
     )

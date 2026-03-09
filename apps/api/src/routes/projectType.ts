@@ -14,6 +14,7 @@ import { projectTypeRepository } from "../db/repositories/projectType.repository
 import { authMiddleware } from "@src/tools/auth-middleware"
 import { responseValidator } from "@src/tools/response-validator"
 import { ApiException } from "@src/tools/error-handler"
+import { audit } from "@src/tools/audit"
 import type { Variables } from "@src/types/global"
 
 export const projectTypeRoutes = new Hono<{ Variables: Variables }>()
@@ -67,6 +68,8 @@ export const projectTypeRoutes = new Hono<{ Variables: Variables }>()
             }
 
             const newProjectType = await projectTypeRepository.create(projectTypeData)
+            const user = c.get("user")
+            audit(user.id, user.email, "create", "projectType", newProjectType.id, { name: newProjectType.name })
             return c.render(newProjectType, 201)
         }
     )
@@ -100,6 +103,8 @@ export const projectTypeRoutes = new Hono<{ Variables: Variables }>()
             }
 
             const updatedProjectType = await projectTypeRepository.update(id, projectTypeData)
+            const user = c.get("user")
+            audit(user.id, user.email, "update", "projectType", id, { name: updatedProjectType.name })
             return c.render(updatedProjectType, 200)
         }
     )
@@ -131,6 +136,8 @@ export const projectTypeRoutes = new Hono<{ Variables: Variables }>()
             }
 
             await projectTypeRepository.delete(id)
+            const user = c.get("user")
+            audit(user.id, user.email, "delete", "projectType", id, { name: existingProjectType.name })
             return c.render({ message: "Project type deleted successfully" }, 200)
         }
     )

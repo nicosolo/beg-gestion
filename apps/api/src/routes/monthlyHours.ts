@@ -13,6 +13,7 @@ import { responseValidator } from "@src/tools/response-validator"
 import type { Variables } from "@src/types/global"
 import { ErrorCode } from "@beg/validations"
 import { ApiException } from "@src/tools/error-handler"
+import { audit } from "@src/tools/audit"
 
 const monthlyHoursResponseArraySchema = createPageResponseSchema(monthlyHoursSchema)
 
@@ -72,6 +73,8 @@ export const monthlyHoursRoutes = new Hono<{ Variables: Variables }>()
             }
 
             const monthlyHours = await monthlyHoursRepository.create(data)
+            const user = c.get("user")
+            audit(user.id, user.email, "create", "monthlyHours", monthlyHours.id, { year: data.year, month: data.month })
             return c.render(monthlyHours, 201)
         }
     )
@@ -116,6 +119,8 @@ export const monthlyHoursRoutes = new Hono<{ Variables: Variables }>()
                 throw new ApiException(404, ErrorCode.NOT_FOUND, "Monthly hours not found")
             }
 
+            const user = c.get("user")
+            audit(user.id, user.email, "update", "monthlyHours", id, { year: monthlyHours.year, month: monthlyHours.month })
             return c.render(monthlyHours, 200)
         }
     )
@@ -133,5 +138,7 @@ export const monthlyHoursRoutes = new Hono<{ Variables: Variables }>()
         }
 
         await monthlyHoursRepository.delete(id)
+        const user = c.get("user")
+        audit(user.id, user.email, "delete", "monthlyHours", id, { year: monthlyHours.year, month: monthlyHours.month })
         return c.json({ success: true }, 200)
     })

@@ -25,6 +25,7 @@ import { roleMiddleware, hasRole } from "@src/tools/role-middleware"
 import { z, ZodError } from "zod"
 import { normalizeStoredPath, fileBaseName, matchesStoredPath } from "@src/tools/file-utils"
 import { storeFile, serveFile } from "@src/services/file-storage.service"
+import { audit } from "@src/tools/audit"
 
 type UploadedInvoiceFiles = {
     invoiceDocument?: File
@@ -289,6 +290,13 @@ export const invoiceRoutes = new Hono<{ Variables: Variables }>()
             }
             await persistUploadedFiles(invoiceData, uploadedFiles)
             const newInvoice = await invoiceRepository.create(invoiceData, user)
+            if (!newInvoice) {
+                throwNotFound("Invoice")
+            }
+            audit(user.id, user.email, "create", "invoice", newInvoice.id, {
+                number: newInvoice.invoiceNumber,
+                projectId: newInvoice.projectId,
+            })
             return c.render(newInvoice, 201)
         }
     )
@@ -323,6 +331,10 @@ export const invoiceRoutes = new Hono<{ Variables: Variables }>()
             if (!updatedInvoice) {
                 throwNotFound("Invoice")
             }
+            audit(user.id, user.email, "update", "invoice", id, {
+                number: updatedInvoice.invoiceNumber,
+                projectId: updatedInvoice.projectId,
+            })
             return c.render(updatedInvoice, 200)
         }
     )
@@ -347,10 +359,16 @@ export const invoiceRoutes = new Hono<{ Variables: Variables }>()
         const { id } = c.req.valid("param")
         const user = c.get("user")
         try {
-            const deleted = await invoiceRepository.delete(id, user)
-            if (!deleted) {
+            const existing = await invoiceRepository.findById(id, user)
+            if (!existing) {
                 throwNotFound("Invoice")
             }
+            await invoiceRepository.delete(id, user)
+
+            audit(user.id, user.email, "delete", "invoice", id, {
+                number: existing.invoiceNumber,
+                projectId: existing.projectId,
+            })
             return c.json({ message: "Invoice deleted successfully" }, 200)
         } catch (error) {
             if (error instanceof Error && error.message === "Cannot delete locked invoices") {

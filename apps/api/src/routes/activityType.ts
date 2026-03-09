@@ -21,6 +21,7 @@ import type { ActivityRateUser, CollaboratorType, ClassPresets } from "@beg/vali
 import { db } from "@src/db"
 import { users } from "@src/db/schema"
 import { eq } from "drizzle-orm"
+import { audit } from "@src/tools/audit"
 
 async function applyClassPresetsToUsers(activityId: number, classPresets: ClassPresets) {
     const allUsers = await userRepository.findAllDetails()
@@ -143,6 +144,8 @@ export const activityTypeRoutes = new Hono<{ Variables: Variables }>()
                 await applyClassPresetsToUsers(newActivityType.id, newActivityType.classPresets as ClassPresets)
             }
 
+            const user = c.get("user")
+            audit(user.id, user.email, "create", "activityType", newActivityType.id, { name: newActivityType.name, code: newActivityType.code })
             return c.render(newActivityType, 201)
         }
     )
@@ -180,6 +183,8 @@ export const activityTypeRoutes = new Hono<{ Variables: Variables }>()
                 await applyClassPresetsToUsers(updatedActivityType.id, updatedActivityType.classPresets as ClassPresets)
             }
 
+            const user = c.get("user")
+            audit(user.id, user.email, "update", "activityType", id, { name: updatedActivityType.name, code: updatedActivityType.code })
             return c.render(updatedActivityType, 200)
         }
     )
@@ -212,6 +217,8 @@ export const activityTypeRoutes = new Hono<{ Variables: Variables }>()
             }
 
             await activityTypeRepository.delete(id)
+            const user = c.get("user")
+            audit(user.id, user.email, "delete", "activityType", id, { name: existingActivityType.name, code: existingActivityType.code })
             return c.render({ message: "Activity type deleted successfully" }, 200)
         }
     )

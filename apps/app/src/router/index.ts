@@ -20,6 +20,7 @@ import EngineerListView from "../views/engineer/EngineerListView.vue"
 import VatRateListView from "../views/vatRate/VatRateListView.vue"
 import MonthlyHoursListView from "../views/monthlyHours/MonthlyHoursListView.vue"
 import LoginView from "../views/LoginView.vue"
+import AuditLogListView from "../views/auditLog/AuditLogListView.vue"
 import DatabaseImportView from "../views/admin/DatabaseImportView.vue"
 import AppSettingsView from "../views/settings/AppSettingsView.vue"
 import DownloadAppView from "../views/download/DownloadAppView.vue"
@@ -177,6 +178,13 @@ const router = createRouter({
             path: "/monthly-hours",
             name: "monthly-hours-list",
             component: MonthlyHoursListView,
+            meta: { requiresAuth: true, requiresAdmin: true },
+        },
+        // Audit log
+        {
+            path: "/audit-log",
+            name: "audit-log-list",
+            component: AuditLogListView,
             meta: { requiresAuth: true, requiresAdmin: true },
         },
         // Admin routes

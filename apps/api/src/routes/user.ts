@@ -17,6 +17,7 @@ import { responseValidator } from "@src/tools/response-validator"
 import { z } from "zod"
 import type { Variables } from "@src/types/global"
 import { roleMiddleware } from "@src/tools/role-middleware"
+import { audit } from "@src/tools/audit"
 
 // Define users array response schema
 const usersArrayResponseSchema = z.array(userResponseSchema)
@@ -34,16 +35,19 @@ export const userRoutes = new Hono<{ Variables: Variables }>()
 
             const user = await userRepository.findByEmailOrInitials(email)
             if (!user) {
+                audit(null, email, "login_failure", "auth", null, { reason: "unknown_user" })
                 return c.json({ error: "Invalid credentials" }, 401)
             }
 
             const passwordMatch = await comparePassword(password, user.password)
             if (!passwordMatch) {
+                audit(null, email, "login_failure", "auth", null, { reason: "wrong_password" })
                 return c.json({ error: "Invalid credentials" }, 401)
             }
 
             // Generate JWT token
             const token = generateToken(user)
+            audit(user.id, user.email, "login_success", "auth")
 
             return c.render(
                 {
@@ -121,6 +125,7 @@ export const userRoutes = new Hono<{ Variables: Variables }>()
             }
 
             const newUser = await userRepository.create(userData)
+            audit(currentUser.id, currentUser.email, "create", "user", newUser.id, { name: `${newUser.firstName} ${newUser.lastName}` })
             return c.render(newUser, 201)
         }
     )
@@ -166,6 +171,7 @@ export const userRoutes = new Hono<{ Variables: Variables }>()
             }
 
             const updatedUser = await userRepository.update(id, userData)
+            audit(currentUser.id, currentUser.email, "update", "user", id, { name: `${updatedUser.firstName} ${updatedUser.lastName}` })
             return c.render(updatedUser, 200)
         }
     )

@@ -13,6 +13,7 @@ import { responseValidator } from "@src/tools/response-validator"
 import type { Variables } from "@src/types/global"
 import { ErrorCode } from "@beg/validations"
 import { ApiException } from "@src/tools/error-handler"
+import { audit } from "@src/tools/audit"
 
 const companyResponseArraySchema = createPageResponseSchema(companySchema)
 
@@ -61,6 +62,8 @@ export const companyRoutes = new Hono<{ Variables: Variables }>()
         async (c) => {
             const data = c.req.valid("json")
             const company = await companyRepository.create(data)
+            const user = c.get("user")
+            audit(user.id, user.email, "create", "company", company.id, { name: company.name })
             return c.render(company, 201)
         }
     )
@@ -84,6 +87,8 @@ export const companyRoutes = new Hono<{ Variables: Variables }>()
                 throw new ApiException(404, ErrorCode.NOT_FOUND, "Company not found")
             }
 
+            const user = c.get("user")
+            audit(user.id, user.email, "update", "company", id, { name: company.name })
             return c.render(company, 200)
         }
     )
@@ -115,6 +120,8 @@ export const companyRoutes = new Hono<{ Variables: Variables }>()
             }
 
             await companyRepository.delete(id)
+            const user = c.get("user")
+            audit(user.id, user.email, "delete", "company", id, { name: company.name })
             return c.json({ success: true }, 200)
         }
     )
