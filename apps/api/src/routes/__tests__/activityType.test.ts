@@ -219,6 +219,234 @@ describe("PUT /activity-type/:id", () => {
     })
 })
 
+describe("applyClasses", () => {
+    const presets = {
+        cadre: "B",
+        chefDeProjet: "C",
+        collaborateur: "D",
+        operateur: "E",
+        secretaire: "F",
+        stagiaire: "G",
+        default: "R",
+    }
+
+    const getUserRates = async (uid: number) => {
+        const { eq } = await import("drizzle-orm")
+        const [u] = await db.select().from(schema.users).where(eq(schema.users.id, uid))
+        return (u.activityRates as { activityId: number; class: string }[]) || []
+    }
+
+    const setUser = async (uid: number, data: Record<string, unknown>) => {
+        const { eq } = await import("drizzle-orm")
+        await db.update(schema.users).set(data).where(eq(schema.users.id, uid))
+    }
+
+    test("does not apply when applyClasses is false", async () => {
+        await setUser(userId, { activityRates: [] })
+
+        const res = await app.request("/activity-type", {
+            method: "POST",
+            headers: jsonHeaders(adminToken),
+            body: JSON.stringify({
+                name: "No Apply",
+                code: "NAP",
+                billable: true,
+                classPresets: presets,
+                applyClasses: false,
+            }),
+        })
+        expect(res.status).toBe(200)
+        const body = await res.json()
+
+        const rates = await getUserRates(userId)
+        expect(rates.find((r) => r.activityId === body.id)).toBeUndefined()
+    })
+
+    test("does not apply when classPresets is null", async () => {
+        await setUser(userId, { activityRates: [] })
+
+        const res = await app.request("/activity-type", {
+            method: "POST",
+            headers: jsonHeaders(adminToken),
+            body: JSON.stringify({
+                name: "No Presets",
+                code: "NPS",
+                billable: true,
+                classPresets: null,
+                applyClasses: true,
+            }),
+        })
+        expect(res.status).toBe(200)
+        const body = await res.json()
+
+        const rates = await getUserRates(userId)
+        expect(rates.find((r) => r.activityId === body.id)).toBeUndefined()
+    })
+
+    test("applies default class to users without collaboratorType", async () => {
+        await setUser(userId, { activityRates: [], collaboratorType: null })
+
+        const res = await app.request("/activity-type", {
+            method: "POST",
+            headers: jsonHeaders(adminToken),
+            body: JSON.stringify({
+                name: "Apply Default",
+                code: "AD",
+                billable: true,
+                classPresets: presets,
+                applyClasses: true,
+            }),
+        })
+        expect(res.status).toBe(200)
+        const body = await res.json()
+
+        const rates = await getUserRates(userId)
+        const rate = rates.find((r) => r.activityId === body.id)
+        expect(rate).toBeDefined()
+        expect(rate!.class).toBe("R")
+    })
+
+    test("applies collaboratorType class when user has one", async () => {
+        await setUser(userId, { activityRates: [], collaboratorType: "cadre" })
+
+        const res = await app.request("/activity-type", {
+            method: "POST",
+            headers: jsonHeaders(adminToken),
+            body: JSON.stringify({
+                name: "Apply Typed",
+                code: "APT",
+                billable: true,
+                classPresets: presets,
+                applyClasses: true,
+            }),
+        })
+        expect(res.status).toBe(200)
+        const body = await res.json()
+
+        const rates = await getUserRates(userId)
+        const rate = rates.find((r) => r.activityId === body.id)
+        expect(rate).toBeDefined()
+        expect(rate!.class).toBe("B") // cadre class, not default
+
+        await setUser(userId, { collaboratorType: null })
+    })
+
+    test("null preset removes existing rate for that activity", async () => {
+        // First create with a class applied
+        const res = await app.request("/activity-type", {
+            method: "POST",
+            headers: jsonHeaders(adminToken),
+            body: JSON.stringify({
+                name: "Will Remove",
+                code: "WR",
+                billable: true,
+                classPresets: { ...presets, default: "B" },
+                applyClasses: true,
+            }),
+        })
+        expect(res.status).toBe(200)
+        const body = await res.json()
+
+        // Confirm rate was applied
+        let rates = await getUserRates(userId)
+        expect(rates.find((r) => r.activityId === body.id)).toBeDefined()
+
+        // Update with null default to remove it
+        const res2 = await app.request(`/activity-type/${body.id}`, {
+            method: "PUT",
+            headers: jsonHeaders(adminToken),
+            body: JSON.stringify({
+                classPresets: { ...presets, default: null },
+                applyClasses: true,
+            }),
+        })
+        expect(res2.status).toBe(200)
+
+        rates = await getUserRates(userId)
+        expect(rates.find((r) => r.activityId === body.id)).toBeUndefined()
+    })
+
+    test("update overwrites existing rate class", async () => {
+        await setUser(userId, { activityRates: [], collaboratorType: null })
+
+        // Create with default "B"
+        const res = await app.request("/activity-type", {
+            method: "POST",
+            headers: jsonHeaders(adminToken),
+            body: JSON.stringify({
+                name: "Overwrite",
+                code: "OW",
+                billable: true,
+                classPresets: { ...presets, default: "B" },
+                applyClasses: true,
+            }),
+        })
+        expect(res.status).toBe(200)
+        const body = await res.json()
+
+        let rates = await getUserRates(userId)
+        expect(rates.find((r) => r.activityId === body.id)!.class).toBe("B")
+
+        // Update to "F"
+        const res2 = await app.request(`/activity-type/${body.id}`, {
+            method: "PUT",
+            headers: jsonHeaders(adminToken),
+            body: JSON.stringify({
+                classPresets: { ...presets, default: "F" },
+                applyClasses: true,
+            }),
+        })
+        expect(res2.status).toBe(200)
+
+        rates = await getUserRates(userId)
+        expect(rates.find((r) => r.activityId === body.id)!.class).toBe("F")
+    })
+
+    test("skips archived users", async () => {
+        const { eq } = await import("drizzle-orm")
+
+        // Create an archived user
+        const pw = (await import("../../tools/auth")).hashPassword
+        const [archivedUser] = await db
+            .insert(schema.users)
+            .values({
+                email: "archived@test.com",
+                firstName: "Archived",
+                lastName: "User",
+                initials: "AU",
+                password: await pw("pass"),
+                role: "user",
+                archived: true,
+                activityRates: [],
+            })
+            .returning()
+
+        const res = await app.request("/activity-type", {
+            method: "POST",
+            headers: jsonHeaders(adminToken),
+            body: JSON.stringify({
+                name: "Skip Archived",
+                code: "SA",
+                billable: true,
+                classPresets: presets,
+                applyClasses: true,
+            }),
+        })
+        expect(res.status).toBe(200)
+        const body = await res.json()
+
+        const [archived] = await db
+            .select()
+            .from(schema.users)
+            .where(eq(schema.users.id, archivedUser.id))
+        const rates = (archived.activityRates as { activityId: number; class: string }[]) || []
+        expect(rates.find((r) => r.activityId === body.id)).toBeUndefined()
+
+        // Cleanup
+        await db.delete(schema.users).where(eq(schema.users.id, archivedUser.id))
+    })
+})
+
 describe("DELETE /activity-type/:id", () => {
     test("admin deletes activity type with no activities", async () => {
         // Create a throwaway type to delete
