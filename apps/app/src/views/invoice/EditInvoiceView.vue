@@ -379,7 +379,7 @@ const convertResponseToInvoice = (response: InvoiceResponse): Invoice => {
 
         expensesTravelBase: response.expensesTravelBase || 0,
         expensesTravelAdjusted: response.expensesTravelAdjusted || 0,
-        expensesTravelRate: response.expensesTravelRate || 0.65,
+        expensesTravelRate: response.expensesTravelRate || 0.7,
         expensesTravelAmount: response.expensesTravelAmount || 0,
         expensesOtherBase: response.expensesOtherBase || 0,
         expensesOtherAmount: response.expensesOtherAmount || 0,

@@ -17,7 +17,7 @@ export const comparePassword = async (password: string, hash: string): Promise<b
 
 export const generateToken = (
     user: Omit<typeof users.$inferSelect, "password">,
-    expiresIn: StringValue = "60d"
+    expiresIn: StringValue = "30d"
 ): string => {
     // Remove sensitive data from token
     const payload = {

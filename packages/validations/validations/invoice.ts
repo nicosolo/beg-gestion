@@ -122,7 +122,7 @@ export const InvoiceSchema = z.object({
     // Expenses - flat structure
     expensesTravelBase: z.number().default(0),
     expensesTravelAdjusted: z.number().default(0),
-    expensesTravelRate: z.number().default(0.65),
+    expensesTravelRate: z.number().default(0.7),
     expensesTravelAmount: z.number().default(0),
     expensesOtherBase: z.number().default(0),
     expensesOtherAmount: z.number().default(0),
@@ -208,7 +208,7 @@ export const invoiceCreateSchema = z.object({
 
     expensesTravelBase: z.number().default(0),
     expensesTravelAdjusted: z.number().default(0),
-    expensesTravelRate: z.number().default(0.65),
+    expensesTravelRate: z.number().default(0.7),
     expensesTravelAmount: z.number().default(0),
     expensesOtherBase: z.number().default(0),
     expensesOtherAmount: z.number().default(0),
@@ -384,7 +384,10 @@ export const invoiceFilterSchema = z
         visaByUserId: z.coerce.number().optional(),
         fromDate: z.coerce.date().optional(),
         toDate: z.coerce.date().optional(),
-        sortBy: z.enum(["date", "reference", "total", "status", "inChargeUser"]).optional().default("date"),
+        sortBy: z
+            .enum(["date", "reference", "total", "status", "inChargeUser"])
+            .optional()
+            .default("date"),
         sortOrder: z.enum(["asc", "desc"]).optional().default("desc"),
     })
     .merge(paginationSchema)

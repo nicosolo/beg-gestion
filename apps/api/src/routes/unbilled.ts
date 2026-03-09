@@ -155,7 +155,7 @@ app.get(
             activityIds,
             periodStart: periodStartDate,
             periodEnd: periodEndDate,
-            expensesTravelRate: 0.65,
+            expensesTravelRate: 0.7,
         }
 
         return c.json(response)
