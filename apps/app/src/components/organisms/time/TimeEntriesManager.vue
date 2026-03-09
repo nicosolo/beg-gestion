@@ -113,7 +113,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, computed } from "vue"
+import { ref, watch, onMounted, onActivated, computed } from "vue"
 import { useFetchActivityList, useExportActivities } from "@/composables/api/useActivity"
 import TimeFilterPanel from "@/components/organisms/time/TimeFilterPanel.vue"
 import TimeTable from "@/components/organisms/time/TimeTable.vue"
@@ -248,6 +248,10 @@ const goToPage = (page: number) => {
 
 // Load initial data
 onMounted(() => {
+    loadActivities()
+})
+
+onActivated(() => {
     loadActivities()
 })
 

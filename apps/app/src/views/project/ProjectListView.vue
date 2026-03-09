@@ -224,7 +224,7 @@ watch(
     }
 )
 onActivated(() => {
-    console.log("onActivated")
+    loadProjects()
 })
 // Initial load
 onMounted(() => {
