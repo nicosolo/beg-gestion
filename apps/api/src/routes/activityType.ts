@@ -24,11 +24,11 @@ import { eq } from "drizzle-orm"
 
 async function applyClassPresetsToUsers(activityId: number, classPresets: ClassPresets) {
     const allUsers = await userRepository.findAllDetails()
-    const eligibleUsers = allUsers.filter((u) => !u.archived && u.collaboratorType)
+    const eligibleUsers = allUsers.filter((u) => !u.archived)
 
     for (const user of eligibleUsers) {
-        const collabType = user.collaboratorType as CollaboratorType
-        const rateClass = classPresets[collabType]
+        const collabType = user.collaboratorType as CollaboratorType | null
+        const rateClass = collabType ? classPresets[collabType] : classPresets.default
 
         const existingRates: ActivityRateUser[] =
             (user.activityRates as ActivityRateUser[] | null) || []

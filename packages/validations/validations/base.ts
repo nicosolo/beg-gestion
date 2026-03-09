@@ -40,6 +40,7 @@ export const classPresetsSchema = z.object({
     operateur: classSchema.nullable(),
     secretaire: classSchema.nullable(),
     stagiaire: classSchema.nullable(),
+    default: classSchema.nullable().optional().default(null),
 })
 
 export type ClassPresets = z.infer<typeof classPresetsSchema>

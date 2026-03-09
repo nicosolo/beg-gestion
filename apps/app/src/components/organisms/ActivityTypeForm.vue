@@ -162,24 +162,26 @@ const emit = defineEmits<{
     cancel: []
 }>()
 
-const collaboratorTypes: { value: CollaboratorType; label: string }[] = [
+const collaboratorTypes: { value: CollaboratorType | "default"; label: string }[] = [
     { value: "cadre", label: "Cadre" },
     { value: "chefDeProjet", label: "Chef de projet" },
     { value: "collaborateur", label: "Collaborateur" },
     { value: "operateur", label: "Opérateur" },
     { value: "secretaire", label: "Secrétaire" },
     { value: "stagiaire", label: "Stagiaire" },
+    { value: "default", label: "Sans type" },
 ]
 
 const rateClasses: (ClassSchema | null)[] = [null, "B", "C", "D", "E", "F", "G", "R"]
 
 const defaultPresets: ClassPresets = {
-    cadre: null,
-    chefDeProjet: null,
-    collaborateur: null,
-    operateur: null,
-    secretaire: null,
-    stagiaire: null,
+    cadre: "R",
+    chefDeProjet: "R",
+    collaborateur: "R",
+    operateur: "R",
+    secretaire: "R",
+    stagiaire: "R",
+    default: "R",
 }
 
 const formData = ref({
