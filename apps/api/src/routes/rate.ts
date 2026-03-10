@@ -75,7 +75,7 @@ export const rateRoutes = new Hono<{ Variables: Variables }>()
 
             const newRate = await rateRepository.create(rateData)
             const user = c.get("user")
-            audit(user.id, user.email, "create", "rate", newRate.id, { class: rateData.class, year: rateData.year })
+            audit(user.id, user.initials, "create", "rate", newRate.id, { class: rateData.class, year: rateData.year })
             return c.render(newRate, 201)
         }
     )
@@ -114,7 +114,7 @@ export const rateRoutes = new Hono<{ Variables: Variables }>()
 
             const updatedRate = await rateRepository.update(id, rateData)
             const user = c.get("user")
-            audit(user.id, user.email, "update", "rate", id, { class: updatedRate.class, year: updatedRate.year })
+            audit(user.id, user.initials, "update", "rate", id, { class: updatedRate.class, year: updatedRate.year })
             return c.render(updatedRate, 200)
         }
     )
@@ -131,6 +131,6 @@ export const rateRoutes = new Hono<{ Variables: Variables }>()
 
         await rateRepository.delete(id)
         const user = c.get("user")
-        audit(user.id, user.email, "delete", "rate", id, { class: existingRate.class, year: existingRate.year })
+        audit(user.id, user.initials, "delete", "rate", id, { class: existingRate.class, year: existingRate.year })
         return c.json({ message: "Rate deleted successfully" }, 200)
     })

@@ -74,7 +74,7 @@ export const monthlyHoursRoutes = new Hono<{ Variables: Variables }>()
 
             const monthlyHours = await monthlyHoursRepository.create(data)
             const user = c.get("user")
-            audit(user.id, user.email, "create", "monthlyHours", monthlyHours.id, { year: data.year, month: data.month })
+            audit(user.id, user.initials, "create", "monthlyHours", monthlyHours.id, { year: data.year, month: data.month })
             return c.render(monthlyHours, 201)
         }
     )
@@ -120,7 +120,7 @@ export const monthlyHoursRoutes = new Hono<{ Variables: Variables }>()
             }
 
             const user = c.get("user")
-            audit(user.id, user.email, "update", "monthlyHours", id, { year: monthlyHours.year, month: monthlyHours.month })
+            audit(user.id, user.initials, "update", "monthlyHours", id, { year: monthlyHours.year, month: monthlyHours.month })
             return c.render(monthlyHours, 200)
         }
     )
@@ -139,6 +139,6 @@ export const monthlyHoursRoutes = new Hono<{ Variables: Variables }>()
 
         await monthlyHoursRepository.delete(id)
         const user = c.get("user")
-        audit(user.id, user.email, "delete", "monthlyHours", id, { year: monthlyHours.year, month: monthlyHours.month })
+        audit(user.id, user.initials, "delete", "monthlyHours", id, { year: monthlyHours.year, month: monthlyHours.month })
         return c.json({ success: true }, 200)
     })

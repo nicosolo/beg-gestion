@@ -4,7 +4,7 @@ import { createPageResponseSchema, paginationSchema } from "./pagination"
 export const auditLogResponseSchema = z.object({
     id: z.number(),
     userId: z.number().nullable(),
-    userEmail: z.string(),
+    userInitials: z.string(),
     action: z.string(),
     entity: z.string(),
     entityId: z.number().nullable(),

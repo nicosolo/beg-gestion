@@ -293,7 +293,7 @@ export const invoiceRoutes = new Hono<{ Variables: Variables }>()
             if (!newInvoice) {
                 throwNotFound("Invoice")
             }
-            audit(user.id, user.email, "create", "invoice", newInvoice.id, {
+            audit(user.id, user.initials, "create", "invoice", newInvoice.id, {
                 number: newInvoice.invoiceNumber,
                 projectId: newInvoice.projectId,
             })
@@ -331,7 +331,7 @@ export const invoiceRoutes = new Hono<{ Variables: Variables }>()
             if (!updatedInvoice) {
                 throwNotFound("Invoice")
             }
-            audit(user.id, user.email, "update", "invoice", id, {
+            audit(user.id, user.initials, "update", "invoice", id, {
                 number: updatedInvoice.invoiceNumber,
                 projectId: updatedInvoice.projectId,
             })
@@ -365,7 +365,7 @@ export const invoiceRoutes = new Hono<{ Variables: Variables }>()
             }
             await invoiceRepository.delete(id, user)
 
-            audit(user.id, user.email, "delete", "invoice", id, {
+            audit(user.id, user.initials, "delete", "invoice", id, {
                 number: existing.invoiceNumber,
                 projectId: existing.projectId,
             })

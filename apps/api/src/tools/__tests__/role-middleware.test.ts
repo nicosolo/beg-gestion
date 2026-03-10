@@ -32,7 +32,7 @@ describe("roleMiddleware", () => {
 	test("returns 403 for user role when admin required", async () => {
 		const app = new Hono()
 		app.use("*", async (c, next) => {
-			c.set("user", { id: 1, email: "u@test.com", role: "user" })
+			c.set("user", { id: 1, email: "u@test.com", role: "user", initials: "UT", name: "User Test", firstName: "User", lastName: "Test" })
 			await next()
 		})
 		app.use("*", roleMiddleware("admin"))
@@ -47,7 +47,7 @@ describe("roleMiddleware", () => {
 	test("passes for admin role when admin required", async () => {
 		const app = new Hono()
 		app.use("*", async (c, next) => {
-			c.set("user", { id: 1, email: "a@test.com", role: "admin" })
+			c.set("user", { id: 1, email: "a@test.com", role: "admin", initials: "AT", name: "Admin Test", firstName: "Admin", lastName: "Test" })
 			await next()
 		})
 		app.use("*", roleMiddleware("admin"))

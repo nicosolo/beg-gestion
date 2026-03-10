@@ -27,7 +27,7 @@ export type AuditEntity =
 
 export function audit(
     userId: number | null,
-    userEmail: string,
+    userInitials: string,
     action: AuditAction,
     entity: AuditEntity,
     entityId?: number | null,
@@ -37,7 +37,7 @@ export function audit(
         db.insert(auditLogs)
             .values({
                 userId,
-                userEmail,
+                userInitials,
                 action,
                 entity,
                 entityId: entityId ?? null,

@@ -207,7 +207,7 @@ export const projectRoutes = new Hono<{ Variables: Variables }>()
                 if (!project) {
                     throw throwNotFound("Project not found")
                 }
-                audit(user.id, user.email, "create", "project", projectId, { name: project.name })
+                audit(user.id, user.initials, "create", "project", projectId, { name: project.name })
                 return c.render(project as ProjectResponse, 201)
             } catch (error: unknown) {
                 console.error("Error creating project:", error)
@@ -250,7 +250,7 @@ export const projectRoutes = new Hono<{ Variables: Variables }>()
             if (!project) {
                 throw throwNotFound("Project not found")
             }
-            audit(user.id, user.email, "update", "project", id, { name: project.name })
+            audit(user.id, user.initials, "update", "project", id, { name: project.name })
             return c.render(project as ProjectResponse, 200)
         }
     )

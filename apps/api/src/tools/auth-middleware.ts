@@ -36,6 +36,7 @@ export const authMiddleware: MiddlewareHandler<{ Variables: Variables }> = async
         role: user.role,
         firstName: user.firstName,
         lastName: user.lastName,
+        initials: user.initials,
     })
 
     await next()

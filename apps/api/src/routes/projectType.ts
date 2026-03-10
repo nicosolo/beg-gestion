@@ -69,7 +69,7 @@ export const projectTypeRoutes = new Hono<{ Variables: Variables }>()
 
             const newProjectType = await projectTypeRepository.create(projectTypeData)
             const user = c.get("user")
-            audit(user.id, user.email, "create", "projectType", newProjectType.id, { name: newProjectType.name })
+            audit(user.id, user.initials, "create", "projectType", newProjectType.id, { name: newProjectType.name })
             return c.render(newProjectType, 201)
         }
     )
@@ -104,7 +104,7 @@ export const projectTypeRoutes = new Hono<{ Variables: Variables }>()
 
             const updatedProjectType = await projectTypeRepository.update(id, projectTypeData)
             const user = c.get("user")
-            audit(user.id, user.email, "update", "projectType", id, { name: updatedProjectType.name })
+            audit(user.id, user.initials, "update", "projectType", id, { name: updatedProjectType.name })
             return c.render(updatedProjectType, 200)
         }
     )
@@ -137,7 +137,7 @@ export const projectTypeRoutes = new Hono<{ Variables: Variables }>()
 
             await projectTypeRepository.delete(id)
             const user = c.get("user")
-            audit(user.id, user.email, "delete", "projectType", id, { name: existingProjectType.name })
+            audit(user.id, user.initials, "delete", "projectType", id, { name: existingProjectType.name })
             return c.render({ message: "Project type deleted successfully" }, 200)
         }
     )

@@ -69,7 +69,7 @@ export const vatRateRoutes = new Hono<{ Variables: Variables }>()
 
             const vatRate = await vatRateRepository.create(data)
             const user = c.get("user")
-            audit(user.id, user.email, "create", "vatRate", vatRate.id, { year: vatRate.year, rate: vatRate.rate })
+            audit(user.id, user.initials, "create", "vatRate", vatRate.id, { year: vatRate.year, rate: vatRate.rate })
             return c.render(vatRate, 201)
         }
     )
@@ -107,7 +107,7 @@ export const vatRateRoutes = new Hono<{ Variables: Variables }>()
             }
 
             const user = c.get("user")
-            audit(user.id, user.email, "update", "vatRate", id, { year: vatRate.year, rate: vatRate.rate })
+            audit(user.id, user.initials, "update", "vatRate", id, { year: vatRate.year, rate: vatRate.rate })
             return c.render(vatRate, 200)
         }
     )
@@ -126,6 +126,6 @@ export const vatRateRoutes = new Hono<{ Variables: Variables }>()
 
         await vatRateRepository.delete(id)
         const user = c.get("user")
-        audit(user.id, user.email, "delete", "vatRate", id, { year: vatRate.year, rate: vatRate.rate })
+        audit(user.id, user.initials, "delete", "vatRate", id, { year: vatRate.year, rate: vatRate.rate })
         return c.json({ success: true }, 200)
     })

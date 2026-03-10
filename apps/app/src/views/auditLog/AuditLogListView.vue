@@ -178,10 +178,10 @@ function formatLog(log: AuditLogResponse) {
     const entity = entityArticles[log.entity] ?? log.entity
 
     if (log.action === "login_success") {
-        return `${log.userEmail} ${verb}`
+        return `${log.userInitials} ${verb}`
     }
     if (log.action === "login_failure") {
-        return `${log.userEmail} — ${verb}`
+        return `${log.userInitials} — ${verb}`
     }
 
     const metaStr = log.meta
@@ -191,7 +191,7 @@ function formatLog(log: AuditLogResponse) {
               .join(", ")
         : ""
 
-    return `${log.userEmail} ${verb} ${entity}${metaStr ? ` (${metaStr})` : ""}`
+    return `${log.userInitials} ${verb} ${entity}${metaStr ? ` (${metaStr})` : ""}`
 }
 
 const onDateRangeChange = (value: { fromDate?: Date; toDate?: Date }) => {

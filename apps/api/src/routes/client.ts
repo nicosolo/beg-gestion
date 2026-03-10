@@ -63,7 +63,7 @@ export const clientRoutes = new Hono<{ Variables: Variables }>()
             const data = c.req.valid("json")
             const client = await clientRepository.create(data)
             const user = c.get("user")
-            audit(user.id, user.email, "create", "client", client.id, { name: client.name })
+            audit(user.id, user.initials, "create", "client", client.id, { name: client.name })
             return c.render(client, 201)
         }
     )
@@ -88,7 +88,7 @@ export const clientRoutes = new Hono<{ Variables: Variables }>()
             }
 
             const user = c.get("user")
-            audit(user.id, user.email, "update", "client", id, { name: client.name })
+            audit(user.id, user.initials, "update", "client", id, { name: client.name })
             return c.render(client, 200)
         }
     )
@@ -122,7 +122,7 @@ export const clientRoutes = new Hono<{ Variables: Variables }>()
 
             await clientRepository.delete(id)
             const user = c.get("user")
-            audit(user.id, user.email, "delete", "client", id, { name: client.name })
+            audit(user.id, user.initials, "delete", "client", id, { name: client.name })
             return c.json({ success: true }, 200)
         }
     )

@@ -198,7 +198,7 @@ export const activityRoutes = new Hono<{ Variables: Variables }>()
                 return c.json({ error: "Failed to create activity" }, 500)
             }
 
-            audit(user.id, user.email, "create", "activity", newActivity.id, {
+            audit(user.id, user.initials, "create", "activity", newActivity.id, {
                 projectId: activityData.projectId,
             })
             return c.render(newActivity, 201)
@@ -357,7 +357,7 @@ export const activityRoutes = new Hono<{ Variables: Variables }>()
                 throwNotFound("Activity")
             }
 
-            audit(user.id, user.email, "update", "activity", id, {
+            audit(user.id, user.initials, "update", "activity", id, {
                 projectId: activityData.projectId ?? existingActivity.project?.id,
             })
             return c.render(updatedActivity, 200)
@@ -416,7 +416,7 @@ export const activityRoutes = new Hono<{ Variables: Variables }>()
             // Perform bulk update
             const updatedCount = await activityRepository.bulkUpdate(ids, updates)
 
-            audit(user.id, user.email, "update", "activity", null, { count: updatedCount })
+            audit(user.id, user.initials, "update", "activity", null, { count: updatedCount })
             return c.json(
                 {
                     updated: updatedCount,
@@ -475,7 +475,7 @@ export const activityRoutes = new Hono<{ Variables: Variables }>()
             throwNotFound("Activity")
         }
 
-        audit(user.id, user.email, "delete", "activity", id, {
+        audit(user.id, user.initials, "delete", "activity", id, {
             projectId: existingActivity.project?.id,
         })
         return c.json({ message: "Activity deleted successfully" }, 200)

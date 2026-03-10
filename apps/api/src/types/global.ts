@@ -8,5 +8,6 @@ export type Variables = {
         role: UserRole
         firstName: string
         lastName: string
+        initials: string
     }
 }

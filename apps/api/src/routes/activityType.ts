@@ -145,7 +145,7 @@ export const activityTypeRoutes = new Hono<{ Variables: Variables }>()
             }
 
             const user = c.get("user")
-            audit(user.id, user.email, "create", "activityType", newActivityType.id, { name: newActivityType.name, code: newActivityType.code })
+            audit(user.id, user.initials, "create", "activityType", newActivityType.id, { name: newActivityType.name, code: newActivityType.code })
             return c.render(newActivityType, 201)
         }
     )
@@ -184,7 +184,7 @@ export const activityTypeRoutes = new Hono<{ Variables: Variables }>()
             }
 
             const user = c.get("user")
-            audit(user.id, user.email, "update", "activityType", id, { name: updatedActivityType.name, code: updatedActivityType.code })
+            audit(user.id, user.initials, "update", "activityType", id, { name: updatedActivityType.name, code: updatedActivityType.code })
             return c.render(updatedActivityType, 200)
         }
     )
@@ -218,7 +218,7 @@ export const activityTypeRoutes = new Hono<{ Variables: Variables }>()
 
             await activityTypeRepository.delete(id)
             const user = c.get("user")
-            audit(user.id, user.email, "delete", "activityType", id, { name: existingActivityType.name, code: existingActivityType.code })
+            audit(user.id, user.initials, "delete", "activityType", id, { name: existingActivityType.name, code: existingActivityType.code })
             return c.render({ message: "Activity type deleted successfully" }, 200)
         }
     )

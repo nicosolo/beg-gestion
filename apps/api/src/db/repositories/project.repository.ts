@@ -1,4 +1,4 @@
-import { eq, sql, like, and, or, gte, lte, asc, desc, inArray, gt, ne } from "drizzle-orm"
+import { eq, sql, like, and, or, gte, lte, asc, desc, inArray, gt } from "drizzle-orm"
 import { db } from "../index"
 import {
     projects,

@@ -63,7 +63,7 @@ export const engineerRoutes = new Hono<{ Variables: Variables }>()
             const data = c.req.valid("json")
             const engineer = await engineerRepository.create(data)
             const user = c.get("user")
-            audit(user.id, user.email, "create", "engineer", engineer.id, { name: engineer.name })
+            audit(user.id, user.initials, "create", "engineer", engineer.id, { name: engineer.name })
             return c.render(engineer, 201)
         }
     )
@@ -88,7 +88,7 @@ export const engineerRoutes = new Hono<{ Variables: Variables }>()
             }
 
             const user = c.get("user")
-            audit(user.id, user.email, "update", "engineer", id, { name: engineer.name })
+            audit(user.id, user.initials, "update", "engineer", id, { name: engineer.name })
             return c.render(engineer, 200)
         }
     )
@@ -118,6 +118,6 @@ export const engineerRoutes = new Hono<{ Variables: Variables }>()
 
         await engineerRepository.delete(id)
         const user = c.get("user")
-        audit(user.id, user.email, "delete", "engineer", id, { name: engineer.name })
+        audit(user.id, user.initials, "delete", "engineer", id, { name: engineer.name })
         return c.json({ success: true }, 200)
     })

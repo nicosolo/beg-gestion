@@ -83,7 +83,7 @@ export const workloadRoutes = new Hono<{ Variables: Variables }>()
 
             const workload = await workloadRepository.create(workloadData)
             const user = c.get("user")
-            audit(user.id, user.email, "create", "workload", workload.id)
+            audit(user.id, user.initials, "create", "workload", workload.id)
             return c.render(workload as WorkloadResponse, 201)
         }
     )
@@ -101,7 +101,7 @@ export const workloadRoutes = new Hono<{ Variables: Variables }>()
 
             const workloads = await workloadRepository.bulkCreate(workloadsData)
             const user = c.get("user")
-            audit(user.id, user.email, "create", "workload", null, { count: workloads.length })
+            audit(user.id, user.initials, "create", "workload", null, { count: workloads.length })
             return c.render(workloads as WorkloadArrayResponse, 201)
         }
     )
@@ -126,7 +126,7 @@ export const workloadRoutes = new Hono<{ Variables: Variables }>()
             }
 
             const user = c.get("user")
-            audit(user.id, user.email, "update", "workload", id)
+            audit(user.id, user.initials, "update", "workload", id)
             return c.render(workload as WorkloadResponse, 200)
         }
     )
@@ -142,7 +142,7 @@ export const workloadRoutes = new Hono<{ Variables: Variables }>()
         }
 
         const user = c.get("user")
-        audit(user.id, user.email, "delete", "workload", id)
+        audit(user.id, user.initials, "delete", "workload", id)
         return c.json({ message: "Workload deleted successfully" }, 200)
     })
 

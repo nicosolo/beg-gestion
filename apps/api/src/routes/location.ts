@@ -65,7 +65,7 @@ export const locationRoutes = new Hono<{ Variables: Variables }>()
             const locationData = c.req.valid("json")
             const newLocation = await locationRepository.create(locationData)
             const user = c.get("user")
-            audit(user.id, user.email, "create", "location", newLocation.id, { name: newLocation.name })
+            audit(user.id, user.initials, "create", "location", newLocation.id, { name: newLocation.name })
             return c.render(newLocation, 201)
         }
     )
@@ -96,7 +96,7 @@ export const locationRoutes = new Hono<{ Variables: Variables }>()
             }
 
             const user = c.get("user")
-            audit(user.id, user.email, "update", "location", id, { name: updatedLocation.name })
+            audit(user.id, user.initials, "update", "location", id, { name: updatedLocation.name })
             return c.render(updatedLocation, 200)
         }
     )
@@ -135,7 +135,7 @@ export const locationRoutes = new Hono<{ Variables: Variables }>()
             }
 
             const user = c.get("user")
-            audit(user.id, user.email, "delete", "location", id, { name: existingLocation.name })
+            audit(user.id, user.initials, "delete", "location", id, { name: existingLocation.name })
             return c.render({ success: true }, 204)
         }
     )

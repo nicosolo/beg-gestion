@@ -35,7 +35,7 @@ beforeAll(async () => {
 	await db.insert(schema.auditLogs).values([
 		{
 			userId: seed.admin.id,
-			userEmail: "admin@test.com",
+			userInitials: "AT",
 			action: "create",
 			entity: "project",
 			entityId: 1,
@@ -43,7 +43,7 @@ beforeAll(async () => {
 		},
 		{
 			userId: seed.admin.id,
-			userEmail: "admin@test.com",
+			userInitials: "AT",
 			action: "update",
 			entity: "project",
 			entityId: 1,
@@ -51,7 +51,7 @@ beforeAll(async () => {
 		},
 		{
 			userId: null,
-			userEmail: "unknown@test.com",
+			userInitials: "unknown@test.com",
 			action: "login_failure",
 			entity: "auth",
 			entityId: null,
@@ -59,7 +59,7 @@ beforeAll(async () => {
 		},
 		{
 			userId: seed.user.id,
-			userEmail: "user@test.com",
+			userInitials: "UT",
 			action: "login_success",
 			entity: "auth",
 			entityId: null,
@@ -67,7 +67,7 @@ beforeAll(async () => {
 		},
 		{
 			userId: seed.admin.id,
-			userEmail: "admin@test.com",
+			userInitials: "AT",
 			action: "delete",
 			entity: "client",
 			entityId: 5,

@@ -500,7 +500,7 @@ export const auditLogs = sqliteTable(
     {
         id: integer("id").primaryKey({ autoIncrement: true }),
         userId: integer("userId").references(() => users.id, { onDelete: "set null" }),
-        userEmail: text("userEmail").notNull(),
+        userInitials: text("userInitials").notNull(),
         action: text("action").notNull(),
         entity: text("entity").notNull(),
         entityId: integer("entityId"),
