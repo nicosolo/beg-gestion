@@ -2,6 +2,7 @@ import { eq, sql, like, and, asc, desc } from "drizzle-orm"
 import { db } from "../index"
 import { locations, projects } from "../schema"
 import type { Location, LocationCreate, LocationUpdate, LocationFilter } from "@beg/validations"
+import { rebuildSearchForRelatedProjects } from "../fts"
 
 export const locationRepository = {
     findAll: async (filter?: LocationFilter) => {
@@ -161,6 +162,10 @@ export const locationRepository = {
                 createdAt: locations.createdAt,
                 updatedAt: locations.updatedAt,
             })
+
+        if (result[0]) {
+            await rebuildSearchForRelatedProjects("location", id)
+        }
 
         return result[0] || null
     },

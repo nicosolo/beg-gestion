@@ -2,6 +2,7 @@ import { eq, sql, like, and } from "drizzle-orm"
 import { db } from "../index"
 import { clients, invoices, projects } from "../schema"
 import type { ClientFilter, ClientCreateInput, ClientUpdateInput } from "@beg/validations"
+import { rebuildSearchForRelatedProjects } from "../fts"
 
 export const clientRepository = {
     findAll: async (filter: ClientFilter) => {
@@ -99,6 +100,11 @@ export const clientRepository = {
                 createdAt: clients.createdAt,
                 updatedAt: clients.updatedAt,
             })
+
+        if (result[0]) {
+            await rebuildSearchForRelatedProjects("client", id)
+        }
+
         return result[0] || null
     },
 

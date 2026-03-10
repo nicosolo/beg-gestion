@@ -17,6 +17,7 @@ import type { InvoiceCreateInput, InvoiceUpdateInput, InvoiceFilter } from "@beg
 import { projectRepository } from "./project.repository"
 import type { Variables } from "@src/types/global"
 import { hasRole } from "@src/tools/role-middleware"
+import { rebuildProjectSearchIndex } from "../fts"
 
 // Helper to get project IDs where user is a manager
 const getManagerProjectIds = async (userId: number): Promise<number[]> => {
@@ -487,7 +488,7 @@ export const invoiceRepository = {
         }
 
         // Start transaction
-        return await db.transaction(async (tx) => {
+        const result = await db.transaction(async (tx) => {
             const now = new Date()
             // Create invoice
             const [invoice] = await tx
@@ -645,6 +646,10 @@ export const invoiceRepository = {
             // Return the created invoice
             return this.findById(invoice.id, user)
         })
+
+        await rebuildProjectSearchIndex(data.projectId)
+
+        return result
     },
 
     async update(id: number, data: Partial<InvoiceUpdateInput>, user: Variables["user"]) {
@@ -655,7 +660,7 @@ export const invoiceRepository = {
         }
 
         // Start transaction
-        return await db.transaction(async (tx) => {
+        const result = await db.transaction(async (tx) => {
             const updateData: Partial<typeof invoices.$inferInsert> = {
                 updatedAt: new Date(),
             }
@@ -843,6 +848,10 @@ export const invoiceRepository = {
 
             return this.findById(id, user)
         })
+
+        await rebuildProjectSearchIndex(existing.projectId)
+
+        return result
     },
 
     async delete(id: number, user: Variables["user"]) {
@@ -857,6 +866,7 @@ export const invoiceRepository = {
         }
 
         await db.delete(invoices).where(eq(invoices.id, id))
+        await rebuildProjectSearchIndex(existing.projectId)
         return true
     },
 

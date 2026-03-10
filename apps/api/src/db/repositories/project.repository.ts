@@ -1,4 +1,4 @@
-import { eq, sql, like, and, or, gte, lte, asc, desc, inArray, gt } from "drizzle-orm"
+import { eq, sql, and, gte, lte, asc, desc, inArray, gt } from "drizzle-orm"
 import { db } from "../index"
 import {
     projects,
@@ -18,6 +18,7 @@ import {
     type ProjectCreateInput,
     type ProjectUpdateInput,
 } from "@beg/validations"
+import { rebuildProjectSearchIndex } from "../fts"
 
 export const projectRepository = {
     // Check if a user is a manager of a specific project
@@ -62,63 +63,21 @@ export const projectRepository = {
             whereConditions.push(eq(projects.status, status))
         }
 
-        // Name filter (case-insensitive search)
-        // Split search terms: numbers match projectNumber, text matches name
+        // FTS5 full-text search
+        let ftsQuery: string | null = null
         if (text && text.trim()) {
-            const terms = text.trim().split(/\s+/)
-            const numberTerms = terms.filter((t) => /^\d+$/.test(t))
-            const textTerms = terms.filter((t) => !/^\d+$/.test(t))
+            ftsQuery = text
+                .trim()
+                .split(/\s+/)
+                .map((term) => `"${term.replace(/"/g, '""')}"*`)
+                .join(" ")
 
-            const conditions = []
-
-            // Match number terms against projectNumber
-            if (numberTerms.length > 0) {
-                const numberPattern = numberTerms.join("%")
-                conditions.push(like(projects.projectNumber, `${numberPattern}%`))
-            }
-
-            // Match text terms against name and related entities (accent-insensitive)
-            if (textTerms.length > 0) {
-                const textPattern = `%${textTerms.join("%")}%`
-                conditions.push(
-                    or(
-                        sql`${projects.name} LIKE ${textPattern}`,
-                        sql`${projects.subProjectName} LIKE ${textPattern}`,
-                        sql`${clients.name} LIKE ${textPattern}`,
-                        sql`${locations.name} LIKE ${textPattern}`,
-                        sql`${locations.region} LIKE ${textPattern}`,
-                        sql`${locations.address} LIKE ${textPattern}`,
-                        sql`${engineers.name} LIKE ${textPattern}`,
-                        sql`${companies.name} LIKE ${textPattern}`,
-                        sql`EXISTS (SELECT 1 FROM ${projectUsers} pu JOIN ${users} u ON pu.userId = u.id WHERE pu.projectId = ${projects.id} AND (${sql`u.firstName`} LIKE ${textPattern} OR ${sql`u.lastName`} LIKE ${textPattern} OR ${sql`u.initials`} LIKE ${textPattern}))`,
-                        sql`EXISTS (SELECT 1 FROM ${projectProjectTypes} ppt JOIN ${projectTypes} pt ON ppt.projectTypeId = pt.id WHERE ppt.projectId = ${projects.id} AND ${sql`pt.name`} LIKE ${textPattern})`
-                    )
-                )
-            }
-
-            // If only numbers or only text, also try matching full string against both
-            if (numberTerms.length === 0 || textTerms.length === 0) {
-                const fullPattern = `%${terms.join("%")}%`
-                whereConditions.push(
-                    or(
-                        sql`${projects.name} LIKE ${fullPattern}`,
-                        like(projects.projectNumber, `${terms.join("%")}%`),
-                        sql`${projects.subProjectName} LIKE ${fullPattern}`,
-                        sql`${clients.name} LIKE ${fullPattern}`,
-                        sql`${locations.name} LIKE ${fullPattern}`,
-                        sql`${locations.region} LIKE ${fullPattern}`,
-                        sql`${locations.address} LIKE ${fullPattern}`,
-                        sql`${engineers.name} LIKE ${fullPattern}`,
-                        sql`${companies.name} LIKE ${fullPattern}`,
-                        sql`EXISTS (SELECT 1 FROM ${projectUsers} pu JOIN ${users} u ON pu.userId = u.id WHERE pu.projectId = ${projects.id} AND (${sql`u.firstName`} LIKE ${fullPattern} OR ${sql`u.lastName`} LIKE ${fullPattern} OR ${sql`u.initials`} LIKE ${fullPattern}))`,
-                        sql`EXISTS (SELECT 1 FROM ${projectProjectTypes} ppt JOIN ${projectTypes} pt ON ppt.projectTypeId = pt.id WHERE ppt.projectId = ${projects.id} AND ${sql`pt.name`} LIKE ${fullPattern})`,
-                        ...(conditions.length > 0 ? [and(...conditions)] : [])
-                    )
-                )
-            } else {
-                // Both number and text terms - require both to match their respective fields
-                whereConditions.push(and(...conditions))
-            }
+            whereConditions.push(
+                sql`${projects.id} IN (
+                    SELECT CAST(project_id AS INTEGER) FROM project_search
+                    WHERE project_search MATCH ${ftsQuery}
+                )`
+            )
         }
 
         // Date filters - filter by project start date
@@ -181,38 +140,20 @@ export const projectRepository = {
             }
         })()
 
-        // Create custom sort order to prioritize projectNumber matches when searching by name
+        // BM25 relevance ranking for FTS search
         const sortExpressions = []
 
-        // If searching by name, add priority sort for exact projectNumber matches
-        if (text && text.trim()) {
-            const terms = text.trim().split(/\s+/)
-            const numberTerms = terms.filter((t) => /^\d+$/.test(t))
-
-            // Prioritize exact projectNumber match for number terms
-            if (numberTerms.length > 0) {
-                const exactNumber = numberTerms[0] // First number for exact match
-                sortExpressions.push(
-                    sql`CASE
-                            WHEN ${projects.projectNumber} = ${exactNumber} THEN 0
-                            WHEN ${projects.projectNumber} LIKE ${exactNumber + "%"} THEN 1
-                            ELSE 2
-                        END`
-                )
-            } else {
-                // No number terms - use original logic for text-only search
-                const searchTokens = terms.join("%")
-                const namePattern = `%${searchTokens}%`
-                sortExpressions.push(
-                    sql`CASE
-                            WHEN ${projects.subProjectName} LIKE ${namePattern} THEN 0
-                            WHEN ${projects.projectNumber} LIKE ${terms.join("%") + "%"} THEN 1
-                            WHEN ${projects.name} LIKE ${namePattern} THEN 2
-                            WHEN ${clients.name} LIKE ${namePattern} OR ${locations.name} LIKE ${namePattern} OR ${locations.region} LIKE ${namePattern} OR ${engineers.name} LIKE ${namePattern} OR ${companies.name} LIKE ${namePattern} THEN 3
-                            ELSE 4
-                        END`
-                )
-            }
+        if (ftsQuery) {
+            // BM25 weights: name(12), subName(13), number(14), remark(4), client(5),
+            // location(5), engineer(5), company(5), types(8),
+            // mgrNames(8), mgrInitials(12), memberNames(5), memberInitials(8),
+            // activities(2), invoices(3)
+            sortExpressions.push(
+                sql`(SELECT bm25(project_search, 12, 13, 14, 4, 5, 5, 5, 5, 8, 8, 12, 5, 8, 2, 3)
+                     FROM project_search
+                     WHERE project_search MATCH ${ftsQuery}
+                     AND CAST(project_id AS INTEGER) = ${projects.id})`
+            )
         }
 
         // Add the main sort column
@@ -749,6 +690,8 @@ export const projectRepository = {
             await db.insert(projectProjectTypes).values(projectTypesToInsert).execute()
         }
 
+        await rebuildProjectSearchIndex(newProject.id)
+
         return newProject.id
     },
 
@@ -845,6 +788,8 @@ export const projectRepository = {
             }
         }
 
+        await rebuildProjectSearchIndex(id)
+
         return id
     },
 
@@ -870,6 +815,8 @@ export const projectRepository = {
             createdAt: new Date(),
             updatedAt: new Date(),
         })
+
+        await rebuildProjectSearchIndex(projectId)
 
         return true
     },

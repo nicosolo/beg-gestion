@@ -1,10 +1,11 @@
-import { db } from "./index"
+import { db, sqlite } from "./index"
 import { resolve } from "node:path"
 import { existsSync } from "node:fs"
 import { dirname } from "node:path"
 import { mkdir } from "node:fs/promises"
 import { DB_FILE_PATH } from "@src/config"
 import { migrate } from "drizzle-orm/bun-sqlite/migrator"
+import { createFtsTable, rebuildAllProjectSearchIndex } from "./fts"
 
 export async function runMigrations() {
     try {
@@ -30,6 +31,23 @@ export async function runMigrations() {
         } catch (migrateError) {
             console.error("Error applying migrations:", migrateError)
             throw migrateError
+        }
+
+        // Create FTS5 virtual table (not managed by Drizzle)
+        createFtsTable()
+
+        // Populate FTS index if empty
+        const row = sqlite.prepare("SELECT COUNT(*) as count FROM project_search").get() as {
+            count: number
+        } | null
+
+        if (!row || row.count === 0) {
+            console.log("FTS index empty, rebuilding...")
+            console.time("rebuildAllProjectSearchIndex")
+            await rebuildAllProjectSearchIndex()
+            console.timeEnd("rebuildAllProjectSearchIndex")
+        } else {
+            console.log("FTS index already populated")
         }
 
         console.log("Database ready")

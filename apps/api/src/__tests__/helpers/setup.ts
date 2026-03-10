@@ -13,6 +13,27 @@ export function createTestDb() {
 	const migrationsFolder = resolve(import.meta.dir, "../../../drizzle")
 	migrate(db, { migrationsFolder })
 
+	// Create FTS5 virtual table (not managed by Drizzle)
+	sqlite.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS project_search USING fts5(
+		project_id UNINDEXED,
+		project_name,
+		sub_project_name,
+		project_number,
+		remark,
+		client_name,
+		location_text,
+		engineer_name,
+		company_name,
+		project_types,
+		manager_names,
+		manager_initials,
+		member_names,
+		member_initials,
+		activity_descriptions,
+		invoice_text,
+		tokenize='unicode61 remove_diacritics 2'
+	)`)
+
 	return { db, sqlite }
 }
 

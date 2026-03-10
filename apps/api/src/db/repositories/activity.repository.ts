@@ -4,6 +4,7 @@ import { activities, activityTypes, projects, users } from "../schema"
 import type { ActivityFilter } from "@beg/validations"
 import type { Variables } from "@src/types/global"
 import { hasRole } from "@src/tools/role-middleware"
+import { rebuildProjectSearchIndex } from "../fts"
 
 // Helper function to update project dates and duration
 export async function updateProjectActivityDates(projectId: number) {
@@ -331,6 +332,7 @@ export const activityRepository = {
 
         // Update project dates after creating activity
         await updateProjectActivityDates(data.projectId)
+        await rebuildProjectSearchIndex(data.projectId)
 
         // Return the created activity with relations
         // Note: For create, we assume the user has access since they're creating it
@@ -364,10 +366,12 @@ export const activityRepository = {
         if (updatedActivity) {
             // Update project dates after updating activity
             await updateProjectActivityDates(updatedActivity.projectId)
+            await rebuildProjectSearchIndex(updatedActivity.projectId)
 
             // If the project was changed, update the old project too
             if (data.projectId && data.projectId !== oldActivity.projectId) {
                 await updateProjectActivityDates(oldActivity.projectId)
+                await rebuildProjectSearchIndex(oldActivity.projectId)
             }
         }
 
@@ -391,6 +395,7 @@ export const activityRepository = {
 
         // Update project dates after deleting activity
         await updateProjectActivityDates(activityToDelete.projectId)
+        await rebuildProjectSearchIndex(activityToDelete.projectId)
 
         return true
     },
@@ -426,9 +431,10 @@ export const activityRepository = {
             )
             .groupBy(activities.projectId)
 
-        // Update project dates for all affected projects
+        // Update project dates and FTS for all affected projects
         for (const project of affectedProjects) {
             await updateProjectActivityDates(project.projectId)
+            await rebuildProjectSearchIndex(project.projectId)
         }
 
         return ids.length
