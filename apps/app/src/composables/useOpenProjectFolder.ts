@@ -4,7 +4,7 @@ import { useTauri } from "@/composables/useTauri"
 import { useAppSettingsStore } from "@/stores/appSettings"
 
 export function useOpenProjectFolder() {
-    const { get: fetchProjectFolder, data: projectFolder } = useProjectFolder()
+    const { get: fetchProjectFolder, data: projectFolder } = useProjectFolder({ silent: true })
     const { isTauri, openFolder } = useTauri()
     const appSettingsStore = useAppSettingsStore()
 
@@ -16,6 +16,14 @@ export function useOpenProjectFolder() {
             : undefined
     )
 
+    const safeFetchProjectFolder = async (...args: Parameters<typeof fetchProjectFolder>) => {
+        try {
+            return await fetchProjectFolder(...args)
+        } catch {
+            // fail silently — folder lookup is non-critical
+        }
+    }
+
     const open = async (e?: Event) => {
         if (!projectFolder.value?.folder?.fullPath || !isTauri.value) return
         e?.preventDefault()
@@ -23,7 +31,7 @@ export function useOpenProjectFolder() {
     }
 
     return {
-        fetchProjectFolder,
+        fetchProjectFolder: safeFetchProjectFolder,
         projectFolder,
         canOpen,
         absolutePath,

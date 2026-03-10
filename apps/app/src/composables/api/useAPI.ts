@@ -89,7 +89,8 @@ export function useGet<
     schemas?: {
         query?: TSchemas["query"]
         params?: TSchemas["params"]
-    }
+    },
+    options?: { silent?: boolean }
 ) {
     const { t } = useI18n()
     const { errorAlert } = useAlert()
@@ -104,17 +105,17 @@ export function useGet<
     type GetOptions = {} & (QueryType extends void ? {} : { query?: QueryType }) &
         (ParamsType extends void ? {} : { params?: ParamsType })
 
-    const get = async (options?: GetOptions) => {
+    const get = async (getOptions?: GetOptions) => {
         loading.value = true
         error.value = null
 
         try {
-            const result = await request<TResponse>("get", endpoint, schemas, options)
+            const result = await request<TResponse>("get", endpoint, schemas, getOptions)
             data.value = result as TResponse
             return result as TResponse
         } catch (e) {
             error.value = e instanceof Error ? e.message : "Unknown error"
-            if (e instanceof ApiError) {
+            if (!options?.silent && e instanceof ApiError) {
                 errorAlert(e.getLocalizedMessage(t))
             }
             throw e

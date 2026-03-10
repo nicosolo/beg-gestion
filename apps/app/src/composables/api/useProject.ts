@@ -64,7 +64,7 @@ export function useUpdateProject() {
     })
 }
 
-export function useProjectFolder() {
+export function useProjectFolder(options?: { silent?: boolean }) {
     return useGet<
         {
             projectId: number
@@ -80,9 +80,7 @@ export function useProjectFolder() {
         {
             params: typeof idParamSchema
         }
-    >("project/:id/folder", {
-        params: idParamSchema,
-    })
+    >("project/:id/folder", { params: idParamSchema }, options)
 }
 
 // Add a user as a member to a project
