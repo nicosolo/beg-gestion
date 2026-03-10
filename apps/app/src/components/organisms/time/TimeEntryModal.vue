@@ -97,6 +97,7 @@
                             id="duration"
                             type="time"
                             v-model.number="activity.duration"
+                            min="0"
                             :disabled="loading || isLocked"
                             class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         />

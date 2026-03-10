@@ -6,6 +6,7 @@
         @input="handleInput"
         @keydown="handleKeydown"
         step="any"
+        :min="min"
         :class="[computedClass, $attrs.class]"
     />
 </template>
@@ -17,10 +18,12 @@ const {
     modelValue,
     type = "number",
     step = 1,
+    min,
 } = defineProps<{
     modelValue: number | null
     type?: "percentage" | "amount" | "number" | "distance" | "time"
     step?: number
+    min?: number | string
 }>()
 
 const emit = defineEmits<{
@@ -61,7 +64,11 @@ function handleKeydown(event: KeyboardEvent) {
         event.preventDefault()
         const current = modelValue ?? 0
         const step = stepValue.value
-        const newValue = event.key === "ArrowUp" ? current + step : current - step
+        let newValue = event.key === "ArrowUp" ? current + step : current - step
+        if (min !== undefined) {
+            const minNum = typeof min === "string" ? parseFloat(min) : min
+            if (!isNaN(minNum) && newValue < minNum) newValue = minNum
+        }
         const rounded = Math.round(newValue * 1000) / 1000
         emit("update:modelValue", rounded)
     }

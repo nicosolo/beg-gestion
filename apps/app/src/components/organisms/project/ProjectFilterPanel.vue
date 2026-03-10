@@ -8,7 +8,7 @@
                     <FormField v-if="showNameInput" :label="$t('projects.name')">
                         <template #input>
                             <Input
-                                v-model="filterData.name"
+                                v-model="filterData.text"
                                 :placeholder="$t('projects.filters.searchByNameAndNumber')"
                                 @update:model-value="emitInputChange"
                             />
@@ -196,7 +196,7 @@ const emit = defineEmits<{
 
 // Create reactive copy of the filter
 const filterData = reactive<ProjectFilterProps["filter"]>({
-    name: filter.name,
+    text: filter.text,
     includeArchived: filter.includeArchived,
     status: filter.status,
     sortBy: filter.sortBy,
@@ -217,7 +217,7 @@ onActivated(() => {
 watch(
     () => filter,
     (newFilter) => {
-        filterData.name = newFilter.name
+        filterData.text = newFilter.text
         filterData.includeArchived = newFilter.includeArchived
         filterData.status = newFilter.status
         filterData.sortBy = newFilter.sortBy
@@ -256,7 +256,7 @@ const emitInputChange = () => {
 // Reset filters
 const resetFilters = () => {
     const { from, to } = getYearRange()
-    filterData.name = ""
+    filterData.text = ""
     filterData.includeArchived = false
     filterData.status = undefined
     filterData.sortBy = "name"

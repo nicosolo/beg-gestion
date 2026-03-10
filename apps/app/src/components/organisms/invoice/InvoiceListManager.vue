@@ -30,7 +30,7 @@
                 :loading="loading"
                 :sort="currentSort"
                 @sort-change="onSortChange"
-                mobile-breakpoint="xl"
+                mobile-breakpoint="lg"
             >
                 <template #cell:invoiceNumber="{ item }">
                     {{ item.invoiceNumber || item.reference || "-" }}
@@ -103,7 +103,7 @@ import { ref, reactive, computed, onMounted, onActivated } from "vue"
 import { useI18n } from "vue-i18n"
 import Button from "@/components/atoms/Button.vue"
 import Badge from "@/components/atoms/Badge.vue"
-import DataTable from "@/components/molecules/DataTable.vue"
+import DataTable, { type Column } from "@/components/molecules/DataTable.vue"
 import Pagination from "@/components/organisms/Pagination.vue"
 import LoadingOverlay from "@/components/atoms/LoadingOverlay.vue"
 import InvoiceFilterPanel, {
@@ -196,7 +196,7 @@ const onFilterChange = (newFilters: InvoiceFilterModel) => {
 }
 
 // Define all possible columns with sortKey for sortable columns
-const allColumns = [
+const allColumns: Column[] = [
     {
         key: "invoiceNumber",
         label: t("invoice.invoiceNumber"),

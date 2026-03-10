@@ -85,9 +85,7 @@
                         <div
                             v-for="column in columns"
                             :key="column.key"
-                            :class="[
-                                'px-2 py-0.5 border-r border-gray-200 last:border-r-0 overflow-hidden',
-                            ]"
+                            :class="['px-2 py-0.5 border-r border-gray-200 last:border-r-0']"
                         >
                             <slot :name="`cell:${column.key}`" :item="item" :column="column">
                                 <TruncateWithTooltip
