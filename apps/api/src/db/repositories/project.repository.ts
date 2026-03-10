@@ -347,8 +347,14 @@ export const projectRepository = {
                 return acc
             },
             {
-                managersMap: new Map<number, { id: number; firstName: string; lastName: string; initials: string }[]>(),
-                membersMap: new Map<number, { id: number; firstName: string; lastName: string; initials: string }[]>(),
+                managersMap: new Map<
+                    number,
+                    { id: number; firstName: string; lastName: string; initials: string }[]
+                >(),
+                membersMap: new Map<
+                    number,
+                    { id: number; firstName: string; lastName: string; initials: string }[]
+                >(),
             }
         )
 
@@ -769,7 +775,6 @@ export const projectRepository = {
         if (data.latitude !== undefined) updateData.latitude = data.latitude
         if (data.longitude !== undefined) updateData.longitude = data.longitude
         if (data.offerAmount !== undefined) updateData.offerAmount = data.offerAmount
-        console.log(data, updateData)
 
         // Update the project
         await db

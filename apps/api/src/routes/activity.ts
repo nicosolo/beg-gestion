@@ -176,7 +176,6 @@ export const activityRoutes = new Hono<{ Variables: Variables }>()
                     activityData.date.getFullYear()
                 )
             }
-            console.log(activityRate, userClass)
             // Add the current user's ID to the activity data
             const newActivity = await activityRepository.create({
                 activityTypeId: activityData.activityTypeId,
@@ -199,7 +198,9 @@ export const activityRoutes = new Hono<{ Variables: Variables }>()
                 return c.json({ error: "Failed to create activity" }, 500)
             }
 
-            audit(user.id, user.email, "create", "activity", newActivity.id, { projectId: activityData.projectId })
+            audit(user.id, user.email, "create", "activity", newActivity.id, {
+                projectId: activityData.projectId,
+            })
             return c.render(newActivity, 201)
         }
     )
@@ -356,7 +357,9 @@ export const activityRoutes = new Hono<{ Variables: Variables }>()
                 throwNotFound("Activity")
             }
 
-            audit(user.id, user.email, "update", "activity", id, { projectId: activityData.projectId ?? existingActivity.project?.id })
+            audit(user.id, user.email, "update", "activity", id, {
+                projectId: activityData.projectId ?? existingActivity.project?.id,
+            })
             return c.render(updatedActivity, 200)
         }
     )
@@ -472,6 +475,8 @@ export const activityRoutes = new Hono<{ Variables: Variables }>()
             throwNotFound("Activity")
         }
 
-        audit(user.id, user.email, "delete", "activity", id, { projectId: existingActivity.project?.id })
+        audit(user.id, user.email, "delete", "activity", id, {
+            projectId: existingActivity.project?.id,
+        })
         return c.json({ message: "Activity deleted successfully" }, 200)
     })

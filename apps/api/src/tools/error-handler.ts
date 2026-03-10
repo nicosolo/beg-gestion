@@ -83,12 +83,11 @@ export function parseZodError(error: ZodError): ValidationErrorDetail[] {
 
 // Global error handler middleware
 export async function errorHandler(err: Error, c: Context) {
-    console.error("[Error]", err)
+    console.error(`[Error] ${new Date().toISOString()} ${c.req.method} ${c.req.path}`, err)
 
     // Handle our custom API exceptions
     if (err instanceof ApiException) {
         const errorResponse = createApiError(err.errorCode, err.message, err.details)
-        console.log(errorResponse)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return c.json(errorResponse, err.statusCode as any)
     }

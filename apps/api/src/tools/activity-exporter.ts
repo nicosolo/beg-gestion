@@ -29,7 +29,6 @@ function getColumnLetter(index: number): string {
  */
 function getColumnLetterByKey(columns: Partial<ExcelJS.Column>[], key: string): string | undefined {
     const index = columns.findIndex((col) => col.key === key)
-    console.log({ index, key, l: getColumnLetter(index) })
     return index >= 0 ? getColumnLetter(index) : undefined
 }
 
