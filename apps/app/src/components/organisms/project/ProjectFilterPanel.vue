@@ -164,9 +164,9 @@ const { t } = useI18n()
 
 const statusOptions = computed(() => [
     {
-        value: "offer",
-        label: t("projects.status.offer"),
-        activeClass: "bg-blue-600 text-white border-blue-600",
+        value: "active",
+        label: t("projects.status.active"),
+        activeClass: "bg-emerald-600 text-white border-emerald-600",
     },
     {
         value: "draft",
@@ -174,9 +174,9 @@ const statusOptions = computed(() => [
         activeClass: "bg-amber-500 text-white border-amber-500",
     },
     {
-        value: "active",
-        label: t("projects.status.active"),
-        activeClass: "bg-emerald-600 text-white border-emerald-600",
+        value: "offer",
+        label: t("projects.status.offer"),
+        activeClass: "bg-blue-600 text-white border-blue-600",
     },
 ])
 
@@ -258,7 +258,7 @@ const resetFilters = () => {
     const { from, to } = getYearRange()
     filterData.text = ""
     filterData.includeArchived = false
-    filterData.status = undefined
+    filterData.status = "active"
     filterData.sortBy = "name"
     filterData.sortOrder = "asc"
     filterData.fromDate = from

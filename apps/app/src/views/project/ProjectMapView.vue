@@ -84,7 +84,7 @@ const hasInteracted = ref(false)
 
 // Initialize filter with default values
 const filter = ref<ProjectFilterModel>({
-    name: "",
+    text: "",
     includeArchived: false,
     sortBy: "name",
     sortOrder: "asc",

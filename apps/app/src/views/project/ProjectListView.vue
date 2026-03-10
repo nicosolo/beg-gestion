@@ -137,7 +137,7 @@ const authStore = useAuthStore()
 // Filter state
 
 const filter = ref<ProjectFilterModel>({
-    name: "",
+    text: "",
     includeArchived: false,
     sortBy: "lastActivityDate",
     sortOrder: "desc",
@@ -146,6 +146,7 @@ const filter = ref<ProjectFilterModel>({
     referentUserId: authStore.user?.id,
     projectTypeIds: [],
     hasUnbilledTime: false,
+    status: "active",
 })
 
 const sort = computed(() => ({

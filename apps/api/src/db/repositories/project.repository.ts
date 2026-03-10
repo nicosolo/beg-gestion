@@ -60,9 +60,6 @@ export const projectRepository = {
         // Status filter
         if (status) {
             whereConditions.push(eq(projects.status, status))
-        } else {
-            // By default exclude "offer" projects
-            whereConditions.push(ne(projects.status, "offer"))
         }
 
         // Name filter (case-insensitive search)

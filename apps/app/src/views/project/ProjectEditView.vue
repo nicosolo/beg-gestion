@@ -156,7 +156,11 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField :label="$t('projects.responsible')" :error="errors.projectManagers">
+                    <FormField
+                        :label="$t('projects.responsible')"
+                        :error="errors.projectManagers"
+                        required
+                    >
                         <template #input>
                             <UserSelect
                                 v-model="form.projectManagers"
@@ -583,6 +587,11 @@ const validateForm = (): boolean => {
 
     if (!form.value.projectTypeIds || form.value.projectTypeIds.length === 0) {
         errors.value.projectTypeIds = t("validation.required")
+        isValid = false
+    }
+
+    if (!form.value.projectManagers || form.value.projectManagers.length === 0) {
+        errors.value.projectManagers = t("validation.required")
         isValid = false
     }
 

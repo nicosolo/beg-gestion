@@ -18,7 +18,7 @@
 
 <script setup lang="ts">
 defineProps<{
-    modelValue?: string
+    modelValue?: string | number | null
     type?: string
     placeholder?: string
     disabled?: boolean
