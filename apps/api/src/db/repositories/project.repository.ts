@@ -1,5 +1,5 @@
 import { eq, sql, and, gte, lte, asc, desc, inArray, gt } from "drizzle-orm"
-import { db } from "../index"
+import { db, sqlite } from "../index"
 import {
     projects,
     clients,
@@ -63,21 +63,34 @@ export const projectRepository = {
             whereConditions.push(eq(projects.status, status))
         }
 
-        // FTS5 full-text search
-        let ftsQuery: string | null = null
+        // FTS5 full-text search — single query for both filtering and ranking
+        let ftsRankedIds: number[] = []
         if (text && text.trim()) {
-            ftsQuery = text
+            const ftsQuery = text
                 .trim()
                 .split(/\s+/)
                 .map((term) => `"${term.replace(/"/g, '""')}"*`)
                 .join(" ")
 
-            whereConditions.push(
-                sql`${projects.id} IN (
-                    SELECT CAST(project_id AS INTEGER) FROM project_search
-                    WHERE project_search MATCH ${ftsQuery}
-                )`
-            )
+            // BM25 weights: name(12), subName(13), number(14), remark(4), client(5),
+            // location(5), engineer(5), company(5), types(8),
+            // mgrNames(8), mgrInitials(12), memberNames(5), memberInitials(8),
+            // activities(2), invoices(3)
+            const ftsResults = sqlite
+                .prepare(
+                    `SELECT CAST(project_id AS INTEGER) as id FROM project_search
+                     WHERE project_search MATCH ?
+                     ORDER BY bm25(project_search, 12, 13, 14, 4, 5, 5, 5, 5, 8, 8, 12, 5, 8, 2, 3)`
+                )
+                .all(ftsQuery) as { id: number }[]
+
+            ftsRankedIds = ftsResults.map((r) => r.id)
+
+            if (ftsRankedIds.length === 0) {
+                whereConditions.push(sql`1 = 0`)
+            } else {
+                whereConditions.push(inArray(projects.id, ftsRankedIds))
+            }
         }
 
         // Date filters - filter by project start date
@@ -140,19 +153,13 @@ export const projectRepository = {
             }
         })()
 
-        // BM25 relevance ranking for FTS search
+        // Pre-computed FTS rank order via CASE (avoids correlated subquery)
         const sortExpressions = []
 
-        if (ftsQuery) {
-            // BM25 weights: name(12), subName(13), number(14), remark(4), client(5),
-            // location(5), engineer(5), company(5), types(8),
-            // mgrNames(8), mgrInitials(12), memberNames(5), memberInitials(8),
-            // activities(2), invoices(3)
+        if (ftsRankedIds.length > 0) {
+            const cases = ftsRankedIds.map((id, i) => sql`WHEN ${id} THEN ${i}`)
             sortExpressions.push(
-                sql`(SELECT bm25(project_search, 12, 13, 14, 4, 5, 5, 5, 5, 8, 8, 12, 5, 8, 2, 3)
-                     FROM project_search
-                     WHERE project_search MATCH ${ftsQuery}
-                     AND CAST(project_id AS INTEGER) = ${projects.id})`
+                sql`CASE ${projects.id} ${sql.join(cases, sql` `)} ELSE ${ftsRankedIds.length} END`
             )
         }
 
