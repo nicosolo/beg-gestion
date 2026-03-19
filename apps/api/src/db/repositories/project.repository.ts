@@ -1,4 +1,4 @@
-import { eq, sql, and, gte, lte, asc, desc, inArray, gt } from "drizzle-orm"
+import { eq, sql, and, gte, lte, asc, desc, inArray, gt, isNotNull } from "drizzle-orm"
 import { db, sqlite } from "../index"
 import {
     projects,
@@ -52,6 +52,10 @@ export const projectRepository = {
             sortOrder = "asc",
             hasUnbilledTime = undefined,
             status,
+            minLat,
+            maxLat,
+            minLng,
+            maxLng,
         } = filters || {}
         const offset = (page - 1) * limit
 
@@ -108,6 +112,21 @@ export const projectRepository = {
 
         if (hasUnbilledTime === true) {
             whereConditions.push(gt(projects.unBilledDuration, 0))
+        }
+
+        // Bounds filtering (for map viewport)
+        if (
+            minLat !== undefined &&
+            maxLat !== undefined &&
+            minLng !== undefined &&
+            maxLng !== undefined
+        ) {
+            whereConditions.push(isNotNull(projects.latitude))
+            whereConditions.push(isNotNull(projects.longitude))
+            whereConditions.push(gte(projects.latitude, minLat))
+            whereConditions.push(lte(projects.latitude, maxLat))
+            whereConditions.push(gte(projects.longitude, minLng))
+            whereConditions.push(lte(projects.longitude, maxLng))
         }
 
         // Project type filter - filter projects that have at least one of the specified types

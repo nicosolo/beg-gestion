@@ -1,4 +1,5 @@
 import { describe, test, expect, beforeAll, mock } from "bun:test"
+import { eq } from "drizzle-orm"
 import { Hono } from "hono"
 import { createTestDb, seedUsers, schema } from "../../__tests__/helpers/setup"
 import { errorHandler } from "../../tools/error-handler"
@@ -412,6 +413,110 @@ describe("GET /project (FTS search)", () => {
         expect(res.status).toBe(200)
         const body = await res.json()
         expect(body.data.length).toBe(0)
+    })
+})
+
+describe("GET /project/map", () => {
+    let projectInBounds: number
+    let projectOutOfBounds: number
+    let projectNoCoords: number
+
+    beforeAll(async () => {
+        // Project in Zurich area
+        const res1 = await app.request("/project", {
+            method: "POST",
+            headers: jsonHeaders(adminToken),
+            body: JSON.stringify({
+                name: "Map Zurich Project",
+                startDate: "2024-01-01",
+                projectTypeIds: [1],
+                projectManagers: [adminId],
+            }),
+        })
+        const p1 = await res1.json()
+        projectInBounds = p1.id
+        await db
+            .update(schema.projects)
+            .set({ latitude: 47.37, longitude: 8.54 })
+            .where(eq(schema.projects.id, projectInBounds))
+
+        // Project in Paris (outside Swiss bounds)
+        const res2 = await app.request("/project", {
+            method: "POST",
+            headers: jsonHeaders(adminToken),
+            body: JSON.stringify({
+                name: "Map Paris Project",
+                startDate: "2024-01-01",
+                projectTypeIds: [1],
+                projectManagers: [adminId],
+            }),
+        })
+        const p2 = await res2.json()
+        projectOutOfBounds = p2.id
+        await db
+            .update(schema.projects)
+            .set({ latitude: 48.85, longitude: 2.35 })
+            .where(eq(schema.projects.id, projectOutOfBounds))
+
+        // Project with no coordinates
+        const res3 = await app.request("/project", {
+            method: "POST",
+            headers: jsonHeaders(adminToken),
+            body: JSON.stringify({
+                name: "Map No Coords Project",
+                startDate: "2024-01-01",
+                projectTypeIds: [1],
+                projectManagers: [adminId],
+            }),
+        })
+        const p3 = await res3.json()
+        projectNoCoords = p3.id
+    })
+
+    test("returns projects with coordinates", async () => {
+        const res = await app.request("/project/map", {
+            headers: { Authorization: `Bearer ${adminToken}` },
+        })
+        expect(res.status).toBe(200)
+        const body = await res.json()
+        expect(Array.isArray(body)).toBe(true)
+        const ids = body.map((p: { id: number }) => p.id)
+        expect(ids).toContain(projectInBounds)
+        expect(ids).toContain(projectOutOfBounds)
+        expect(ids).not.toContain(projectNoCoords)
+    })
+
+    test("filters by bounds", async () => {
+        // Bounds covering Zurich but not Paris
+        const res = await app.request(
+            "/project/map?minLat=46&maxLat=48&minLng=6&maxLng=10",
+            { headers: { Authorization: `Bearer ${adminToken}` } }
+        )
+        expect(res.status).toBe(200)
+        const body = await res.json()
+        const ids = body.map((p: { id: number }) => p.id)
+        expect(ids).toContain(projectInBounds)
+        expect(ids).not.toContain(projectOutOfBounds)
+        expect(ids).not.toContain(projectNoCoords)
+    })
+
+    test("returns lightweight map format", async () => {
+        const res = await app.request("/project/map", {
+            headers: { Authorization: `Bearer ${adminToken}` },
+        })
+        expect(res.status).toBe(200)
+        const body = await res.json()
+        const project = body.find((p: { id: number }) => p.id === projectInBounds)
+        expect(project).toBeDefined()
+        expect(project.name).toBe("Map Zurich Project")
+        expect(project.latitude).toBe(47.37)
+        expect(project.longitude).toBe(8.54)
+        expect(typeof project.ended).toBe("boolean")
+    })
+
+    test("no auth returns 401", async () => {
+        const res = await app.request("/project/map")
+        expect(res.status).toBe(401)
     })
 })
 

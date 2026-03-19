@@ -72,60 +72,29 @@ export const projectRoutes = new Hono<{ Variables: Variables }>()
         async (c) => {
             const filter = c.req.valid("query")
 
-            const { minLat, maxLat, minLng, maxLng, limit: requestedLimit } = filter
-            const hasBounds =
-                minLat !== undefined &&
-                maxLat !== undefined &&
-                minLng !== undefined &&
-                maxLng !== undefined
-
-            // Default limit is 1000, can be overridden
-            const limit = requestedLimit ?? 100
-
-            // Get all projects with applied filters, sorted by most recent activity
             const result = await projectRepository.findAll({
                 ...filter,
                 sortBy: "lastActivityDate",
                 sortOrder: "desc",
                 page: 1,
-                limit: 100000,
+                limit: filter.limit ?? 100,
             })
 
-            // Filter and transform to lightweight map format
-            let mapData = result.data
-                .filter((project) => {
-                    // Must have coordinates
-                    if (!project.latitude || !project.longitude) return false
-
-                    // If bounds provided, filter to viewport
-                    if (hasBounds) {
-                        const lat = project.latitude
-                        const lng = project.longitude
-                        if (lat < minLat || lat > maxLat || lng < minLng || lng > maxLng) {
-                            return false
-                        }
-                    }
-
-                    return true
-                })
+            const mapData = result.data
+                .filter((p) => p.latitude != null && p.longitude != null)
                 .map((project) => ({
-                    id: project.id,
-                    projectNumber: project.projectNumber,
-                    subProjectName: project.subProjectName ?? null,
-                    name: project.name,
-                    latitude: project.latitude!,
-                    longitude: project.longitude!,
-                    clientName: project.client?.name ?? null,
-                    locationName: project.location?.name ?? null,
-                    lastActivityDate: project.lastActivityDate,
-                    ended: project.ended ?? false,
-                    types: project.types ?? [],
-                }))
-
-            // Apply limit (show most recent first)
-            if (mapData.length > limit) {
-                mapData = mapData.slice(0, limit)
-            }
+                id: project.id,
+                projectNumber: project.projectNumber,
+                subProjectName: project.subProjectName ?? null,
+                name: project.name,
+                latitude: project.latitude!,
+                longitude: project.longitude!,
+                clientName: project.client?.name ?? null,
+                locationName: project.location?.name ?? null,
+                lastActivityDate: project.lastActivityDate,
+                ended: project.ended ?? false,
+                types: project.types ?? [],
+            }))
 
             return c.render(mapData as ProjectMapArrayResponse, 200)
         }
@@ -207,7 +176,9 @@ export const projectRoutes = new Hono<{ Variables: Variables }>()
                 if (!project) {
                     throw throwNotFound("Project not found")
                 }
-                audit(user.id, user.initials, "create", "project", projectId, { name: project.name })
+                audit(user.id, user.initials, "create", "project", projectId, {
+                    name: project.name,
+                })
                 return c.render(project as ProjectResponse, 201)
             } catch (error: unknown) {
                 console.error("Error creating project:", error)

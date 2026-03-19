@@ -46,6 +46,10 @@ const projectBaseFilterSchema = z.object({
     hasUnbilledTime: booleanSchema.optional().default(false),
     includeArchived: booleanSchema.optional().default(false),
     status: z.enum(projectStatusEnum).optional(),
+    minLat: z.coerce.number().optional(),
+    maxLat: z.coerce.number().optional(),
+    minLng: z.coerce.number().optional(),
+    maxLng: z.coerce.number().optional(),
 })
 
 // Project filter schema for listing (includes pagination)
