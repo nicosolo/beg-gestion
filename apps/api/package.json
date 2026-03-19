@@ -16,6 +16,8 @@
         "db:seed": "bun run src/db/seed.ts",
         "db:import": "bun run src/scripts/import-mdb.ts",
         "db:rebuild-fts": "bun run src/db/rebuild-fts.ts",
+        "test": "bun test --timeout 30000",
+        "test:coverage": "bun test --timeout 30000 --coverage",
         "test:project-finder": "bun run src/scripts/test-project-finder.ts",
         "lint": "eslint . --fix",
         "lint:check": "eslint .",

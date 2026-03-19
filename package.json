@@ -15,6 +15,8 @@
         "lint:api": "bun run --cwd apps/api lint",
         "lint:check:app": "bun run --cwd apps/app lint:check",
         "lint:check:api": "bun run --cwd apps/api lint:check",
+        "test:api": "docker compose exec api bun test --timeout 30000",
+        "test:api:coverage": "docker compose exec api bun test --timeout 30000 --coverage",
         "type-check:app": "bun run --cwd apps/app type-check",
         "type-check:api": "bun run --cwd apps/api type-check"
     },
