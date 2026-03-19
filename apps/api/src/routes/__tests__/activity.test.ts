@@ -23,7 +23,6 @@ beforeAll(async () => {
 	userToken = seed.userToken
 	adminId = seed.admin.id
 	userId = seed.user.id
-
 	// Seed activity types
 	const [activityType] = await db
 		.insert(schema.activityTypes)
@@ -45,7 +44,7 @@ beforeAll(async () => {
 	// Seed project users
 	await db.insert(schema.projectUsers).values([
 		{ projectId, userId: adminId, role: "manager" },
-		{ projectId, userId, role: "collaborator" },
+		{ projectId, userId, role: "member" },
 	])
 
 	// Seed rate class
@@ -342,5 +341,508 @@ describe("No auth", () => {
 	test("returns 401 without token", async () => {
 		const res = await app.request("/activity")
 		expect(res.status).toBe(401)
+	})
+})
+
+describe("GET /activity/export", () => {
+	test("exports activities to Excel", async () => {
+		const res = await app.request("/activity/export", {
+			headers: { Authorization: `Bearer ${adminToken}` },
+		})
+		expect(res.status).toBe(200)
+		expect(res.headers.get("Content-Type")).toBe(
+			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+		)
+		expect(res.headers.get("Content-Disposition")).toContain("attachment")
+	})
+})
+
+describe("GET /activity/orphaned", () => {
+	test("returns orphaned activities for project manager", async () => {
+		const res = await app.request("/activity/orphaned", {
+			headers: { Authorization: `Bearer ${adminToken}` },
+		})
+		expect(res.status).toBe(200)
+		const body = await res.json()
+		expect(Array.isArray(body)).toBe(true)
+	})
+})
+
+describe("GET /activity/:id invalid", () => {
+	test("returns 400 for non-numeric id", async () => {
+		const res = await app.request("/activity/abc", {
+			headers: { Authorization: `Bearer ${adminToken}` },
+		})
+		expect(res.status).toBe(400)
+	})
+})
+
+describe("POST /activity - validation errors", () => {
+	test("project not found returns 404", async () => {
+		const res = await app.request("/activity", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({
+				projectId: 99999,
+				activityTypeId,
+				date: new Date().toISOString(),
+				duration: 1,
+				kilometers: 0,
+				expenses: 0,
+				description: "test",
+				billed: false,
+			}),
+		})
+		expect(res.status).toBe(404)
+	})
+
+	test("activity type not found returns 400", async () => {
+		const res = await app.request("/activity", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({
+				projectId,
+				activityTypeId: 99999,
+				date: new Date().toISOString(),
+				duration: 1,
+				kilometers: 0,
+				expenses: 0,
+				description: "test",
+				billed: false,
+			}),
+		})
+		expect(res.status).toBe(400)
+		const body = await res.json()
+		expect(body.code).toBe("VALIDATION_ERROR")
+	})
+
+	test("adminOnly activity type for non-admin returns 400", async () => {
+		const adminOnlyTypes = await db
+			.select()
+			.from(schema.activityTypes)
+			.where(eq(schema.activityTypes.adminOnly, true))
+		const adminOnlyTypeId = adminOnlyTypes[0].id
+
+		const res = await app.request("/activity", {
+			method: "POST",
+			headers: jsonHeaders(userToken),
+			body: JSON.stringify({
+				projectId,
+				activityTypeId: adminOnlyTypeId,
+				date: new Date().toISOString(),
+				duration: 1,
+				kilometers: 0,
+				expenses: 0,
+				description: "test",
+				billed: false,
+			}),
+		})
+		expect(res.status).toBe(400)
+		const body = await res.json()
+		expect(body.code).toBe("VALIDATION_ERROR")
+		expect(body.details?.[0]?.message).toContain("restricted to admins")
+	})
+
+	test("admin with invalid userId returns 400", async () => {
+		const res = await app.request("/activity", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({
+				projectId,
+				activityTypeId,
+				date: new Date().toISOString(),
+				duration: 1,
+				kilometers: 0,
+				expenses: 0,
+				description: "test",
+				billed: false,
+				userId: 99999,
+			}),
+		})
+		expect(res.status).toBe(400)
+		const body = await res.json()
+		expect(body.code).toBe("VALIDATION_ERROR")
+	})
+})
+
+describe("PUT /activity/:id - billed activity restrictions", () => {
+	test("non-manager cannot edit billed activity", async () => {
+		// Create a billed activity as admin (manager)
+		const createRes = await app.request("/activity", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({
+				projectId,
+				activityTypeId,
+				date: new Date().toISOString(),
+				duration: 1,
+				kilometers: 0,
+				expenses: 0,
+				description: "billed activity",
+				billed: true,
+			}),
+		})
+		const created = await createRes.json()
+
+		// User (collaborator, not manager) tries to edit
+		const res = await app.request(`/activity/${created.id}`, {
+			method: "PUT",
+			headers: jsonHeaders(userToken),
+			body: JSON.stringify({ description: "changed" }),
+		})
+		expect(res.status).toBe(400)
+		const body = await res.json()
+		expect(body.code).toBe("VALIDATION_ERROR")
+		expect(body.details?.[0]?.field).toBe("billed")
+	})
+})
+
+describe("PUT /activity/:id - 60-day lock", () => {
+	test("non-admin cannot change description on old activity", async () => {
+		// Create old activity as admin
+		const oldDate = new Date()
+		oldDate.setDate(oldDate.getDate() - 90)
+		const createRes = await app.request("/activity", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({
+				projectId,
+				activityTypeId,
+				date: oldDate.toISOString(),
+				duration: 1,
+				kilometers: 0,
+				expenses: 0,
+				description: "old activity",
+				billed: false,
+				userId,
+			}),
+		})
+		const created = await createRes.json()
+
+		// User tries to change description (not allowed on locked)
+		const res = await app.request(`/activity/${created.id}`, {
+			method: "PUT",
+			headers: jsonHeaders(userToken),
+			body: JSON.stringify({ description: "changed" }),
+		})
+		expect(res.status).toBe(403)
+		const body = await res.json()
+		expect(body.code).toBe("ACTIVITY_LOCKED")
+	})
+
+	test("non-admin can change projectId on old activity", async () => {
+		// Create a second project for reassignment
+		const [project2] = await db
+			.insert(schema.projects)
+			.values({ name: "Project 2", startDate: new Date(), status: "active" })
+			.returning()
+		await db.insert(schema.projectUsers).values([
+			{ projectId: project2.id, userId, role: "member" },
+			{ projectId: project2.id, userId: adminId, role: "manager" },
+		])
+
+		// Create old activity assigned to user
+		const oldDate = new Date()
+		oldDate.setDate(oldDate.getDate() - 90)
+		const createRes = await app.request("/activity", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({
+				projectId,
+				activityTypeId,
+				date: oldDate.toISOString(),
+				duration: 1,
+				kilometers: 0,
+				expenses: 0,
+				description: "old for project change",
+				billed: false,
+				userId,
+			}),
+		})
+		const created = await createRes.json()
+
+		// User changes only projectId - should be allowed
+		const res = await app.request(`/activity/${created.id}`, {
+			method: "PUT",
+			headers: jsonHeaders(userToken),
+			body: JSON.stringify({ projectId: project2.id }),
+		})
+		expect(res.status).toBe(200)
+	})
+})
+
+describe("PUT /activity/:id - billed toggle permission", () => {
+	test("non-manager cannot toggle billed status", async () => {
+		// Create unbilled activity assigned to user
+		const createRes = await app.request("/activity", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({
+				projectId,
+				activityTypeId,
+				date: new Date().toISOString(),
+				duration: 1,
+				kilometers: 0,
+				expenses: 0,
+				description: "toggle billed test",
+				billed: false,
+				userId,
+			}),
+		})
+		const created = await createRes.json()
+
+		// User (collaborator) tries to toggle billed
+		const res = await app.request(`/activity/${created.id}`, {
+			method: "PUT",
+			headers: jsonHeaders(userToken),
+			body: JSON.stringify({ billed: true }),
+		})
+		expect(res.status).toBe(400)
+		const body = await res.json()
+		expect(body.details?.[0]?.message).toContain("Only project managers")
+	})
+})
+
+describe("PUT /activity/:id - admin userId", () => {
+	test("admin can set userId on update", async () => {
+		const createRes = await app.request("/activity", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({
+				projectId,
+				activityTypeId,
+				date: new Date().toISOString(),
+				duration: 1,
+				kilometers: 0,
+				expenses: 0,
+				description: "admin userId test",
+				billed: false,
+			}),
+		})
+		const created = await createRes.json()
+
+		const res = await app.request(`/activity/${created.id}`, {
+			method: "PUT",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({ userId }),
+		})
+		expect(res.status).toBe(200)
+		const body = await res.json()
+		expect(body.user.id).toBe(userId)
+	})
+})
+
+describe("PUT /activity/:id - activityTypeId change triggers rate recalc", () => {
+	test("changing activityTypeId to nonexistent type returns 400", async () => {
+		const createRes = await app.request("/activity", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({
+				projectId,
+				activityTypeId,
+				date: new Date().toISOString(),
+				duration: 1,
+				kilometers: 0,
+				expenses: 0,
+				description: "rate recalc test",
+				billed: false,
+			}),
+		})
+		const created = await createRes.json()
+
+		const res = await app.request(`/activity/${created.id}`, {
+			method: "PUT",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({ activityTypeId: 99999 }),
+		})
+		expect(res.status).toBe(400)
+	})
+
+	test("non-admin changing to adminOnly type returns 400", async () => {
+		const adminOnlyTypes = await db
+			.select()
+			.from(schema.activityTypes)
+			.where(eq(schema.activityTypes.adminOnly, true))
+		const adminOnlyTypeId = adminOnlyTypes[0].id
+
+		// Create activity assigned to user
+		const createRes = await app.request("/activity", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({
+				projectId,
+				activityTypeId,
+				date: new Date().toISOString(),
+				duration: 1,
+				kilometers: 0,
+				expenses: 0,
+				description: "adminOnly type change",
+				billed: false,
+				userId,
+			}),
+		})
+		const created = await createRes.json()
+
+		const res = await app.request(`/activity/${created.id}`, {
+			method: "PUT",
+			headers: jsonHeaders(userToken),
+			body: JSON.stringify({ activityTypeId: adminOnlyTypeId }),
+		})
+		expect(res.status).toBe(400)
+		const body = await res.json()
+		expect(body.details?.[0]?.message).toContain("restricted to admins")
+	})
+
+	test("changing activityTypeId with invalid projectId returns 404", async () => {
+		// Create a new activity type for switching to
+		const [newType] = await db
+			.insert(schema.activityTypes)
+			.values({ name: "Type B", code: "TB", billable: true, adminOnly: false })
+			.returning()
+
+		const createRes = await app.request("/activity", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({
+				projectId,
+				activityTypeId,
+				date: new Date().toISOString(),
+				duration: 1,
+				kilometers: 0,
+				expenses: 0,
+				description: "project not found on type change",
+				billed: false,
+			}),
+		})
+		const created = await createRes.json()
+
+		const res = await app.request(`/activity/${created.id}`, {
+			method: "PUT",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({ activityTypeId: newType.id, projectId: 99999 }),
+		})
+		expect(res.status).toBe(404)
+	})
+})
+
+describe("PUT /activity/:id - update nonexistent", () => {
+	test("update nonexistent activity returns 404", async () => {
+		const res = await app.request("/activity/99999", {
+			method: "PUT",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({ description: "nope" }),
+		})
+		expect(res.status).toBe(404)
+	})
+})
+
+describe("PATCH /activity/bulk - errors", () => {
+	test("some activities not found returns 400", async () => {
+		const res = await app.request("/activity/bulk", {
+			method: "PATCH",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({
+				ids: [99998, 99999],
+				updates: { billed: true },
+			}),
+		})
+		expect(res.status).toBe(400)
+		const body = await res.json()
+		expect(body.code).toBe("VALIDATION_ERROR")
+	})
+
+	test("non-admin non-manager cannot bulk toggle billed", async () => {
+		// Create activity as admin, assigned to user
+		const createRes = await app.request("/activity", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({
+				projectId,
+				activityTypeId,
+				date: new Date().toISOString(),
+				duration: 1,
+				kilometers: 0,
+				expenses: 0,
+				description: "bulk billed test",
+				billed: false,
+				userId,
+			}),
+		})
+		const created = await createRes.json()
+
+		const res = await app.request("/activity/bulk", {
+			method: "PATCH",
+			headers: jsonHeaders(userToken),
+			body: JSON.stringify({
+				ids: [created.id],
+				updates: { billed: true },
+			}),
+		})
+		expect(res.status).toBe(400)
+		const body = await res.json()
+		expect(body.details?.[0]?.message).toContain("Only project managers")
+	})
+})
+
+describe("DELETE /activity/:id - billed restriction", () => {
+	test("non-manager cannot delete billed activity", async () => {
+		// Create billed activity assigned to user
+		const createRes = await app.request("/activity", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({
+				projectId,
+				activityTypeId,
+				date: new Date().toISOString(),
+				duration: 1,
+				kilometers: 0,
+				expenses: 0,
+				description: "billed delete test",
+				billed: true,
+				userId,
+			}),
+		})
+		const created = await createRes.json()
+
+		const res = await app.request(`/activity/${created.id}`, {
+			method: "DELETE",
+			headers: { Authorization: `Bearer ${userToken}` },
+		})
+		expect(res.status).toBe(400)
+		const body = await res.json()
+		expect(body.details?.[0]?.message).toContain("cannot be deleted")
+	})
+})
+
+describe("DELETE /activity/:id - 60-day lock", () => {
+	test("non-admin cannot delete old activity", async () => {
+		const oldDate = new Date()
+		oldDate.setDate(oldDate.getDate() - 90)
+
+		// Create old activity assigned to user
+		const createRes = await app.request("/activity", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({
+				projectId,
+				activityTypeId,
+				date: oldDate.toISOString(),
+				duration: 1,
+				kilometers: 0,
+				expenses: 0,
+				description: "old delete test",
+				billed: false,
+				userId,
+			}),
+		})
+		const created = await createRes.json()
+
+		const res = await app.request(`/activity/${created.id}`, {
+			method: "DELETE",
+			headers: { Authorization: `Bearer ${userToken}` },
+		})
+		expect(res.status).toBe(403)
+		const body = await res.json()
+		expect(body.code).toBe("ACTIVITY_LOCKED")
 	})
 })

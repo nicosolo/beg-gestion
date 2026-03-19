@@ -126,3 +126,58 @@ describe("DELETE /rate/:id", () => {
 		expect(body.message).toBeDefined()
 	})
 })
+
+describe("GET /rate/:id - edge cases", () => {
+	test("nonexistent id returns 404", async () => {
+		const res = await app.request("/rate/99999", {
+			headers: { Authorization: `Bearer ${adminToken}` },
+		})
+		expect(res.status).toBe(404)
+	})
+})
+
+describe("PUT /rate/:id - edge cases", () => {
+	test("nonexistent id returns 404", async () => {
+		const res = await app.request("/rate/99999", {
+			method: "PUT",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({ amount: 100 }),
+		})
+		expect(res.status).toBe(404)
+	})
+
+	test("class/year conflict returns 400", async () => {
+		// Create two rates with valid class values
+		await app.request("/rate", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({ class: "B", year: 2030, amount: 100 }),
+		})
+		const res2 = await app.request("/rate", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({ class: "C", year: 2030, amount: 200 }),
+		})
+		const rate2 = await res2.json()
+
+		// Try to change rate2's class to B (conflicts with rate1)
+		const res = await app.request(`/rate/${rate2.id}`, {
+			method: "PUT",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({ class: "B" }),
+		})
+		expect(res.status).toBe(400)
+		const body = await res.json()
+		expect(body.code).toBe("DUPLICATE_ENTRY")
+	})
+})
+
+describe("DELETE /rate/:id - edge cases", () => {
+	test("nonexistent id returns 404", async () => {
+		const res = await app.request("/rate/99999", {
+			method: "DELETE",
+			headers: { Authorization: `Bearer ${adminToken}` },
+		})
+		expect(res.status).toBe(404)
+	})
+})

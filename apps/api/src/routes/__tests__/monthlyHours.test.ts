@@ -132,3 +132,82 @@ describe("DELETE /monthly-hours/:id", () => {
 		expect(body.success).toBe(true)
 	})
 })
+
+describe("GET /monthly-hours/:id - edge cases", () => {
+	test("NaN id returns 400", async () => {
+		const res = await app.request("/monthly-hours/abc", {
+			headers: { Authorization: `Bearer ${adminToken}` },
+		})
+		expect(res.status).toBe(400)
+	})
+
+	test("nonexistent id returns 404", async () => {
+		const res = await app.request("/monthly-hours/99999", {
+			headers: { Authorization: `Bearer ${adminToken}` },
+		})
+		expect(res.status).toBe(404)
+	})
+})
+
+describe("PUT /monthly-hours/:id - edge cases", () => {
+	test("NaN id returns 400", async () => {
+		const res = await app.request("/monthly-hours/abc", {
+			method: "PUT",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({ amountOfHours: 160 }),
+		})
+		expect(res.status).toBe(400)
+	})
+
+	test("year/month conflict returns 409", async () => {
+		// Create two monthly hours entries
+		await app.request("/monthly-hours", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({ year: 2030, month: 1, amountOfHours: 168 }),
+		})
+		const res2 = await app.request("/monthly-hours", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({ year: 2030, month: 2, amountOfHours: 160 }),
+		})
+		const entry2 = await res2.json()
+
+		// Try to update entry2's month to conflict with entry1
+		const res = await app.request(`/monthly-hours/${entry2.id}`, {
+			method: "PUT",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({ month: 1 }),
+		})
+		expect(res.status).toBe(409)
+		const body = await res.json()
+		expect(body.code).toBe("DUPLICATE_ENTRY")
+	})
+
+	test("nonexistent id returns 404", async () => {
+		const res = await app.request("/monthly-hours/99999", {
+			method: "PUT",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({ amountOfHours: 160 }),
+		})
+		expect(res.status).toBe(404)
+	})
+})
+
+describe("DELETE /monthly-hours/:id - edge cases", () => {
+	test("NaN id returns 400", async () => {
+		const res = await app.request("/monthly-hours/abc", {
+			method: "DELETE",
+			headers: { Authorization: `Bearer ${adminToken}` },
+		})
+		expect(res.status).toBe(400)
+	})
+
+	test("nonexistent id returns 404", async () => {
+		const res = await app.request("/monthly-hours/99999", {
+			method: "DELETE",
+			headers: { Authorization: `Bearer ${adminToken}` },
+		})
+		expect(res.status).toBe(404)
+	})
+})

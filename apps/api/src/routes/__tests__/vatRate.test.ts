@@ -125,3 +125,81 @@ describe("DELETE /vat-rate/:id", () => {
 		expect(body.success).toBe(true)
 	})
 })
+
+describe("GET /vat-rate/:id - edge cases", () => {
+	test("NaN id returns 400", async () => {
+		const res = await app.request("/vat-rate/abc", {
+			headers: { Authorization: `Bearer ${adminToken}` },
+		})
+		expect(res.status).toBe(400)
+	})
+
+	test("nonexistent id returns 404", async () => {
+		const res = await app.request("/vat-rate/99999", {
+			headers: { Authorization: `Bearer ${adminToken}` },
+		})
+		expect(res.status).toBe(404)
+	})
+})
+
+describe("PUT /vat-rate/:id - edge cases", () => {
+	test("NaN id returns 400", async () => {
+		const res = await app.request("/vat-rate/abc", {
+			method: "PUT",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({ rate: 9.0 }),
+		})
+		expect(res.status).toBe(400)
+	})
+
+	test("year conflict returns 409", async () => {
+		// Create two vat rates
+		await app.request("/vat-rate", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({ year: 2030, rate: 7.7 }),
+		})
+		const res2 = await app.request("/vat-rate", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({ year: 2031, rate: 8.1 }),
+		})
+		const vr2 = await res2.json()
+
+		const res = await app.request(`/vat-rate/${vr2.id}`, {
+			method: "PUT",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({ year: 2030 }),
+		})
+		expect(res.status).toBe(409)
+		const body = await res.json()
+		expect(body.code).toBe("ALREADY_EXISTS")
+	})
+
+	test("nonexistent id returns 404", async () => {
+		const res = await app.request("/vat-rate/99999", {
+			method: "PUT",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({ rate: 9.0 }),
+		})
+		expect(res.status).toBe(404)
+	})
+})
+
+describe("DELETE /vat-rate/:id - edge cases", () => {
+	test("NaN id returns 400", async () => {
+		const res = await app.request("/vat-rate/abc", {
+			method: "DELETE",
+			headers: { Authorization: `Bearer ${adminToken}` },
+		})
+		expect(res.status).toBe(400)
+	})
+
+	test("nonexistent id returns 404", async () => {
+		const res = await app.request("/vat-rate/99999", {
+			method: "DELETE",
+			headers: { Authorization: `Bearer ${adminToken}` },
+		})
+		expect(res.status).toBe(404)
+	})
+})

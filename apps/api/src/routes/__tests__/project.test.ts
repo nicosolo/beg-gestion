@@ -555,4 +555,140 @@ describe("POST /project/:id/members/:userId", () => {
         })
         expect(res.status).toBe(401)
     })
+
+    test("NaN id/userId returns 404", async () => {
+        const res = await app.request("/project/abc/members/xyz", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${adminToken}` },
+        })
+        expect(res.status).toBe(404)
+    })
+})
+
+describe("GET /project/export", () => {
+    test("returns xlsx with correct content type", async () => {
+        const res = await app.request("/project/export", {
+            headers: { Authorization: `Bearer ${adminToken}` },
+        })
+        expect(res.status).toBe(200)
+        expect(res.headers.get("Content-Type")).toBe(
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        expect(res.headers.get("Content-Disposition")).toContain("mandats-")
+        expect(res.headers.get("Content-Disposition")).toContain(".xlsx")
+    })
+
+    test("no auth returns 401", async () => {
+        const res = await app.request("/project/export")
+        expect(res.status).toBe(401)
+    })
+})
+
+describe("GET /project/:id (NaN id)", () => {
+    test("NaN id returns 404", async () => {
+        const res = await app.request("/project/abc", {
+            headers: { Authorization: `Bearer ${adminToken}` },
+        })
+        expect(res.status).toBe(404)
+    })
+})
+
+describe("GET /project/:id/folder", () => {
+    test("NaN id returns 400", async () => {
+        const res = await app.request("/project/abc/folder", {
+            headers: { Authorization: `Bearer ${adminToken}` },
+        })
+        expect(res.status).toBe(400)
+        const body = await res.json()
+        expect(body.error).toBe("Invalid project ID")
+    })
+
+    test("project without projectNumber returns 404", async () => {
+        // Create project without projectNumber
+        const createRes = await app.request("/project", {
+            method: "POST",
+            headers: jsonHeaders(adminToken),
+            body: JSON.stringify({
+                name: "No Number Project",
+                startDate: "2024-01-01",
+                projectTypeIds: [1],
+            }),
+        })
+        const created = await createRes.json()
+
+        const res = await app.request(`/project/${created.id}/folder`, {
+            headers: { Authorization: `Bearer ${adminToken}` },
+        })
+        expect(res.status).toBe(404)
+        const body = await res.json()
+        expect(body.error).toBe("Project not found")
+    })
+
+    test("project with projectNumber returns folder search result", async () => {
+        // Create project with projectNumber
+        const createRes = await app.request("/project", {
+            method: "POST",
+            headers: jsonHeaders(adminToken),
+            body: JSON.stringify({
+                name: "Folder Test Project",
+                startDate: "2024-01-01",
+                projectTypeIds: [1],
+                projectNumber: "9999",
+            }),
+        })
+        const created = await createRes.json()
+
+        const res = await app.request(`/project/${created.id}/folder`, {
+            headers: { Authorization: `Bearer ${adminToken}` },
+        })
+        const body = await res.json()
+        // Folder search executes — result depends on whether /mandats exists in env
+        expect([200, 500]).toContain(res.status)
+        if (res.status === 200) {
+            expect(body.projectId).toBe(created.id)
+            expect(body.projectNumber).toBe("9999")
+            expect(typeof body.found).toBe("boolean")
+        } else {
+            expect(body.error).toBe("Failed to search for project folder")
+        }
+    })
+})
+
+describe("POST /project (duplicate projectNumber)", () => {
+    test("duplicate projectNumber returns 409", async () => {
+        const payload = {
+            name: "Dup Number A",
+            startDate: "2024-01-01",
+            projectTypeIds: [1],
+            projectNumber: "DUP-001",
+        }
+        const res1 = await app.request("/project", {
+            method: "POST",
+            headers: jsonHeaders(adminToken),
+            body: JSON.stringify(payload),
+        })
+        expect(res1.status).toBe(200)
+
+        const res2 = await app.request("/project", {
+            method: "POST",
+            headers: jsonHeaders(adminToken),
+            body: JSON.stringify({ ...payload, name: "Dup Number B" }),
+        })
+        expect(res2.status).toBe(409)
+        const body = await res2.json()
+        expect(body.error).toBe("Project number already exists")
+    })
+})
+
+describe("PUT /project/:id (edge cases)", () => {
+    test("NaN id returns 400", async () => {
+        const res = await app.request("/project/abc", {
+            method: "PUT",
+            headers: jsonHeaders(adminToken),
+            body: JSON.stringify({ name: "Whatever" }),
+        })
+        expect(res.status).toBe(400)
+        const body = await res.json()
+        expect(body.error).toBe("Invalid ID")
+    })
 })

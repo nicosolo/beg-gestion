@@ -185,3 +185,83 @@ describe("PUT /user/:id", () => {
 		expect(res.status).toBe(403)
 	})
 })
+
+describe("POST /user - edge cases", () => {
+	test("admin creating super_admin role returns 403", async () => {
+		const res = await app.request("/user", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({
+				email: "newsuperadmin@test.com",
+				firstName: "New",
+				lastName: "SuperAdmin",
+				initials: "NS",
+				password: "password123",
+				role: "super_admin",
+			}),
+		})
+		expect(res.status).toBe(403)
+	})
+
+	test("duplicate email returns 400", async () => {
+		const res = await app.request("/user", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({
+				email: "admin@test.com",
+				firstName: "Dup",
+				lastName: "User",
+				initials: "DU",
+				password: "password123",
+				role: "user",
+			}),
+		})
+		expect(res.status).toBe(400)
+	})
+})
+
+describe("PUT /user/:id - edge cases", () => {
+	test("nonexistent user returns 404", async () => {
+		const res = await app.request("/user/99999", {
+			method: "PUT",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({ firstName: "Ghost" }),
+		})
+		expect(res.status).toBe(404)
+	})
+
+	test("admin updating super_admin returns 403", async () => {
+		// Find the super_admin user id
+		const listRes = await app.request("/user", {
+			headers: { Authorization: `Bearer ${adminToken}` },
+		})
+		const users = await listRes.json()
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const superAdmin = users.find((u: any) => u.role === "super_admin")
+
+		const res = await app.request(`/user/${superAdmin.id}`, {
+			method: "PUT",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({ firstName: "Hacked" }),
+		})
+		expect(res.status).toBe(403)
+	})
+
+	test("admin assigning super_admin role returns 403", async () => {
+		const res = await app.request(`/user/${userId}`, {
+			method: "PUT",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({ role: "super_admin" }),
+		})
+		expect(res.status).toBe(403)
+	})
+
+	test("email conflict returns 400", async () => {
+		const res = await app.request(`/user/${userId}`, {
+			method: "PUT",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({ email: "admin@test.com" }),
+		})
+		expect(res.status).toBe(400)
+	})
+})
