@@ -133,6 +133,27 @@
     </div>
 </template>
 
+<script lang="ts">
+import type { ProjectFilter } from "@beg/validations"
+
+export type ProjectFilterModel = Omit<ProjectFilter, "page" | "limit" | "accountId">
+
+export const getDefaultProjectFilter = (): ProjectFilterModel => {
+    return {
+        text: "",
+        includeArchived: false,
+        status: "active",
+        sortBy: "name",
+        sortOrder: "asc",
+        fromDate: undefined,
+        toDate: undefined,
+        referentUserId: undefined,
+        projectTypeIds: [],
+        hasUnbilledTime: false,
+    }
+}
+</script>
+
 <script setup lang="ts">
 defineOptions({ name: "ProjectFilterPanel" })
 
@@ -146,13 +167,9 @@ import FormField from "../../molecules/FormField.vue"
 import DateRange from "../../molecules/DateRange.vue"
 import UserSelect from "../../organisms/user/UserSelect.vue"
 import MultiProjectTypeSelect from "../../organisms/projectType/MultiProjectTypeSelect.vue"
-import type { ProjectFilter } from "@beg/validations"
 import Checkbox from "@/components/atoms/Checkbox.vue"
 import Input from "@/components/atoms/Input.vue"
 import { debounce } from "@/utils/debounce"
-import { getYearRange } from "@/composables/utils/useDateRangePresets"
-
-export type ProjectFilterModel = Omit<ProjectFilter, "page" | "limit" | "accountId">
 interface ProjectFilterProps {
     filter: ProjectFilterModel
     showSort?: boolean
@@ -255,17 +272,17 @@ const emitInputChange = () => {
 
 // Reset filters
 const resetFilters = () => {
-    const { from, to } = getYearRange()
-    filterData.text = ""
-    filterData.includeArchived = false
-    filterData.status = "active"
-    filterData.sortBy = "name"
-    filterData.sortOrder = "asc"
-    filterData.fromDate = from
-    filterData.toDate = to
-    filterData.referentUserId = undefined
-    filterData.projectTypeIds = []
-    filterData.hasUnbilledTime = false
+    const defaultFilter = getDefaultProjectFilter()
+    filterData.text = defaultFilter.text
+    filterData.includeArchived = defaultFilter.includeArchived
+    filterData.status = defaultFilter.status
+    filterData.sortBy = defaultFilter.sortBy
+    filterData.sortOrder = defaultFilter.sortOrder
+    filterData.fromDate = defaultFilter.fromDate
+    filterData.toDate = defaultFilter.toDate
+    filterData.referentUserId = defaultFilter.referentUserId
+    filterData.projectTypeIds = defaultFilter.projectTypeIds
+    filterData.hasUnbilledTime = defaultFilter.hasUnbilledTime
     emitChange()
 }
 </script>

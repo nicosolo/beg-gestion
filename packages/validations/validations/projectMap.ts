@@ -44,7 +44,7 @@ export type ProjectMapFilterInput = z.input<typeof projectMapFilterSchema>
 // Lightweight project map item schema for map markers
 export const projectMapItemResponseSchema = z.object({
     id: z.number(),
-    projectNumber: z.string(),
+    projectNumber: z.string().optional().nullable(),
     subProjectName: z.string().nullable(),
     name: z.string(),
     latitude: z.number(),

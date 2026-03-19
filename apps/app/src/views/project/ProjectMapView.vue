@@ -70,6 +70,7 @@ import { ref, onMounted, onActivated } from "vue"
 import { useFetchProjectMap } from "@/composables/api/useProjectMap"
 import ProjectMap, { type MapBounds } from "@/components/organisms/project/ProjectMap.vue"
 import ProjectFilterPanel, {
+    getDefaultProjectFilter,
     type ProjectFilterModel,
 } from "@/components/organisms/project/ProjectFilterPanel.vue"
 
@@ -83,17 +84,7 @@ const currentBounds = ref<MapBounds | null>(null)
 const hasInteracted = ref(false)
 
 // Initialize filter with default values
-const filter = ref<ProjectFilterModel>({
-    text: "",
-    includeArchived: false,
-    sortBy: "name",
-    sortOrder: "asc",
-    fromDate: undefined,
-    toDate: undefined,
-    referentUserId: undefined,
-    projectTypeIds: [],
-    hasUnbilledTime: false,
-})
+const filter = ref<ProjectFilterModel>(getDefaultProjectFilter())
 
 const loadProjects = async () => {
     const { projectTypeIds, ...rest } = filter.value
