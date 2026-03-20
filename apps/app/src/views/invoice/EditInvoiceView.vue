@@ -18,37 +18,12 @@
                 </Button>
             </template>
             <!-- Tabs Navigation -->
-            <div class="-mx-6 -mt-6 mb-6">
-                <div class="border-b border-gray-200">
-                    <nav class="flex -mb-px px-6">
-                        <button
-                            @click="activeTab = 'general'"
-                            type="button"
-                            :class="[
-                                'py-4 px-6 font-medium text-sm cursor-pointer',
-                                activeTab === 'general'
-                                    ? 'border-b-2 border-blue-500 text-blue-600'
-                                    : 'text-gray-500 hover:text-gray-700 hover:border-gray-300',
-                            ]"
-                        >
-                            Données de facturation et documents
-                        </button>
-                        <button
-                            v-if="invoice && activityBasedBilling"
-                            @click="activeTab = 'details'"
-                            type="button"
-                            :class="[
-                                'py-4 px-6 font-medium text-sm cursor-pointer',
-                                activeTab === 'details'
-                                    ? 'border-b-2 border-blue-500 text-blue-600'
-                                    : 'text-gray-500 hover:text-gray-700 hover:border-gray-300',
-                            ]"
-                        >
-                            Préparation de la facture et heures réalisées
-                        </button>
-                    </nav>
-                </div>
-            </div>
+            <TabNav
+                v-model="activeTab"
+                :tabs="invoiceTabs"
+                wrapper-class="-mx-6 -mt-6 mb-6"
+                nav-class="px-6"
+            />
             <!-- Locked invoice banner -->
             <div
                 v-if="isLocked && !isNewInvoice"
@@ -165,6 +140,7 @@ import Button from "@/components/atoms/Button.vue"
 import ConfirmDialog from "@/components/molecules/ConfirmDialog.vue"
 import Dialog from "@/components/molecules/Dialog.vue"
 import Textarea from "@/components/atoms/Textarea.vue"
+import TabNav from "@/components/molecules/TabNav.vue"
 import InvoiceGeneralInfo from "@/components/organisms/invoice/InvoiceGeneralInfo.vue"
 import InvoiceDetails from "@/components/organisms/invoice/InvoiceDetails.vue"
 import { createEmptyInvoice, type Invoice, type InvoiceResponse } from "@beg/validations"
@@ -347,6 +323,14 @@ const handleInvoiceDocumentFileChange = (file: File | null) => {
 const activityBasedBilling = computed(() => {
     const mode = invoice.value?.billingMode
     return mode !== "accordingToOffer" && mode !== "accordingToInvoice"
+})
+
+const invoiceTabs = computed(() => {
+    const tabs = [{ value: "general", label: "Données de facturation et documents" }]
+    if (invoice.value && activityBasedBilling.value) {
+        tabs.push({ value: "details", label: "Préparation de la facture et heures réalisées" })
+    }
+    return tabs
 })
 
 const loading = computed(() => fetchLoading.value || savingInvoice.value)

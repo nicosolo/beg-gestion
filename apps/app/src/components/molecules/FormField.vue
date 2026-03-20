@@ -1,5 +1,6 @@
 <template>
-    <div class="form-group">
+    <div :class="['form-group', highlight && 'bg-yellow-50/50 rounded-md  px-2.5 py-2']">
+
         <Label :className="labelClassName" v-if="label">
             {{ label }}
             <span v-if="required" class="text-red-500 ml-0.5">*</span>
@@ -24,9 +25,10 @@ interface FormFieldProps {
     disabled?: boolean
     labelClassName?: string
     required?: boolean
+    highlight?: boolean
 }
 
-const { label, labelClassName, required } = defineProps<FormFieldProps>()
+const { label, labelClassName, required, highlight } = defineProps<FormFieldProps>()
 
 defineEmits<{
     (e: "update:modelValue", value: string): void

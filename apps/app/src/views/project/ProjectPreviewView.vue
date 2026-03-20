@@ -74,45 +74,7 @@
         </div>
 
         <!-- Tabs Navigation -->
-        <div class="border-b border-gray-200">
-            <nav class="flex flex-wrap gap-2 -mb-px overflow-x-auto">
-                <button
-                    @click="activeTab = 'overview'"
-                    :class="[
-                        'py-4 px-6 font-medium text-sm cursor-pointer shrink-0',
-                        activeTab === 'overview'
-                            ? 'border-b-2 border-blue-500 text-blue-600'
-                            : 'text-gray-500 hover:text-gray-700 hover:border-gray-300',
-                    ]"
-                >
-                    {{ $t("projects.tabs.overview") }}
-                </button>
-                <button
-                    v-if="canViewActivitiesAndInvoices"
-                    @click="activeTab = 'activities'"
-                    :class="[
-                        'py-4 px-6 font-medium text-sm cursor-pointer shrink-0',
-                        activeTab === 'activities'
-                            ? 'border-b-2 border-blue-500 text-blue-600'
-                            : 'text-gray-500 hover:text-gray-700 hover:border-gray-300',
-                    ]"
-                >
-                    {{ $t("projects.tabs.activities") }}
-                </button>
-                <button
-                    v-if="canEditProject"
-                    @click="activeTab = 'invoices'"
-                    :class="[
-                        'py-4 px-6 font-medium text-sm cursor-pointer shrink-0',
-                        activeTab === 'invoices'
-                            ? 'border-b-2 border-blue-500 text-blue-600'
-                            : 'text-gray-500 hover:text-gray-700 hover:border-gray-300',
-                    ]"
-                >
-                    {{ $t("projects.tabs.invoices") }}
-                </button>
-            </nav>
-        </div>
+        <TabNav v-model="activeTab" :tabs="previewTabs" />
 
         <!-- Tab Content -->
         <LoadingOverlay :loading="loading">
@@ -415,14 +377,17 @@ import TimeEntryModal from "@/components/organisms/time/TimeEntryModal.vue"
 import { useFetchProject } from "@/composables/api/useProject"
 import { useOpenProjectFolder } from "@/composables/useOpenProjectFolder"
 import LoadingOverlay from "@/components/atoms/LoadingOverlay.vue"
+import TabNav from "@/components/molecules/TabNav.vue"
 import MapDisplay from "@/components/molecules/MapDisplay.vue"
 import { useFormat } from "@/composables/utils/useFormat"
 import { useTauri } from "@/composables/useTauri"
 import { buildGeoAdminUrl, buildGoogleMapsUrl } from "@/utils/coordinates"
+import { useI18n } from "vue-i18n"
 import { useAuthStore } from "@/stores/auth"
 import { getMonthRange } from "@/composables/utils/useDateRangePresets"
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 const authStore = useAuthStore()
 const { from: initialFromDate, to: initialToDate } = getMonthRange()
 // Tab state - get from query string or default to overview
@@ -462,6 +427,17 @@ const isAssignedToProject = computed(() => {
     const isMember = projectData.value.projectMembers?.some((pm) => pm.id === authStore.user?.id)
 
     return isManager || isMember
+})
+
+const previewTabs = computed(() => {
+    const tabs = [{ value: "overview", label: t("projects.tabs.overview") }]
+    if (canViewActivitiesAndInvoices.value) {
+        tabs.push({ value: "activities", label: t("projects.tabs.activities") })
+    }
+    if (canEditProject.value) {
+        tabs.push({ value: "invoices", label: t("projects.tabs.invoices") })
+    }
+    return tabs
 })
 
 // Check if current user can view Hours and Invoices (admin or assigned)

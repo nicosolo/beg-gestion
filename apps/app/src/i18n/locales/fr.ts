@@ -267,9 +267,11 @@ export default {
         },
         sections: {
             identification: "Identification",
+            planning: "Planification",
             stakeholders: "Intervenants",
             location: "Localisation",
-            financesNotes: "Finances et notes",
+            finances: "Finances",
+            notes: "Notes",
         },
     },
     pagination: {

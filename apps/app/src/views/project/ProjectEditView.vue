@@ -5,42 +5,16 @@
         :error-message="errorMessage"
     >
         <!-- Project mode tabs (only for new projects) -->
-        <div v-if="isNewProject" class="border-b border-gray-200 mb-4">
-            <nav class="flex gap-2 -mb-px">
-                <button
-                    type="button"
-                    @click="setProjectMode('standard')"
-                    :class="[
-                        'py-3 px-6 font-medium text-sm cursor-pointer shrink-0',
-                        projectMode === 'standard'
-                            ? 'border-b-2 border-blue-500 text-blue-600'
-                            : 'text-gray-500 hover:text-gray-700 hover:border-gray-300',
-                    ]"
-                >
-                    {{ $t("projects.mode.standard") }}
-                </button>
-                <button
-                    type="button"
-                    @click="setProjectMode('sub')"
-                    :class="[
-                        'py-3 px-6 font-medium text-sm cursor-pointer shrink-0',
-                        projectMode === 'sub'
-                            ? 'border-b-2 border-blue-500 text-blue-600'
-                            : 'text-gray-500 hover:text-gray-700 hover:border-gray-300',
-                    ]"
-                >
-                    {{ $t("projects.mode.sub") }}
-                </button>
-            </nav>
-        </div>
+        <TabNav
+            v-if="isNewProject"
+            v-model="projectMode"
+            :tabs="projectModeTabs"
+            wrapper-class="mb-4"
+        />
 
-        <form @submit.prevent="saveProject" id="projectForm" class="divide-y divide-gray-200">
+        <form @submit.prevent="saveProject" id="projectForm" class="space-y-6">
             <!-- Section: Identification -->
-            <fieldset class="space-y-4 pt-2 pb-8">
-                <legend class="text-base font-semibold text-gray-700 uppercase tracking-wide mb-4">
-                    {{ $t("projects.sections.identification") }}
-                </legend>
-
+            <SectionCard :title="$t('projects.sections.identification')" content-class="space-y-4" highlight>
                 <!-- Parent Project Selection (sub mode only) -->
                 <div v-if="isNewProject && projectMode === 'sub'">
                     <FormField
@@ -59,7 +33,7 @@
                     </FormField>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <FormField :label="$t('projects.mandat')" :error="errors.projectNumber">
                         <template #input>
                             <Input
@@ -75,7 +49,11 @@
                             </p>
                         </template>
                     </FormField>
-                    <FormField :label="$t('projects.designation')" :error="errors.name" required>
+                    <FormField
+                        :label="$t('projects.designation')"
+                        :error="errors.name"
+                        required
+                    >
                         <template #input>
                             <Input type="text" v-model="form.name" required />
                         </template>
@@ -93,14 +71,25 @@
                         </template>
                     </FormField>
                 </div>
+            </SectionCard>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <FormField :label="$t('projects.startDate')" :error="errors.startDate" required>
+            <!-- Section: Planning -->
+            <SectionCard highlight :title="$t('projects.sections.planning')" content-class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField
+                        :label="$t('projects.startDate')"
+                        :error="errors.startDate"
+                        required
+                    >
                         <template #input>
                             <Input type="date" v-model="formattedDate" required />
                         </template>
                     </FormField>
-                    <FormField :label="$t('projects.type')" :error="errors.projectTypeIds" required>
+                    <FormField
+                        :label="$t('projects.type')"
+                        :error="errors.projectTypeIds"
+                        required
+                    >
                         <template #input>
                             <MultiProjectTypeSelect
                                 v-model="form.projectTypeIds"
@@ -108,7 +97,7 @@
                             />
                         </template>
                     </FormField>
-                    <FormField :label="$t('projects.statusLabel')" :error="errors.status">
+                    <FormField :label="$t('projects.statusLabel')" :error="errors.status" >
                         <template #input>
                             <ToggleGroup
                                 :model-value="form.status"
@@ -120,15 +109,11 @@
                         </template>
                     </FormField>
                 </div>
-            </fieldset>
+            </SectionCard>
 
             <!-- Section: Intervenants -->
-            <fieldset class="space-y-4 pt-10 pb-8">
-                <legend class="text-base font-semibold text-gray-700 uppercase tracking-wide my-4">
-                    {{ $t("projects.sections.stakeholders") }}
-                </legend>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <SectionCard :title="$t('projects.sections.stakeholders')" content-class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <FormField :label="$t('projects.client')" :error="errors.clientId">
                         <template #input>
                             <ClientSelect
@@ -155,11 +140,12 @@
                     </FormField>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                         :label="$t('projects.responsible')"
                         :error="errors.projectManagers"
                         required
+                        highlight
                     >
                         <template #input>
                             <UserSelect
@@ -169,7 +155,7 @@
                             />
                         </template>
                     </FormField>
-                    <FormField :label="$t('projects.members')" :error="errors.projectMembers">
+                    <FormField :label="$t('projects.members')" :error="errors.projectMembers" highlight>
                         <template #input>
                             <UserSelect
                                 v-model="form.projectMembers"
@@ -179,50 +165,43 @@
                         </template>
                     </FormField>
                 </div>
-            </fieldset>
+            </SectionCard>
 
-            <!-- Section: Localisation (card style) -->
-            <fieldset class="pt-10 pb-8">
-                <legend class="text-base font-semibold text-gray-700 uppercase tracking-wide mb-4">
-                    {{ $t("projects.sections.location") }}
-                </legend>
-
-                <div class="bg-gray-50 rounded-lg border border-gray-300 p-5 space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <FormField :label="$t('projects.locality')" :error="errors.locationId">
-                            <template #input>
-                                <LocationSelect
-                                    v-model="form.locationId"
-                                    :placeholder="$t('common.select')"
-                                />
-                            </template>
-                        </FormField>
-                    </div>
-
-                    <FormField
-                        :label="$t('projects.location')"
-                        :error="errors.latitude || errors.longitude"
-                    >
+            <!-- Section: Localisation -->
+            <SectionCard :title="$t('projects.sections.location')" content-class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField :label="$t('projects.locality')" :error="errors.locationId">
                         <template #input>
-                            <LocationPicker
-                                :latitude="parsedLatitude"
-                                :longitude="parsedLongitude"
-                                @update:latitude="updateLatitude"
-                                @update:longitude="updateLongitude"
+                            <LocationSelect
+                                v-model="form.locationId"
+                                :placeholder="$t('common.select')"
                             />
                         </template>
                     </FormField>
                 </div>
-            </fieldset>
 
-            <!-- Section: Finances & notes -->
-            <fieldset class="space-y-4 pt-10 pb-8">
-                <legend class="text-base font-semibold text-gray-700 uppercase tracking-wide mb-4">
-                    {{ $t("projects.sections.financesNotes") }}
-                </legend>
+                <FormField
+                    :label="$t('projects.location')"
+                    :error="errors.latitude || errors.longitude"
+                >
+                    <template #input>
+                        <LocationPicker
+                            :latitude="parsedLatitude"
+                            :longitude="parsedLongitude"
+                            @update:latitude="updateLatitude"
+                            @update:longitude="updateLongitude"
+                        />
+                    </template>
+                </FormField>
+            </SectionCard>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField :label="$t('projects.offerAmount')" :error="errors.offerAmount">
+            <!-- Section: Finances -->
+            <SectionCard :title="$t('projects.sections.finances')" content-class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                        :label="$t('projects.offerAmount')"
+                        :error="errors.offerAmount"
+                    >
                         <template #input>
                             <Input
                                 type="number"
@@ -246,31 +225,28 @@
                             <Textarea
                                 v-model="form.invoicingAddress"
                                 rows="3"
-                                class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 :placeholder="$t('projects.invoicingAddressPlaceholder')"
                             ></Textarea>
                         </template>
                     </FormField>
                 </div>
+            </SectionCard>
 
+            <!-- Section: Notes -->
+            <SectionCard :title="$t('projects.sections.notes')">
                 <FormField :label="$t('projects.remark')" :error="errors.remark">
                     <template #input>
                         <Textarea
                             v-model="form.remark"
                             rows="3"
-                            class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             :placeholder="$t('projects.remarkPlaceholder')"
                         ></Textarea>
                     </template>
                 </FormField>
-            </fieldset>
+            </SectionCard>
 
             <!-- Section: Statut (only when editing) -->
-            <fieldset v-if="!isNewProject" class="pt-10 pb-2">
-                <legend class="text-base font-semibold text-gray-700 uppercase tracking-wide mb-4">
-                    {{ $t("projects.statusLabel") }}
-                </legend>
-
+            <SectionCard v-if="!isNewProject" :title="$t('projects.statusLabel')">
                 <div class="flex gap-8">
                     <label class="flex items-center">
                         <input
@@ -289,7 +265,7 @@
                         <span>{{ $t("projects.markAsArchived") }}</span>
                     </label>
                 </div>
-            </fieldset>
+            </SectionCard>
         </form>
 
         <template #actions>
@@ -316,6 +292,8 @@ import { useAlert } from "@/composables/utils/useAlert"
 import Button from "@/components/atoms/Button.vue"
 import FormField from "@/components/molecules/FormField.vue"
 import FormLayout from "@/components/templates/FormLayout.vue"
+import TabNav from "@/components/molecules/TabNav.vue"
+import SectionCard from "@/components/molecules/SectionCard.vue"
 import Input from "@/components/atoms/Input.vue"
 import ProjectSelect from "@/components/organisms/project/ProjectSelect.vue"
 import LocationSelect from "@/components/organisms/location/LocationSelect.vue"
@@ -357,6 +335,11 @@ interface ProjectFormState {
 }
 
 const { t } = useI18n()
+
+const projectModeTabs = computed(() => [
+    { value: "standard", label: t("projects.mode.standard") },
+    { value: "sub", label: t("projects.mode.sub") },
+])
 
 const statusOptions = computed(() => [
     {
@@ -419,8 +402,7 @@ const isNewProject = computed(() => !projectId.value)
 // Project mode tabs (only used for new projects)
 const projectMode = ref<"standard" | "sub">("standard")
 
-const setProjectMode = (mode: "standard" | "sub") => {
-    projectMode.value = mode
+watch(projectMode, (mode) => {
     if (mode === "standard") {
         form.value.parentProjectId = undefined
         form.value.subProjectName = ""
@@ -436,7 +418,7 @@ const setProjectMode = (mode: "standard" | "sub") => {
         form.value.latitude = ""
         form.value.longitude = ""
     }
-}
+})
 
 // Loading states
 const isSubmitting = ref(false)

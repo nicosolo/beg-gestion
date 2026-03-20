@@ -1,5 +1,5 @@
 <template>
-    <div class="bg-white rounded-md shadow">
+    <div class="bg-white rounded-lg drop-shadow-sm">
         <div v-if="items.length === 0" class="p-8 text-center">
             <p class="text-gray-500">{{ emptyMessage }}</p>
         </div>
@@ -7,7 +7,7 @@
             <!-- Header row (visible only on desktop) -->
             <div
                 v-if="isDesktop"
-                class="grid border-b border-gray-200 sticky top-12 bg-white z-[5]"
+                class="grid border-b border-gray-200 sticky top-12 bg-white z-[5] rounded-t-lg"
                 :style="{ gridTemplateColumns }"
             >
                 <div
@@ -31,7 +31,7 @@
             </div>
 
             <!-- Data rows -->
-            <div class="divide-y divide-gray-200">
+            <div class="divide-y divide-gray-200 last:rounded-b-lg [&>*:last-child]:rounded-b-lg">
                 <component
                     v-for="(item, index) in items"
                     :key="getItemKey(item, index)"
@@ -103,7 +103,7 @@
             </div>
 
             <!-- Footer row with totals -->
-            <div v-if="showFooter" class="border-t-3 border-gray-300 bg-gray-50">
+            <div v-if="showFooter" class="border-t-3 border-gray-300 bg-gray-50 rounded-b-lg">
                 <!-- Mobile footer -->
                 <div v-if="!isDesktop" class="flex flex-col">
                     <div

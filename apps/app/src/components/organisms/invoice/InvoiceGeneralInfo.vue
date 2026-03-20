@@ -54,6 +54,7 @@
             </div>
         </div>
 
+        <!-- Right Column -->
         <div>
             <div class="grid grid-cols-2 gap-4 mb-4">
                 <div>

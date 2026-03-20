@@ -60,7 +60,7 @@
         <slot />
 
         <!-- Footer Actions -->
-        <div class="py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg">
+        <div class="py-4 mt-4 bg-gray-50 border-t border-gray-200 rounded-b-lg">
             <div class="flex items-center justify-end gap-3">
                 <slot name="actions" />
             </div>
