@@ -55,7 +55,11 @@ const stepValue = computed(() => {
 })
 
 function handleInput(event: Event) {
-    const value = parseFloat((event.target as HTMLInputElement).value)
+    let value = parseFloat((event.target as HTMLInputElement).value)
+    if (min !== undefined) {
+        const minNum = typeof min === "string" ? parseFloat(min) : min
+        if (!isNaN(minNum) && value < minNum) value = minNum
+    }
     emit("update:modelValue", value)
 }
 

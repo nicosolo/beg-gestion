@@ -377,6 +377,62 @@ describe("GET /activity/:id invalid", () => {
 	})
 })
 
+describe("POST /activity - negative values rejected", () => {
+	test("negative duration returns 400", async () => {
+		const res = await app.request("/activity", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({
+				projectId,
+				activityTypeId,
+				date: new Date().toISOString(),
+				duration: -1,
+				kilometers: 0,
+				expenses: 0,
+				description: "negative duration",
+				billed: false,
+			}),
+		})
+		expect(res.status).toBe(400)
+	})
+
+	test("negative kilometers returns 400", async () => {
+		const res = await app.request("/activity", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({
+				projectId,
+				activityTypeId,
+				date: new Date().toISOString(),
+				duration: 1,
+				kilometers: -5,
+				expenses: 0,
+				description: "negative km",
+				billed: false,
+			}),
+		})
+		expect(res.status).toBe(400)
+	})
+
+	test("negative expenses returns 400", async () => {
+		const res = await app.request("/activity", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({
+				projectId,
+				activityTypeId,
+				date: new Date().toISOString(),
+				duration: 1,
+				kilometers: 0,
+				expenses: -10,
+				description: "negative expenses",
+				billed: false,
+			}),
+		})
+		expect(res.status).toBe(400)
+	})
+})
+
 describe("POST /activity - validation errors", () => {
 	test("project not found returns 404", async () => {
 		const res = await app.request("/activity", {
