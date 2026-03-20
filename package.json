@@ -18,8 +18,8 @@
         "test:app": "bun run --cwd apps/app vitest run",
         "test:app:watch": "bun run --cwd apps/app vitest",
         "test:app:coverage": "bun run --cwd apps/app vitest run --coverage",
-        "test:api": "docker compose exec api bun test --timeout 30000",
-        "test:api:coverage": "docker compose exec api bun test --timeout 30000 --coverage",
+        "test:api": "docker compose run --rm api bun test --timeout 30000",
+        "test:api:coverage": "docker compose run --rm api bun test --timeout 30000 --coverage",
         "type-check:app": "bun run --cwd apps/app type-check",
         "type-check:api": "bun run --cwd apps/api type-check"
     },

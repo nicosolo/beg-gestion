@@ -6,19 +6,6 @@ services:
             dockerfile: apps/api/Dockerfile
         develop:
             watch:
-                - action: sync
-                  path: ./apps/api
-                  target: /app/apps/api
-                  ignore:
-                      - node_modules/
-                      - drizzle/
-                  initial_sync: true
-                - action: sync+restart
-                  path: ./packages
-                  target: /app/packages
-                  ignore:
-                      - node_modules/
-                  initial_sync: true
                 - action: rebuild
                   path: apps/api/package.json
                 - action: rebuild
@@ -30,7 +17,10 @@ services:
             - MANDATS_PATH=${MANDATS_PATH-./data/mandats}
             - MS_ACCESS_DB_PATH=${MS_ACCESS_DB_PATH-./data/BEGdatas.mdb}
         volumes:
+            - ./apps/api/src:/app/apps/api/src
+            - ./apps/api/bunfig.toml:/app/apps/api/bunfig.toml
             - ./apps/api/drizzle:/app/apps/api/drizzle
+            - ./packages:/app/packages
             - ./data:/app/data
             - ./export-mdb:/app/export-mdb
             - ./initial-data:/app/initial-data
@@ -48,18 +38,6 @@ services:
             dockerfile: apps/app/Dockerfile
         develop:
             watch:
-                - action: sync
-                  path: ./apps/app
-                  target: /app/apps/app
-                  ignore:
-                      - node_modules/
-                  initial_sync: true
-                - action: sync+restart
-                  path: ./packages
-                  target: /app/packages
-                  ignore:
-                      - node_modules/
-                  initial_sync: true
                 - action: rebuild
                   path: ./apps/app/package.json
                 - action: rebuild
@@ -68,6 +46,9 @@ services:
             - NODE_ENV=development
             - VITE_HMR_HOST=0.0.0.0
             - VITE_HMR_PORT=8080
+        volumes:
+            - ./apps/app/src:/app/apps/app/src
+            - ./packages:/app/packages
         working_dir: /app/apps/app
         command: bun run dev
 
