@@ -586,6 +586,7 @@ export default {
             success: "La facture a été enregistrée",
         },
         visaByUser: "À viser par",
+        visaByUserRequired: "Le champ 'À viser par' est requis",
         selectVisaUser: "Sélectionner un viseur",
         inChargeUser: "Responsable",
         selectInChargeUser: "Sélectionner un responsable",

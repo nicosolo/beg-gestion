@@ -60,7 +60,7 @@
                         <td class="border border-gray-300 p-1 text-sm">
                             <template v-if="invoice.visaByUserId || invoice.visaBy">
                                 {{ invoice.visaDate ? formatDate(invoice.visaDate) : "-" }} -
-                                {{ visaByUserName || invoice.visaBy || "-" }}
+                                {{  invoice.visaBy || "-" }}
                             </template>
                             <template v-else> Pas de visa </template>
                         </td>

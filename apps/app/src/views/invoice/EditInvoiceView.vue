@@ -53,6 +53,7 @@
                     v-model="invoice"
                     :invoice-id="invoiceId ? parseInt(invoiceId) : null"
                     :default-path="projectFolderPath"
+                    :saved-status="savedStatus"
                     @document-file-change="handleDocumentFileChange"
                     @document-entry-removed="handleDocumentEntryRemoved"
                     @invoice-document-change="handleInvoiceDocumentFileChange"
@@ -240,7 +241,8 @@ const hasPendingUploads = computed(
 )
 
 const isLocked = computed(() => {
-    return savedStatus.value === "sent" || savedStatus.value === "vise"
+    if (isRole("admin")) return savedStatus.value === "sent"
+    return savedStatus.value === "vise" || savedStatus.value === "sent"
 })
 const canDelete = computed(() => !isLocked.value)
 const adminUnlock = ref(false)
@@ -540,6 +542,14 @@ const handleSave = async () => {
 
     if (invoice.value.billingMode === "accordingToInvoice" && !invoice.value.invoiceDocument) {
         errorAlert(t("invoice.document.required"), 5000)
+        return
+    }
+
+    if (
+        ["controle", "vise", "sent"].includes(invoice.value.status) &&
+        !invoice.value.visaByUserId
+    ) {
+        errorAlert(t("invoice.visaByUserRequired"), 5000)
         return
     }
 

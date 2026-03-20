@@ -6,12 +6,17 @@
             type="button"
             role="radio"
             :aria-checked="modelValue === opt.value"
-            @click="select(opt.value)"
+            :disabled="opt.disabled"
+            @click="!opt.disabled && select(opt.value)"
             :class="[
-                'inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md border transition-colors duration-100 cursor-pointer select-none',
-                modelValue === opt.value
-                    ? opt.activeClass || 'bg-indigo-600 text-white border-indigo-600'
-                    : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50 hover:border-gray-400',
+                'inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md border transition-colors duration-100 select-none',
+                opt.disabled
+                    ? modelValue === opt.value
+                        ? 'bg-gray-200 text-gray-500 border-gray-300 cursor-not-allowed'
+                        : 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
+                    : modelValue === opt.value
+                        ? opt.activeClass || 'bg-indigo-600 text-white border-indigo-600'
+                        : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50 hover:border-gray-400 cursor-pointer',
             ]"
         >
             {{ opt.label }}
@@ -25,6 +30,8 @@ export interface ToggleGroupOption {
     value: string
     /** Classes applied when this option is selected (bg + text + border) */
     activeClass?: string
+    /** Prevent selecting this option */
+    disabled?: boolean
 }
 
 interface Props {

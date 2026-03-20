@@ -99,9 +99,8 @@
                     </FormField>
                     <FormField :label="$t('projects.statusLabel')" :error="errors.status" >
                         <template #input>
-                            <ToggleGroup
+                            <ProjectStatusSelect
                                 :model-value="form.status"
-                                :options="statusOptions"
                                 @update:model-value="
                                     form.status = ($event as typeof form.status) || 'active'
                                 "
@@ -304,7 +303,7 @@ import MultiProjectTypeSelect from "@/components/organisms/projectType/MultiProj
 import UserSelect from "@/components/organisms/user/UserSelect.vue"
 import LocationPicker from "@/components/molecules/LocationPicker.vue"
 import Select from "@/components/atoms/Select.vue"
-import ToggleGroup from "@/components/atoms/ToggleGroup.vue"
+import ProjectStatusSelect from "@/components/organisms/project/ProjectStatusSelect.vue"
 
 // API Composables
 import { useFetchProject, useCreateProject, useUpdateProject } from "@/composables/api/useProject"
@@ -339,24 +338,6 @@ const { t } = useI18n()
 const projectModeTabs = computed(() => [
     { value: "standard", label: t("projects.mode.standard") },
     { value: "sub", label: t("projects.mode.sub") },
-])
-
-const statusOptions = computed(() => [
-    {
-        value: "offer",
-        label: t("projects.status.offer"),
-        activeClass: "bg-blue-600 text-white border-blue-600",
-    },
-    {
-        value: "draft",
-        label: t("projects.status.draft"),
-        activeClass: "bg-amber-500 text-white border-amber-500",
-    },
-    {
-        value: "active",
-        label: t("projects.status.active"),
-        activeClass: "bg-emerald-600 text-white border-emerald-600",
-    },
 ])
 
 const SUB_PROJECT_NAMES = [

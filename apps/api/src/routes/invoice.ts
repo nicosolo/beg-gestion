@@ -288,6 +288,14 @@ export const invoiceRoutes = new Hono<{ Variables: Variables }>()
                     { field: "projectId", message: "Missing project reference" },
                 ])
             }
+            if (
+                ["controle", "vise", "sent"].includes(invoiceData.status || "") &&
+                !invoiceData.visaByUserId
+            ) {
+                throwValidationError("visaByUserId is required for this status", [
+                    { field: "visaByUserId", message: "Required for controle/visé/sent status" },
+                ])
+            }
             await persistUploadedFiles(invoiceData, uploadedFiles)
             const newInvoice = await invoiceRepository.create(invoiceData, user)
             if (!newInvoice) {
@@ -314,7 +322,7 @@ export const invoiceRoutes = new Hono<{ Variables: Variables }>()
             const existing = await invoiceRepository.findById(id, user)
             if (!existing) throwNotFound("Invoice")
             if (
-                (existing.status === "sent" || existing.status === "vise") &&
+                (existing.status === "vise" || existing.status === "sent") &&
                 !hasRole(user.role, "admin")
             ) {
                 throwForbidden("Cannot modify locked invoices (visé or sent)")
@@ -325,6 +333,16 @@ export const invoiceRoutes = new Hono<{ Variables: Variables }>()
                 "update"
             )
             const invoiceData = parsedInvoice as InvoiceUpdateInput
+
+            const effectiveStatus = invoiceData.status ?? existing.status
+            if (
+                ["controle", "vise", "sent"].includes(effectiveStatus || "") &&
+                !(invoiceData.visaByUserId ?? existing.visaByUserId)
+            ) {
+                throwValidationError("visaByUserId is required for this status", [
+                    { field: "visaByUserId", message: "Required for controle/visé/sent status" },
+                ])
+            }
 
             await persistUploadedFiles(invoiceData, uploadedFiles)
             const updatedInvoice = await invoiceRepository.update(id, invoiceData, user)

@@ -267,18 +267,18 @@ function mapInvoiceStatus(edtVisa: string, edtBon: string): InvoiceStatus {
     return isApproved && hasVisaUser ? "sent" : "controle"
 }
 
-// Get visa user ID from legacy edtVisa index
-async function getVisaUserId(edtVisa: string): Promise<number | null> {
+// Get visa user from legacy edtVisa index
+async function getVisaUser(edtVisa: string): Promise<{ id: number; firstName: string } | null> {
     const initials = VISA_USER_INITIALS[edtVisa]
     if (!initials) return null
 
     const [user] = await db
-        .select({ id: users.id })
+        .select({ id: users.id, firstName: users.firstName })
         .from(users)
         .where(eq(users.initials, initials))
         .limit(1)
 
-    return user?.id ?? null
+    return user ?? null
 }
 
 // Get user ID from initials (for edtResponsable)
@@ -431,8 +431,8 @@ async function importInvoiceFromFab(fabPath: string): Promise<boolean> {
         const vatAmount = parseSwissNumber(d["grdFacture25.4"])
         const totalTTC = parseSwissNumber(d["grdFacture26.4"])
 
-        // Get visa user ID
-        const visaByUserId = await getVisaUserId(d["edtVisa"] || "")
+        // Get visa user
+        const visaUser = await getVisaUser(d["edtVisa"] || "")
 
         // Get in charge user ID from edtResponsable (user initials)
         const inChargeUserId = await getUserIdByInitials(d["edtResponsable"] || "")
@@ -458,7 +458,8 @@ async function importInvoiceFromFab(fabPath: string): Promise<boolean> {
                 note,
                 otherServices: "",
                 visaDate,
-                visaByUserId,
+                visaByUserId: visaUser?.id ?? null,
+                visaBy: visaUser?.firstName ?? null,
                 inChargeUserId,
                 legacyInvoicePath: fabPath.replace("/mandats/", ""),
                 feesBase,

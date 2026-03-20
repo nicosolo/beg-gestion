@@ -120,9 +120,8 @@
                         <Label class="text-xs mb-1.5 block">{{
                             $t("projects.filters.status")
                         }}</Label>
-                        <ToggleGroup
+                        <ProjectStatusSelect
                             :model-value="filterData.status"
-                            :options="statusOptions"
                             :allow-deselect="true"
                             @update:model-value="handleStatusChange"
                         />
@@ -157,11 +156,10 @@ export const getDefaultProjectFilter = (): ProjectFilterModel => {
 <script setup lang="ts">
 defineOptions({ name: "ProjectFilterPanel" })
 
-import { computed, onActivated, onMounted, reactive, watch } from "vue"
-import { useI18n } from "vue-i18n"
+import { onActivated, onMounted, reactive, watch } from "vue"
 import Label from "../../atoms/Label.vue"
 import Select from "../../atoms/Select.vue"
-import ToggleGroup from "../../atoms/ToggleGroup.vue"
+import ProjectStatusSelect from "./ProjectStatusSelect.vue"
 import Button from "../../atoms/Button.vue"
 import FormField from "../../molecules/FormField.vue"
 import DateRange from "../../molecules/DateRange.vue"
@@ -176,26 +174,6 @@ interface ProjectFilterProps {
     showCheckboxes?: boolean
     showNameInput?: boolean
 }
-
-const { t } = useI18n()
-
-const statusOptions = computed(() => [
-    {
-        value: "active",
-        label: t("projects.status.active"),
-        activeClass: "bg-emerald-600 text-white border-emerald-600",
-    },
-    {
-        value: "draft",
-        label: t("projects.status.draft"),
-        activeClass: "bg-amber-500 text-white border-amber-500",
-    },
-    {
-        value: "offer",
-        label: t("projects.status.offer"),
-        activeClass: "bg-blue-600 text-white border-blue-600",
-    },
-])
 
 // Define props for the component
 const {

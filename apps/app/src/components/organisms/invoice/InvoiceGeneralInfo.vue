@@ -146,15 +146,9 @@
                     <label class="text-sm font-medium text-gray-700 mb-1" for="invoiceStatus">
                         {{ $t("invoice.status.title") }}
                     </label>
-                    <Select
+                    <InvoiceStatusSelect
                         id="invoiceStatus"
                         v-model="invoice.status"
-                        :options="[
-                            { value: 'draft', label: $t('invoice.status.draft') },
-                            { value: 'controle', label: $t('invoice.status.controle') },
-                            { value: 'vise', label: $t('invoice.status.vise') },
-                            { value: 'sent', label: $t('invoice.status.sent') },
-                        ]"
                     />
                 </div>
 
@@ -167,6 +161,8 @@
                         v-model="invoice.visaByUserId"
                         :roles="['super_admin']"
                         :placeholder="$t('invoice.selectVisaUser')"
+                        :required="['controle', 'vise', 'sent'].includes(invoice.status)"
+                        :disabled="['vise', 'sent'].includes(invoice.status)"
                     />
                 </div>
             </div>
@@ -250,6 +246,7 @@ import Input from "@/components/atoms/Input.vue"
 import Select from "@/components/atoms/Select.vue"
 import Textarea from "@/components/atoms/Textarea.vue"
 import InvoiceDocumentEntries from "./InvoiceDocumentEntries.vue"
+import InvoiceStatusSelect from "./InvoiceStatusSelect.vue"
 import DocumentUploadField from "@/components/molecules/DocumentUploadField.vue"
 import DragDropZone from "@/components/molecules/DragDropZone.vue"
 import UserSelect from "@/components/organisms/user/UserSelect.vue"
@@ -260,6 +257,7 @@ const props = defineProps<{
     modelValue: Invoice
     invoiceId?: number | null
     defaultPath?: string
+    savedStatus?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -278,6 +276,7 @@ const emit = defineEmits<{
 }>()
 
 const { buildFileUrl, downloadInvoiceFile, extractFileName } = useInvoiceDocuments()
+
 
 const handleInvoiceDocDrop = (files: ResolvedFile[]) => {
     if (files.length === 0) return
@@ -384,6 +383,15 @@ watch(
     (mode) => {
         if (mode !== "accordingToInvoice" && invoice.value.invoiceDocument) {
             clearInvoiceDocument()
+        }
+    }
+)
+
+watch(
+    () => invoice.value.status,
+    (status) => {
+        if (status === "draft" && invoice.value.visaByUserId) {
+            invoice.value = { ...invoice.value, visaByUserId: null }
         }
     }
 )
