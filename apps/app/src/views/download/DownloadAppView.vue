@@ -5,7 +5,7 @@
             <h1 class="text-2xl font-semibold">{{ $t("downloadApp.title") }}</h1>
         </div>
 
-        <div class="bg-white shadow-sm rounded-lg p-6">
+        <Card>
             <p class="text-gray-600 mb-6">{{ $t("downloadApp.description") }}</p>
 
             <div class="grid gap-4 md:grid-cols-2">
@@ -34,12 +34,13 @@
             <div class="mt-6 text-sm text-gray-500">
                 <p>{{ $t("downloadApp.version") }}: {{ version }}</p>
             </div>
-        </div>
+        </Card>
     </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue"
+import Card from "@/components/atoms/Card.vue"
 import { ArrowDownTrayIcon, ComputerDesktopIcon } from "@heroicons/vue/24/outline"
 import desktopVersion from "@/config/desktop-version.json"
 import { useFileDownload } from "@/composables/utils/useFileDownload"

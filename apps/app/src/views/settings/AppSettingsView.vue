@@ -5,8 +5,8 @@
             <h1 class="text-2xl font-semibold">{{ $t("appSettings.title") }}</h1>
         </div>
 
-        <div class="bg-white shadow-sm rounded-lg">
-            <div class="p-6 space-y-6">
+        <Card>
+            <div class="space-y-6">
                 <!-- Base Path Configuration -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -110,13 +110,14 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </Card>
     </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from "vue"
 import { useRouter } from "vue-router"
+import Card from "@/components/atoms/Card.vue"
 import { useI18n } from "vue-i18n"
 import { useAppSettingsStore } from "@/stores/appSettings"
 import { useTauri } from "@/composables/useTauri"

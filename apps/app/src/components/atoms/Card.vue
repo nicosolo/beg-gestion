@@ -1,5 +1,5 @@
 <template>
-    <div :class="['bg-white drop-shadow-md rounded-lg p-2 bg-red-600', highlight && 'bg-yellow-100/80']">
+    <div :class="['shadow-md rounded-lg p-4', highlight && 'bg-yellow-100/80']">
         <slot />
     </div>
 </template>

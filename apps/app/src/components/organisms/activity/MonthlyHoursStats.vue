@@ -1,5 +1,5 @@
 <template>
-    <div class="bg-white border border-gray-200 shadow-sm rounded-lg p-6">
+    <Card>
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-semibold text-gray-900">
                 {{ $t("home.monthlyStats.title") }}
@@ -56,12 +56,13 @@
                 </div>
             </div>
         </div>
-    </div>
+    </Card>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from "vue"
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/vue/24/outline"
+import Card from "@/components/atoms/Card.vue"
 import { useFetchMyMonthlyStats } from "@/composables/api/useActivity"
 import { useFormat } from "@/composables/utils/useFormat"
 const { formatDuration } = useFormat()

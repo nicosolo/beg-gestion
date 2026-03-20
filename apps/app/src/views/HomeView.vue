@@ -9,7 +9,7 @@
             </p>
         </div>
 
-        <div class="max-w-4xl mx-auto bg-white border border-gray-200 shadow-sm rounded-lg p-6">
+        <Card class="max-w-4xl mx-auto">
             <form @submit.prevent>
                 <div class="space-y-2">
                     <label
@@ -32,7 +32,7 @@
                     </p>
                 </div>
             </form>
-        </div>
+        </Card>
         <!-- Alert for orphaned activities (only for managers) -->
         <div class="max-w-4xl mx-auto">
             <OrphanedActivitiesAlert />
@@ -64,6 +64,7 @@
 import { ref, onMounted } from "vue"
 import { useRouter } from "vue-router"
 import { useI18n } from "vue-i18n"
+import Card from "@/components/atoms/Card.vue"
 import ProjectSelect from "@/components/organisms/project/ProjectSelect.vue"
 import TimeEntriesManager from "@/components/organisms/time/TimeEntriesManager.vue"
 import OrphanedActivitiesAlert from "@/components/organisms/activity/OrphanedActivitiesAlert.vue"

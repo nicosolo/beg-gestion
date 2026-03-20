@@ -4,7 +4,7 @@
             <h1 class="text-3xl font-bold mb-8">Database Import</h1>
 
             <!-- Status Card -->
-            <div class="bg-white shadow rounded-lg p-6 mb-6">
+            <Card class="mb-6">
                 <h2 class="text-xl font-semibold mb-4">System Status</h2>
 
                 <div v-if="statusLoading" class="text-gray-500">Loading...</div>
@@ -40,10 +40,10 @@
                         </span>
                     </div>
                 </div>
-            </div>
+            </Card>
 
             <!-- Import Action Card -->
-            <div class="bg-white shadow rounded-lg p-6">
+            <Card>
                 <h2 class="text-xl font-semibold mb-4">Import Action</h2>
 
                 <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
@@ -182,13 +182,14 @@
                 <p v-if="!canImport && status" class="mt-2 text-sm text-gray-500 text-center">
                     {{ getDisabledReason() }}
                 </p>
-            </div>
+            </Card>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue"
+import Card from "@/components/atoms/Card.vue"
 import {
     useImportStatus,
     useRunImport,

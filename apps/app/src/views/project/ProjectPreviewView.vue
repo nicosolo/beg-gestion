@@ -84,7 +84,7 @@
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <!-- Project Details -->
                         <div class="lg:col-span-2">
-                            <div class="bg-gray-50 rounded-lg border-1 p-4 border-gray-300">
+                            <Card>
                                 <h2 class="text-lg font-semibold mb-4">
                                     {{ $t("projects.details") }}
                                 </h2>
@@ -264,12 +264,12 @@
                                         </p>
                                     </div>
                                 </div>
-                            </div>
+                            </Card>
                         </div>
 
                         <!-- Project Statistics -->
                         <div>
-                            <div class="bg-gray-50 rounded-lg border-1 p-4 border-gray-300">
+                            <Card>
                                 <h2 class="text-lg font-semibold mb-4">
                                     {{ $t("projects.statistics") }}
                                 </h2>
@@ -315,7 +315,7 @@
                                         </p>
                                     </div>
                                 </div>
-                            </div>
+                            </Card>
                         </div>
                     </div>
                 </div>
@@ -371,6 +371,7 @@ import { ref, computed, watch, onActivated } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Button from "@/components/atoms/Button.vue"
 import Badge from "@/components/atoms/Badge.vue"
+import Card from "@/components/atoms/Card.vue"
 import TimeEntriesManager from "@/components/organisms/time/TimeEntriesManager.vue"
 import InvoiceListManager from "@/components/organisms/invoice/InvoiceListManager.vue"
 import TimeEntryModal from "@/components/organisms/time/TimeEntryModal.vue"
