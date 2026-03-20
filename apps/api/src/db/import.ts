@@ -173,6 +173,44 @@ async function loadProjectTypeMapping(): Promise<{
     return { mapping, allNewTypes }
 }
 
+// Pre-hashed (bcrypt) password mapping by initials for active users
+const PASSWORD_HASH_MAP: Record<string, string> = {
+    aje: "$2b$10$Mchvq2q4WL.BwX3Y10bb1ewXUIiHCJS5KXX2Lr7Y6QF9CmTw4letu",
+    ap: "$2b$10$3A/CGf7SKnWVlw19ztcFj.AeDId4wquYwKnsc69ts8Ki0RaRpKVva",
+    al: "$2b$10$02qNLk4sCm1PBYUjI/sgp.Cdq9PBzLFlUWKRd3YEkAH2EXRGH9BQa",
+    arh: "$2b$10$MvLrvQ6LyiV0D8UxlsC2DOU3zX6/If2Yk9auTXI9Oj3m3ek/0ivdC",
+    as: "$2b$10$kyOH8sgWKFzJM0iiA4D.n./fMcHo2k9oH5ripaAjr6M3AfPsKXXem",
+    ad: "$2b$10$kuxioGpJPcy.Q.juG.gGOu9iqhXH96yQdDnzQJ9WQUoun34XUAihi",
+    bl: "$2b$10$swRi6UbIdO/TAbmjP10rFOA4TfhRtKg2L0nS3rSJqMdfuZ/KQiQJ.",
+    cva: "$2b$10$hx9nLQPyzkSG7OaTnUMsaOJOIrrwA5Ox2s3RQxpru0mlqM2TDQiYa",
+    dbo: "$2b$10$1jzYtDpHav6OAs8nd5ni6estnUo6RrR/dRfMxZlG3Ann8DfX0BOA6",
+    fh: "$2b$10$9gRWpiNu7tIdZgAlQhjlo.ZQ2pOHW7DhYfE6F1QW6mttq37yax/pi",
+    fp: "$2b$10$iYIKTUdm8itO5huPu0nRK.nLL5trb4Jq9OzsoJLVIQLfX/R1bLQ4y",
+    gg: "$2b$10$FymG7FnngTkaY1eUW24lRuYwT5InH7T9Io5Ek5d1QKeuF.yExOP/m",
+    gm: "$2b$10$22EBGY3YteXnCjhL.ln3bupXD4vy08mioTYFC6BI294JbiMPWgiDy",
+    kf: "$2b$10$YWQ/xO.gCsEmLOxKCSlGA.xInWwv/PMtN4YX9QFEuaUeg47kaqdlC",
+    lf: "$2b$10$iHb40n6K2RrNA14p1ccIUuvLDpFLPCU/UPtuD4G4y9p/O5YcQu3WC",
+    lkl: "$2b$10$p/Z/V6flR1/BMOBNn7gak.F3JjhPLVnqpyZRh.MGfFbAwsrhca1x.",
+    mxd: "$2b$10$rX5/ieD1XzfJgc/MQPfgDuKDfwIe7jkZ39pwTy.pXMrQF1irabYgG",
+    mc: "$2b$10$bMBBPHFe0Ku/S0T3K2LCouosrnt3KvYv2UY5ClwCO7/8C/VIw.prK",
+    fm: "$2b$10$bJLzIdyaY7UgVhnYqUP1H.MBLOIClC6hjlV5nOyPfIDl1VcFeQXFu",
+    mgi: "$2b$10$Deh/VBuyNRKsROXG1nA39.jsfvsBwcM3EmSED3PxSgsEthp4fRwne",
+    mpo: "$2b$10$9XwTrcKnyTn.6HdITuQoPOECaOmQCgShRqaaTzkdK3C0ak85Jy4nW",
+    mmi: "$2b$10$2bNoY541.8wpWKdQBvnx5eAmk2Uv7owMYRbNhX25mVg6sI5xbQsKW",
+    md: "$2b$10$cKYppWNlYTtcHSDNbsBGROXXahKTOPubqAPtK91u6cHUaguOEO50m",
+    mdb: "$2b$10$WVgwZ5i2.MJ2ysoW8uzzxOXb3T486KAifyci4Hdjm209JdB9cR4/2",
+    mdu: "$2b$10$WpdR8bTf9Ku.sn8uoVbxw.WwhNScWnEEtjIi33AnI8nkjf5k9azaO",
+    ns: "$2b$10$cPF28Nan5gBo.e2G0psdV.7pBfkGK4vE8/kvnmMCBzOJOHJw8mx1i",
+    pp: "$2b$10$7IvuCWG88vNP20wXAjn6se11rJYKhUMlpAc4t3j/CQElFlwD/Ai6q",
+    mo: "$2b$10$ZKo7QKR4LxnMjmMsmYf.uOS/tUNG0Wh2pdg4.oG.17p/9zuCxJF5S",
+    sa: "$2b$10$hI4SWSXNKuCCbrejDdPXl.SRFaw5qPYAyOQ/vHk1vnMH3rG/.2T5.",
+    sc: "$2b$10$HTpjbVoV6HiHOpMThWUYWOIbmZAhcDdsm3yIVj0nwMMXFrr5gF2WC",
+    smd: "$2b$10$vdUrZCzytivhtmZZla4RLeUbTLi81nHI24K7oJJY3NwTvnBWijNJW",
+    tr: "$2b$10$Ue7ELWHYqLyK07RwbOga3e65BsuTqGkRq2HTG8BOXLcyNvVrKnRTq",
+    vd: "$2b$10$LlQD35ZfDInbawzofX0XL.AG/ho0OcRmLBPb1.6s502XMQQqXhVau",
+    vtr: "$2b$10$9vjMX2CTZ8.XD3qq/b9IxueoqZgy7PH5eUOi5afO3qpd9H4aHT96q",
+}
+
 // Map French names to DB table structure
 const ARCHIVED_USERS: [string, string][] = [
     ["Alexis", "Jaspar"],
@@ -224,7 +262,15 @@ function mapUserData(data: any): typeof users.$inferInsert {
         firstName: data.Prénom,
         lastName: data.Nom,
         initials: data.Initiales,
-        password: data["Mot de passe"] || "password123", // Default password
+        password: (() => {
+            const initials = data.Initiales?.toLowerCase()
+            const mapped = PASSWORD_HASH_MAP[initials]
+            if (!mapped) {
+                console.warn(`No password hash found for user ${data.Prénom} ${data.Nom} (${initials}), using random password`)
+                return crypto.randomUUID()
+            }
+            return mapped
+        })(),
         role: superAdminUsers.includes(data.Initiales)
             ? "super_admin"
             : adminUsers.includes(data.Initiales)
