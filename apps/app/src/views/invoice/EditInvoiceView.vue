@@ -103,6 +103,18 @@
         @confirm="confirmDelete"
     />
 
+    <!-- Visa reset warning (when moving from vise back to draft/controle) -->
+    <ConfirmDialog
+        v-model="showVisaResetConfirm"
+        title="Retirer le visa"
+        message="Le visa sera retiré et devra être refait par un membre visa. Voulez-vous continuer ?"
+        type="warning"
+        confirm-text="Continuer"
+        :cancel-text="$t('common.cancel')"
+        @confirm="confirmVisaReset"
+        @cancel="cancelVisaReset"
+    />
+
     <!-- Missing fields popup (when leaving draft) -->
     <Dialog v-model="showMissingFieldsDialog" title="Champs à compléter" size="md">
         <p class="text-sm text-gray-500 mb-4">
@@ -167,6 +179,8 @@ const activeTab = ref("general")
 const isUpdatingFromApi = ref(false)
 const showDeleteConfirm = ref(false)
 const showMissingFieldsDialog = ref(false)
+const showVisaResetConfirm = ref(false)
+const pendingVisaResetStatus = ref<string | null>(null)
 
 // API composables
 const { get: fetchInvoice, loading: fetchLoading, error: fetchError } = useFetchInvoice()
@@ -514,6 +528,40 @@ const loadInvoice = async () => {
             console.error("Failed to load invoice:", err)
         }
     }
+}
+
+// Watch for status downgrade from vise to draft/controle
+const skipVisaWatch = ref(false)
+watch(
+    () => invoice.value?.status,
+    async (newStatus, oldStatus) => {
+        if (isUpdatingFromApi.value || skipVisaWatch.value) return
+        if ((oldStatus === "vise" || oldStatus === "sent") && (newStatus === "draft" || newStatus === "controle")) {
+            pendingVisaResetStatus.value = newStatus
+            // Revert immediately, confirm dialog will apply if confirmed
+            skipVisaWatch.value = true
+            invoice.value!.status = oldStatus as any
+            await nextTick()
+            skipVisaWatch.value = false
+            showVisaResetConfirm.value = true
+        }
+    }
+)
+
+const confirmVisaReset = async () => {
+    showVisaResetConfirm.value = false
+    if (invoice.value && pendingVisaResetStatus.value) {
+        skipVisaWatch.value = true
+        invoice.value.status = pendingVisaResetStatus.value as any
+        await nextTick()
+        skipVisaWatch.value = false
+    }
+    pendingVisaResetStatus.value = null
+}
+
+const cancelVisaReset = () => {
+    showVisaResetConfirm.value = false
+    pendingVisaResetStatus.value = null
 }
 
 const isLeavingDraft = computed(() => {
