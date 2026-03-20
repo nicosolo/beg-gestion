@@ -12,6 +12,7 @@ import {
     throwValidationError,
     throwActivityLocked,
     throwInternalError,
+    throwNoProjectFolderError,
     parseZodError,
     errorHandler,
 } from "../error-handler"
@@ -265,5 +266,19 @@ describe("errorHandler", () => {
         const body = await res.json()
         expect(body.code).toBe(ErrorCode.INTERNAL_ERROR)
         expect(body.message).toBe("An unexpected error occurred")
+    })
+})
+
+describe("throwNoProjectFolderError", () => {
+    test("throws with 400 + NO_PROJECT_FOLDER", () => {
+        try {
+            throwNoProjectFolderError("No folder found")
+            expect.unreachable("should have thrown")
+        } catch (err) {
+            const ex = err as ApiException
+            expect(ex.statusCode).toBe(400)
+            expect(ex.errorCode).toBe(ErrorCode.NO_PROJECT_FOLDER)
+            expect(ex.message).toBe("No folder found")
+        }
     })
 })

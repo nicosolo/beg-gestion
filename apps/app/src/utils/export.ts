@@ -70,7 +70,7 @@ export function generateCSV(columns: ExportColumn[], data: any[]): string {
 /**
  * Escape CSV special characters
  */
-function escapeCSV(value: string): string {
+export function escapeCSV(value: string): string {
     if (value == null) return ""
 
     // Convert to string if not already
@@ -90,7 +90,7 @@ function escapeCSV(value: string): string {
  * Get nested value from object using dot notation
  * Example: getNestedValue(obj, 'user.name')
  */
-function getNestedValue(obj: any, path: string): any {
+export function getNestedValue(obj: any, path: string): any {
     const keys = path.split(".")
     let value = obj
 

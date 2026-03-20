@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeAll, mock } from "bun:test"
 import { Hono } from "hono"
-import { createTestDb, seedUsers } from "../../__tests__/helpers/setup"
+import { createTestDb, seedUsers, schema } from "../../__tests__/helpers/setup"
 import { errorHandler } from "../../tools/error-handler"
 
 const { db, sqlite } = createTestDb()
@@ -159,5 +159,52 @@ describe("DELETE /location/:id", () => {
 			headers: jsonHeaders(userToken),
 		})
 		expect(res.status).toBe(403)
+	})
+})
+
+describe("PUT /location/:id - edge cases", () => {
+	test("nonexistent id returns 404", async () => {
+		const res = await app.request("/location/99999", {
+			method: "PUT",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({ name: "Ghost" }),
+		})
+		expect(res.status).toBe(404)
+	})
+})
+
+describe("DELETE /location/:id - edge cases", () => {
+	test("nonexistent id returns 404", async () => {
+		const res = await app.request("/location/99999", {
+			method: "DELETE",
+			headers: jsonHeaders(adminToken),
+		})
+		expect(res.status).toBe(404)
+	})
+
+	test("location with projects returns 409", async () => {
+		// Create location
+		const locRes = await app.request("/location", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({ name: "HasProjects", country: "CH" }),
+		})
+		const loc = await locRes.json()
+
+		// Link a project to this location
+		await db.insert(schema.projects).values({
+			name: "Linked Project",
+			startDate: new Date(),
+			status: "active",
+			locationId: loc.id,
+		})
+
+		const res = await app.request(`/location/${loc.id}`, {
+			method: "DELETE",
+			headers: jsonHeaders(adminToken),
+		})
+		expect(res.status).toBe(409)
+		const body = await res.json()
+		expect(body.code).toBe("CONSTRAINT_VIOLATION")
 	})
 })
