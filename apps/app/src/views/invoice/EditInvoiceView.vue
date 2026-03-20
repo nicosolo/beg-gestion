@@ -126,6 +126,35 @@
         :cancel-text="$t('common.cancel')"
         @confirm="confirmDelete"
     />
+
+    <!-- Missing fields popup (when leaving draft) -->
+    <Dialog v-model="showMissingFieldsDialog" title="Champs à compléter" size="md">
+        <p class="text-sm text-gray-500 mb-4">
+            Les champs suivants ne sont pas remplis. Vous pouvez les compléter maintenant ou enregistrer sans.
+        </p>
+        <div class="mb-4">
+            <label class="text-sm font-medium text-gray-700 mb-1" for="missingNote">
+                Note
+            </label>
+            <Textarea
+                id="missingNote"
+                v-model="invoice!.note"
+                :rows="4"
+                placeholder="Ajouter une note..."
+            />
+        </div>
+        <template #footer>
+            <Button variant="primary" @click="confirmSaveWithFields" :loading="loading">
+                {{ $t("common.save") }}
+            </Button>
+            <Button variant="secondary" @click="confirmSaveWithoutFields" :loading="loading">
+                Enregistrer sans
+            </Button>
+            <Button variant="secondary" @click="showMissingFieldsDialog = false">
+                Annuler
+            </Button>
+        </template>
+    </Dialog>
 </template>
 
 <script setup lang="ts">
@@ -134,6 +163,8 @@ import { useRoute, useRouter } from "vue-router"
 import FormLayout from "@/components/templates/FormLayout.vue"
 import Button from "@/components/atoms/Button.vue"
 import ConfirmDialog from "@/components/molecules/ConfirmDialog.vue"
+import Dialog from "@/components/molecules/Dialog.vue"
+import Textarea from "@/components/atoms/Textarea.vue"
 import InvoiceGeneralInfo from "@/components/organisms/invoice/InvoiceGeneralInfo.vue"
 import InvoiceDetails from "@/components/organisms/invoice/InvoiceDetails.vue"
 import { createEmptyInvoice, type Invoice, type InvoiceResponse } from "@beg/validations"
@@ -158,6 +189,7 @@ const { errorAlert, successAlert } = useAlert()
 const activeTab = ref("general")
 const isUpdatingFromApi = ref(false)
 const showDeleteConfirm = ref(false)
+const showMissingFieldsDialog = ref(false)
 
 // API composables
 const { get: fetchInvoice, loading: fetchLoading, error: fetchError } = useFetchInvoice()
@@ -498,6 +530,25 @@ const loadInvoice = async () => {
     }
 }
 
+const isLeavingDraft = computed(() => {
+    const wasDraft = savedStatus.value === "draft" || savedStatus.value === null
+    return wasDraft && invoice.value?.status !== "draft"
+})
+
+const hasMissingFields = computed(() => {
+    return !invoice.value?.note?.trim()
+})
+
+const confirmSaveWithFields = () => {
+    showMissingFieldsDialog.value = false
+    doSave()
+}
+
+const confirmSaveWithoutFields = () => {
+    showMissingFieldsDialog.value = false
+    doSave()
+}
+
 // Save invoice
 const handleSave = async () => {
     if (!invoice.value) return
@@ -507,6 +558,18 @@ const handleSave = async () => {
         errorAlert(t("invoice.document.required"), 5000)
         return
     }
+
+    // Show missing fields popup when leaving draft with empty fields
+    if (isLeavingDraft.value && hasMissingFields.value) {
+        showMissingFieldsDialog.value = true
+        return
+    }
+
+    doSave()
+}
+
+const doSave = async () => {
+    if (!invoice.value) return
 
     savingInvoice.value = true
     savingError.value = null
