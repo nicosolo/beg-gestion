@@ -78,8 +78,10 @@ export default {
         companies: "Entreprises",
     },
     home: {
-        title: "Bienvenue dans BEG Gestion",
+        title: "Recherche de mandats",
         subtitle: "Recherchez un mandat pour accéder rapidement à ses informations.",
+        myDay: "Ma journée",
+        myDayDescription: "Heures saisies aujourd'hui",
         searchLabel: "Mandat",
         searchPlaceholder: "Rechercher par numéro ou nom de mandat",
         searchHint: "Sélectionnez un mandat pour ouvrir sa fiche détaillée.",

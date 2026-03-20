@@ -1,38 +1,18 @@
 <template>
-    <div class="max-w-8xl py-12 space-y-8">
-        <div class="text-center space-y-2">
-            <h1 class="text-3xl font-bold text-gray-900">
-                {{ $t("home.title") }}
-            </h1>
-            <p class="text-gray-600">
-                {{ $t("home.subtitle") }}
-            </p>
-        </div>
+    <div class="max-w-8xl py-8 space-y-6">
+        <!-- Title + Search -->
+        <SectionCard :title="$t('home.title')" class="max-w-3xl mx-auto">
+            <ProjectSelect
+                id="home-project-search"
+                v-model="selectedProjectId"
+                class-name="w-full"
+                :placeholder="$t('home.searchPlaceholder')"
+                :include-archived="true"
+                :include-ended="true"
+                @update:model-value="handleProjectSelect"
+            />
+        </SectionCard>
 
-        <Card class="max-w-4xl mx-auto">
-            <form @submit.prevent>
-                <div class="space-y-2">
-                    <label
-                        class="block text-sm font-medium text-gray-700"
-                        for="home-project-search"
-                    >
-                        {{ $t("home.searchLabel") }}
-                    </label>
-                    <ProjectSelect
-                        id="home-project-search"
-                        v-model="selectedProjectId"
-                        class-name="w-full"
-                        :placeholder="$t('home.searchPlaceholder')"
-                        :include-archived="true"
-                        :include-ended="true"
-                        @update:model-value="handleProjectSelect"
-                    />
-                    <p class="text-sm text-gray-500">
-                        {{ $t("home.searchHint") }}
-                    </p>
-                </div>
-            </form>
-        </Card>
         <!-- Alert for orphaned activities (only for managers) -->
         <div class="max-w-4xl mx-auto">
             <OrphanedActivitiesAlert />
@@ -43,20 +23,26 @@
             <MonthlyHoursStats />
         </div>
 
+        <!-- Today's activities -->
         <div>
-            <TimeEntriesManager
-                :show-project-filter="false"
-                :initial-filter="{
-                    includeBilled: false,
-                    includeUnbilled: true,
-                    userId: authStore.user?.id,
-                    fromDate: initialFromDate,
-                    toDate: initialToDate,
-                }"
-                initial-date-preset="today"
-                empty-message="Aucune entrée d'heure trouvée"
-            />
+            <div class="flex items-baseline gap-2 mb-3">
+                <h2 class="text-lg font-semibold text-gray-900">{{ $t("home.myDay") }}</h2>
+                <span class="text-sm text-gray-500">{{ $t("home.myDayDescription") }}</span>
+            </div>
         </div>
+        <TimeEntriesManager
+            :show-project-filter="false"
+            :initial-filter="{
+                includeBilled: false,
+                includeUnbilled: true,
+                userId: authStore.user?.id,
+                fromDate: initialFromDate,
+                toDate: initialToDate,
+            }"
+            initial-date-preset="today"
+            hide-header
+            empty-message="Aucune entrée d'heure trouvée"
+        />
     </div>
 </template>
 
@@ -64,7 +50,7 @@
 import { ref, onMounted } from "vue"
 import { useRouter } from "vue-router"
 import { useI18n } from "vue-i18n"
-import Card from "@/components/atoms/Card.vue"
+import SectionCard from "@/components/molecules/SectionCard.vue"
 import ProjectSelect from "@/components/organisms/project/ProjectSelect.vue"
 import TimeEntriesManager from "@/components/organisms/time/TimeEntriesManager.vue"
 import OrphanedActivitiesAlert from "@/components/organisms/activity/OrphanedActivitiesAlert.vue"
