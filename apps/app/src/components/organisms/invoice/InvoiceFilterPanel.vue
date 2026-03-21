@@ -7,11 +7,10 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="form-group">
                         <Label>{{ $t("invoice.status.title") }}</Label>
-                        <Select
-                            id="statusFilter"
-                            v-model="filterData.status"
-                            :options="statusOptions"
-                            @update:model-value="emitChange"
+                        <InvoiceStatusSelect
+                            :model-value="filterData.status || undefined"
+                            allow-deselect
+                            @update:model-value="filterData.status = $event || ''; emitChange()"
                         />
                     </div>
                     <div class="form-group" v-if="isRole('admin')">
@@ -80,6 +79,7 @@ import Select from "@/components/atoms/Select.vue"
 import Button from "@/components/atoms/Button.vue"
 import DateRange from "@/components/molecules/DateRange.vue"
 import UserSelect from "@/components/organisms/user/UserSelect.vue"
+import InvoiceStatusSelect from "@/components/organisms/invoice/InvoiceStatusSelect.vue"
 import type { InvoiceStatus } from "@beg/validations"
 import { useI18n } from "vue-i18n"
 import { useAuthStore } from "@/stores/auth"
@@ -119,15 +119,6 @@ const filterData = reactive<InvoiceFilterModel>({
     sortBy: props.filter.sortBy,
     sortOrder: props.filter.sortOrder,
 })
-
-// Status filter options
-const statusOptions = [
-    { value: "", label: t("common.all") },
-    { value: "draft", label: t("invoice.status.draft") },
-    { value: "controle", label: t("invoice.status.controle") },
-    { value: "vise", label: t("invoice.status.vise") },
-    { value: "sent", label: t("invoice.status.sent") },
-]
 
 // Sort options
 const sortByOptions = [
