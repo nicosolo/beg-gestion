@@ -17,7 +17,11 @@ export function useSendMail() {
             const headers = [`To: ${to || ""}`, `Subject: ${subject}`]
             if (cc) headers.push(`Cc: ${cc}`)
             if (bcc) headers.push(`Bcc: ${bcc}`)
-            headers.push(`MIME-Version: 1.0`, `Content-Type: text/html; charset=utf-8`)
+            headers.push(
+                `X-Unsent: 1`,
+                `MIME-Version: 1.0`,
+                `Content-Type: text/html; charset=utf-8`
+            )
 
             const eml = [...headers, ``, `<html><body>${htmlBody}</body></html>`].join("\r\n")
 
