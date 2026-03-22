@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="mb-4 print:hidden">
-            <Button variant="primary" :href="mailtoLink">Partager par email</Button>
+            <Button variant="primary" @click="shareByEmail">Partager par email</Button>
         </div>
         <div class="invoice-preview print:p-0 p-6 text-sm w-[25cm] print:w-[17cm]">
             <table class="line w-full border border-gray-300 border-collapse">
@@ -595,6 +595,7 @@ import { type InvoiceResponse } from "@beg/validations"
 import { useFormat } from "@/composables/utils/useFormat"
 import { useI18n } from "vue-i18n"
 import { useInvoiceDocuments } from "@/composables/invoice/useInvoiceDocuments"
+import { useSendMail } from "@/composables/utils/useSendMail"
 import Button from "@/components/atoms/Button.vue"
 import { useTauri } from "@/composables/useTauri"
 import { useAppSettingsStore } from "@/stores/appSettings"
@@ -607,7 +608,28 @@ const props = defineProps<InvoiceProps>()
 const { formatCurrency, formatDuration, formatDate, nl2br } = useFormat()
 const { t } = useI18n()
 const { buildFileUrl, downloadInvoiceFile, extractFileName } = useInvoiceDocuments()
+const { sendMail } = useSendMail()
 const { isTauri, openFile } = useTauri()
+
+const shareByEmail = async () => {
+    const subject = `Facture ${props.invoice.invoiceNumber || props.invoice.reference || ""}`
+    const projectLink = projectUrl.value
+        ? `<p>Mandat: <a href="${projectUrl.value}">${projectUrl.value}</a></p>`
+        : ""
+    const htmlBody = `<p>Bonjour,</p>
+<p>Veuillez trouver ci-joint le lien vers la facture:</p>
+<p><a href="${invoiceUrl.value}">${invoiceUrl.value}</a></p>
+${projectLink}
+<p>Cordialement</p>`
+
+    let plainBody = `Bonjour,\n\nVeuillez trouver ci-joint le lien vers la facture:\n\n${invoiceUrl.value}`
+    if (projectUrl.value) {
+        plainBody += `\n\nMandat: ${projectUrl.value}`
+    }
+    plainBody += `\n\nCordialement`
+
+    await sendMail({ subject, htmlBody, plainBody })
+}
 
 const openLegacyInvoice = async () => {
     const appSettingsStore = useAppSettingsStore()
@@ -673,18 +695,6 @@ const projectUrl = computed(() => {
     return `beg-gestion:/${path}`
 })
 
-const mailtoLink = computed(() => {
-    const subject = encodeURIComponent(
-        `Facture ${props.invoice.invoiceNumber || props.invoice.reference || ""}`
-    )
-    let text = `Bonjour,\n\nVeuillez trouver ci-joint le lien vers la facture:\n\n${invoiceUrl.value}`
-    if (projectUrl.value) {
-        text += `\n\nMandat: ${projectUrl.value}`
-    }
-    text += `\n\nCordialement`
-    const body = encodeURIComponent(text)
-    return `mailto:?subject=${subject}&body=${body}`
-})
 </script>
 
 <style scoped>
