@@ -1,8 +1,9 @@
 import { mkdir, readdir, unlink, readFile, writeFile } from "node:fs/promises"
-import { join, dirname } from "node:path"
+import { join, dirname, basename } from "node:path"
 import { gzipSync } from "node:zlib"
 import { DB_FILE_PATH } from "@src/config"
 import { sqlite } from "@src/db"
+import { audit } from "@src/tools/audit"
 
 const SNAPSHOT_DIR = join(dirname(DB_FILE_PATH), "snapshots")
 
@@ -107,6 +108,7 @@ async function cleanOldSnapshots(): Promise<void> {
     for (const name of toDelete) {
         await unlink(join(SNAPSHOT_DIR, name))
         console.log(`🗑️ Removed old snapshot: ${name}`)
+        audit(null, "SYS", "prune", "snapshot", null, { file: name })
     }
 }
 
@@ -124,6 +126,7 @@ export async function createSnapshot(): Promise<string> {
     await writeFile(snapshotPath, compressed)
     await unlink(tempPath)
     console.log(`📸 Database snapshot created: ${snapshotPath}`)
+    audit(null, "SYS", "create", "snapshot", null, { file: basename(snapshotPath) })
 
     await cleanOldSnapshots()
 

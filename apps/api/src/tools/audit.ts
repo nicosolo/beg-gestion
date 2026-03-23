@@ -7,6 +7,7 @@ export type AuditAction =
     | "delete"
     | "login_success"
     | "login_failure"
+    | "prune"
 
 export type AuditEntity =
     | "auth"
@@ -24,6 +25,7 @@ export type AuditEntity =
     | "vatRate"
     | "monthlyHours"
     | "workload"
+    | "snapshot"
 
 export function audit(
     userId: number | null,
