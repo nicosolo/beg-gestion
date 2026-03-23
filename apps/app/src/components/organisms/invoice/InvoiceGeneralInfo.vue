@@ -1,112 +1,85 @@
 <template>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Left Column -->
-        <div>
-            <div class="mb-4">
-                <label class="text-sm font-medium text-gray-700 mb-1" for="invoiceNumber">
-                    {{ $t("invoice.invoiceNumber") }}
-                </label>
-                <Input id="invoiceNumber" v-model="invoice.invoiceNumber" type="text" />
+    <div class="space-y-6">
+        <!-- Section: Identification -->
+        <SectionCard :title="$t('invoice.sections.identification')" content-class="space-y-4" highlight>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField :label="$t('invoice.invoiceNumber')">
+                    <template #input>
+                        <Input id="invoiceNumber" v-model="invoice.invoiceNumber" type="text" />
+                    </template>
+                </FormField>
+                <FormField :label="$t('invoice.reference')" required>
+                    <template #input>
+                        <Input v-model="invoice.reference" type="text" required />
+                    </template>
+                </FormField>
+                <FormField :label="$t('invoice.period')">
+                    <template #input>
+                        <Input id="invoicePeriod" v-model="invoice.period" type="text" required />
+                    </template>
+                </FormField>
             </div>
+        </SectionCard>
 
-            <div class="mb-4">
-                <h3 class="text-sm font-medium text-gray-700 mb-1">Objet de la facture</h3>
-                <Input v-model="invoice.reference" type="text" required />
+        <!-- Section: Facturation -->
+        <SectionCard :title="$t('invoice.sections.billing')" content-class="space-y-4" highlight>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField :label="$t('invoice.invoiceType')">
+                    <template #input>
+                        <Select
+                            id="invoiceType"
+                            v-model="invoice.type"
+                            :options="[
+                                { value: 'invoice', label: $t('invoice.type.invoice') },
+                                { value: 'final_invoice', label: $t('invoice.type.final_invoice') },
+                                { value: 'situation', label: $t('invoice.type.situation') },
+                                { value: 'deposit', label: $t('invoice.type.deposit') },
+                            ]"
+                        />
+                    </template>
+                </FormField>
+                <FormField :label="$t('invoice.billingModeLabel')">
+                    <template #input>
+                        <Select
+                            id="invoiceBillingMode"
+                            v-model="invoice.billingMode"
+                            :options="[
+                                {
+                                    value: 'accordingToData',
+                                    label: $t('invoice.billingMode.accordingToData'),
+                                },
+                                {
+                                    value: 'accordingToOffer',
+                                    label: $t('invoice.billingMode.accordingToOffer'),
+                                },
+                                {
+                                    value: 'accordingToInvoice',
+                                    label: $t('invoice.billingMode.accordingToInvoice'),
+                                },
+                                { value: 'fixedPrice', label: $t('invoice.billingMode.fixedPrice') },
+                            ]"
+                        />
+                    </template>
+                </FormField>
+                <FormField :label="$t('invoice.billingPeriod')">
+                    <template #input>
+                        <div class="flex gap-2">
+                            <Input v-model="startDate" type="date" className="w-1/2" />
+                            <Input v-model="endDate" type="date" className="w-1/2" />
+                        </div>
+                    </template>
+                </FormField>
             </div>
-
-            <div class="mb-4">
-                <h3 class="text-sm font-medium text-gray-700 mb-1">Période de facturation</h3>
-                <div class="flex gap-2">
-                    <Input v-model="startDate" type="date" className="w-1/2" />
-                    <Input v-model="endDate" type="date" className="w-1/2" />
-                </div>
-            </div>
-
-            <div class="mb-4">
-                <label class="text-sm font-medium text-gray-700 mb-1" for="invoiceDescription">
-                    Description des prestations
-                </label>
-                <Textarea id="invoiceDescription" v-model="invoice.description" :rows="6" />
-            </div>
-
-            <div class="mb-4">
-                <label class="text-sm font-medium text-gray-700 mb-1" for="invoiceNote">
-                    Note
-                </label>
-                <Textarea id="invoiceNote" v-model="invoice.note" :rows="4" />
-            </div>
-            <div class="mb-4">
-                <label class="text-sm font-medium text-gray-700 mb-1" for="invoiceClientAddress">
-                    Adresse de facturation (société)
-                </label>
-                <Textarea id="invoiceClientAddress" v-model="invoice.clientAddress" :rows="4" />
-            </div>
-
-            <div>
-                <label class="text-sm font-medium text-gray-700 mb-1" for="invoiceRecipientAddress">
-                    Adresse d'envoi de la facture
-                </label>
-                <Textarea
-                    id="invoiceRecipientAddress"
-                    v-model="invoice.recipientAddress"
-                    :rows="4"
-                />
-            </div>
-        </div>
-
-        <!-- Right Column -->
-        <div>
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="text-sm font-medium text-gray-700 mb-1" for="invoiceType">
-                        Type de facture
-                    </label>
-                    <Select
-                        id="invoiceType"
-                        v-model="invoice.type"
-                        :options="[
-                            { value: 'invoice', label: $t('invoice.type.invoice') },
-                            { value: 'final_invoice', label: $t('invoice.type.final_invoice') },
-                            { value: 'situation', label: $t('invoice.type.situation') },
-                            { value: 'deposit', label: $t('invoice.type.deposit') },
-                        ]"
-                    />
-                </div>
-
-                <div>
-                    <label class="text-sm font-medium text-gray-700 mb-1" for="invoiceBillingMode">
-                        Mode de facturation
-                    </label>
-                    <Select
-                        id="invoiceBillingMode"
-                        v-model="invoice.billingMode"
-                        :options="[
-                            {
-                                value: 'accordingToData',
-                                label: $t('invoice.billingMode.accordingToData'),
-                            },
-                            {
-                                value: 'accordingToOffer',
-                                label: $t('invoice.billingMode.accordingToOffer'),
-                            },
-                            {
-                                value: 'accordingToInvoice',
-                                label: $t('invoice.billingMode.accordingToInvoice'),
-                            },
-                            { value: 'fixedPrice', label: $t('invoice.billingMode.fixedPrice') },
-                        ]"
-                    />
-                    <DragDropZone
-                        v-if="invoice.billingMode === 'accordingToInvoice'"
-                        class="mt-4 p-2"
-                        :multiple="false"
-                        highlight-class="border-blue-500 border-2 bg-blue-50 rounded"
-                        normal-class="border border-gray-300 border-dashed rounded"
-                        @drop="handleInvoiceDocDrop"
-                    >
-                        <label class="text-sm font-medium text-gray-700 mb-1">
-                            {{ $t("invoice.document.label") }}
-                        </label>
+            <DragDropZone
+                v-if="invoice.billingMode === 'accordingToInvoice'"
+                class="mt-2 p-2"
+                :multiple="false"
+                highlight-class="border-blue-500 border-2 bg-blue-50 rounded"
+                normal-class="border border-gray-300 border-dashed rounded"
+                @drop="handleInvoiceDocDrop"
+            >
+                <FormField :label="$t('invoice.document.label')">
+                    <template #input>
                         <DocumentUploadField
                             :required="
                                 invoice.billingMode === 'accordingToInvoice' &&
@@ -134,107 +107,130 @@
                                 </button>
                             </template>
                         </DocumentUploadField>
+                    </template>
+                    <template #help>
                         <p class="mt-1 text-xs text-gray-500">
                             {{ $t("invoice.document.helper") }}
                         </p>
-                    </DragDropZone>
-                </div>
+                    </template>
+                </FormField>
+            </DragDropZone>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField :label="$t('invoice.status.title')">
+                    <template #input>
+                        <InvoiceStatusSelect id="invoiceStatus" v-model="invoice.status" />
+                    </template>
+                </FormField>
+                <FormField :label="$t('invoice.visaByUser')">
+                    <template #input>
+                        <UserSelect
+                            id="visaByUserId"
+                            v-model="invoice.visaByUserId"
+                            :roles="['super_admin']"
+                            :placeholder="$t('invoice.selectVisaUser')"
+                            :required="['controle', 'vise', 'sent'].includes(invoice.status)"
+                            :disabled="['vise', 'sent'].includes(invoice.status)"
+                        />
+                    </template>
+                </FormField>
+                <FormField :label="$t('invoice.inChargeUser')">
+                    <template #input>
+                        <UserSelect
+                            id="inChargeUserId"
+                            v-model="invoice.inChargeUserId"
+                            :placeholder="$t('invoice.selectInChargeUser')"
+                        />
+                    </template>
+                </FormField>
+            </div>
+        </SectionCard>
+
+        <!-- Section: Prestations, Adresses & Documents -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Left: Prestations + Adresses -->
+            <div class="space-y-6">
+                <SectionCard :title="$t('invoice.sections.services')" content-class="space-y-4">
+                    <FormField :label="$t('invoice.description')">
+                        <template #input>
+                            <Textarea id="invoiceDescription" v-model="invoice.description" :rows="6" />
+                        </template>
+                    </FormField>
+                    <FormField :label="$t('invoice.note')">
+                        <template #input>
+                            <Textarea id="invoiceNote" v-model="invoice.note" :rows="4" />
+                        </template>
+                    </FormField>
+                </SectionCard>
+
+                <SectionCard :title="$t('invoice.sections.addresses')" content-class="space-y-4">
+                    <FormField :label="$t('invoice.clientAddress')">
+                        <template #input>
+                            <Textarea id="invoiceClientAddress" v-model="invoice.clientAddress" :rows="4" />
+                        </template>
+                    </FormField>
+                    <FormField :label="$t('invoice.recipientAddress')">
+                        <template #input>
+                            <Textarea
+                                id="invoiceRecipientAddress"
+                                v-model="invoice.recipientAddress"
+                                :rows="4"
+                            />
+                        </template>
+                    </FormField>
+                </SectionCard>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="text-sm font-medium text-gray-700 mb-1" for="invoiceStatus">
-                        {{ $t("invoice.status.title") }}
-                    </label>
-                    <InvoiceStatusSelect
-                        id="invoiceStatus"
-                        v-model="invoice.status"
-                    />
-                </div>
+            <!-- Right: Documents -->
+            <SectionCard :title="$t('invoice.sections.documents')" content-class="space-y-4">
+                <InvoiceDocumentEntries
+                    v-model="invoice.offers"
+                    :title="$t('invoice.documents.offer.title')"
+                    :add-button-label="$t('invoice.documents.offer.add')"
+                    :empty-state-label="$t('invoice.documents.offer.empty')"
+                    entry-type="offer"
+                    :invoice-id="invoiceId"
+                    :default-path="props.defaultPath"
+                    @file-change="(payload) => handleDocumentFileChange('offer', payload)"
+                    @entry-removed="(payload) => handleDocumentEntryRemoved('offer', payload)"
+                />
 
-                <div>
-                    <label class="text-sm font-medium text-gray-700 mb-1" for="visaByUserId">
-                        {{ $t("invoice.visaByUser") }}
-                    </label>
-                    <UserSelect
-                        id="visaByUserId"
-                        v-model="invoice.visaByUserId"
-                        :roles="['super_admin']"
-                        :placeholder="$t('invoice.selectVisaUser')"
-                        :required="['controle', 'vise', 'sent'].includes(invoice.status)"
-                        :disabled="['vise', 'sent'].includes(invoice.status)"
-                    />
-                </div>
-            </div>
+                <InvoiceDocumentEntries
+                    v-model="invoice.adjudications"
+                    :title="$t('invoice.documents.adjudication.title')"
+                    :add-button-label="$t('invoice.documents.adjudication.add')"
+                    :empty-state-label="$t('invoice.documents.adjudication.empty')"
+                    entry-type="adjudication"
+                    :invoice-id="invoiceId"
+                    :default-path="props.defaultPath"
+                    @file-change="(payload) => handleDocumentFileChange('adjudication', payload)"
+                    @entry-removed="(payload) => handleDocumentEntryRemoved('adjudication', payload)"
+                />
 
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="text-sm font-medium text-gray-700 mb-1" for="inChargeUserId">
-                        {{ $t("invoice.inChargeUser") }}
-                    </label>
-                    <UserSelect
-                        id="inChargeUserId"
-                        v-model="invoice.inChargeUserId"
-                        :placeholder="$t('invoice.selectInChargeUser')"
-                    />
-                </div>
-            </div>
+                <InvoiceDocumentEntries
+                    v-model="invoice.situations"
+                    :title="$t('invoice.documents.situation.title')"
+                    :add-button-label="$t('invoice.documents.situation.add')"
+                    :empty-state-label="$t('invoice.documents.situation.empty')"
+                    entry-type="situation"
+                    :invoice-id="invoiceId"
+                    :default-path="props.defaultPath"
+                    @file-change="(payload) => handleDocumentFileChange('situation', payload)"
+                    @entry-removed="(payload) => handleDocumentEntryRemoved('situation', payload)"
+                />
 
-            <div class="mb-4">
-                <label class="text-sm font-medium text-gray-700 mb-1" for="invoicePeriod">
-                    Période
-                </label>
-                <Input id="invoicePeriod" v-model="invoice.period" type="text" required />
-            </div>
-
-            <InvoiceDocumentEntries
-                v-model="invoice.offers"
-                :title="$t('invoice.documents.offer.title')"
-                :add-button-label="$t('invoice.documents.offer.add')"
-                :empty-state-label="$t('invoice.documents.offer.empty')"
-                entry-type="offer"
-                :invoice-id="invoiceId"
-                :default-path="props.defaultPath"
-                @file-change="(payload) => handleDocumentFileChange('offer', payload)"
-                @entry-removed="(payload) => handleDocumentEntryRemoved('offer', payload)"
-            />
-
-            <InvoiceDocumentEntries
-                v-model="invoice.adjudications"
-                :title="$t('invoice.documents.adjudication.title')"
-                :add-button-label="$t('invoice.documents.adjudication.add')"
-                :empty-state-label="$t('invoice.documents.adjudication.empty')"
-                entry-type="adjudication"
-                :invoice-id="invoiceId"
-                :default-path="props.defaultPath"
-                @file-change="(payload) => handleDocumentFileChange('adjudication', payload)"
-                @entry-removed="(payload) => handleDocumentEntryRemoved('adjudication', payload)"
-            />
-
-            <InvoiceDocumentEntries
-                v-model="invoice.situations"
-                :title="$t('invoice.documents.situation.title')"
-                :add-button-label="$t('invoice.documents.situation.add')"
-                :empty-state-label="$t('invoice.documents.situation.empty')"
-                entry-type="situation"
-                :invoice-id="invoiceId"
-                :default-path="props.defaultPath"
-                @file-change="(payload) => handleDocumentFileChange('situation', payload)"
-                @entry-removed="(payload) => handleDocumentEntryRemoved('situation', payload)"
-            />
-
-            <InvoiceDocumentEntries
-                v-model="invoice.documents"
-                :title="$t('invoice.documents.document.title')"
-                :add-button-label="$t('invoice.documents.document.add')"
-                :empty-state-label="$t('invoice.documents.document.empty')"
-                entry-type="document"
-                :invoice-id="invoiceId"
-                :default-path="props.defaultPath"
-                :show-amount="false"
-                @file-change="(payload) => handleDocumentFileChange('document', payload)"
-                @entry-removed="(payload) => handleDocumentEntryRemoved('document', payload)"
-            />
+                <InvoiceDocumentEntries
+                    v-model="invoice.documents"
+                    :title="$t('invoice.documents.document.title')"
+                    :add-button-label="$t('invoice.documents.document.add')"
+                    :empty-state-label="$t('invoice.documents.document.empty')"
+                    entry-type="document"
+                    :invoice-id="invoiceId"
+                    :default-path="props.defaultPath"
+                    :show-amount="false"
+                    @file-change="(payload) => handleDocumentFileChange('document', payload)"
+                    @entry-removed="(payload) => handleDocumentEntryRemoved('document', payload)"
+                />
+            </SectionCard>
         </div>
     </div>
 </template>
@@ -245,6 +241,8 @@ import { computed, watch } from "vue"
 import Input from "@/components/atoms/Input.vue"
 import Select from "@/components/atoms/Select.vue"
 import Textarea from "@/components/atoms/Textarea.vue"
+import SectionCard from "@/components/molecules/SectionCard.vue"
+import FormField from "@/components/molecules/FormField.vue"
 import InvoiceDocumentEntries from "./InvoiceDocumentEntries.vue"
 import InvoiceStatusSelect from "./InvoiceStatusSelect.vue"
 import DocumentUploadField from "@/components/molecules/DocumentUploadField.vue"
