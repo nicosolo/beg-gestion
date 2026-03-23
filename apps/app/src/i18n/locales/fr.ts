@@ -644,6 +644,10 @@ export default {
         recommended: "Recommandé",
         updateAvailable: "Mise à jour disponible",
     },
+    webUpdate: {
+        available: "Nouvelle version disponible",
+        refresh: "Rafraîchir",
+    },
     appSettings: {
         title: "Paramètres de l'application",
         resetToDefault: "Réinitialiser par défaut",

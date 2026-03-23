@@ -1,14 +1,14 @@
 # Build stage for Vue app
 FROM oven/bun:1 AS app-builder
 
-WORKDIR /app
+ARG COMMIT_SHA=unknown
+ENV VITE_COMMIT_SHA=${COMMIT_SHA}
 
+WORKDIR /app
 
 COPY . .
 # Install dependencies
 RUN bun install --network-concurrency=5 -f
-
-# Copy source code
 
 # Build the Vue app
 WORKDIR /app/apps/app

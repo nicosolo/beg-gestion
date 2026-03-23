@@ -12,6 +12,7 @@ import {
 } from "@heroicons/vue/24/outline"
 import { useAuthStore } from "./stores/auth"
 import { useAlert } from "./composables/utils/useAlert"
+import { useAppUpdate } from "./composables/utils/useAppUpdate"
 import { useTauri } from "./composables/useTauri"
 import Snackbar from "./components/atoms/Snackbar.vue"
 import Button from "./components/atoms/Button.vue"
@@ -21,6 +22,7 @@ const { t } = useI18n()
 const isSidebarOpen = ref(false)
 const isSettingsOpen = ref(false)
 const { alerts, removeAlert } = useAlert()
+const { updateAvailable: webUpdateAvailable, reload: reloadApp } = useAppUpdate()
 const { isTauri, appVersion, fetchAppVersion, setupDeepLinkListener } = useTauri()
 const route = useRoute()
 const router = useRouter()
@@ -528,6 +530,26 @@ html {
             @click="toggleSidebar"
             class="fixed inset-0 bg-black/30 z-20"
         ></div>
+
+        <!-- Web update banner -->
+        <Transition
+            enter-active-class="transform ease-out duration-300 transition"
+            enter-from-class="translate-y-full opacity-0"
+            enter-to-class="translate-y-0 opacity-100"
+        >
+            <div
+                v-if="webUpdateAvailable"
+                class="fixed bottom-0 inset-x-0 z-50 bg-blue-600 text-white px-4 py-2 flex items-center justify-center gap-3 text-sm shadow-md"
+            >
+                <span>{{ t("webUpdate.available") }}</span>
+                <button
+                    @click="reloadApp"
+                    class="rounded bg-white text-blue-600 px-3 py-0.5 text-sm font-medium hover:bg-blue-50"
+                >
+                    {{ t("webUpdate.refresh") }}
+                </button>
+            </div>
+        </Transition>
 
         <!-- Global Snackbar Container -->
         <div

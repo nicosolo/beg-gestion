@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `isSystem` integer DEFAULT false NOT NULL;

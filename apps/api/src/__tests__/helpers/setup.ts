@@ -81,13 +81,29 @@ export async function seedUsers(db: TestDb) {
 		})
 		.returning()
 
+	const [systemAdmin] = await db
+		.insert(schema.users)
+		.values({
+			email: "system@test.com",
+			firstName: "System",
+			lastName: "Admin",
+			initials: "SYS",
+			password: pw,
+			role: "admin",
+			archived: false,
+			isSystem: true,
+		})
+		.returning()
+
 	return {
 		superAdmin,
 		admin,
 		user,
+		systemAdmin,
 		superAdminToken: generateToken(superAdmin),
 		adminToken: generateToken(admin),
 		userToken: generateToken(user),
+		systemAdminToken: generateToken(systemAdmin),
 	}
 }
 

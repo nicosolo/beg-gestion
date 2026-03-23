@@ -1,4 +1,4 @@
-import { and, eq, or } from "drizzle-orm"
+import { and, eq, or, sql } from "drizzle-orm"
 import { db } from "../index"
 import { users } from "../schema"
 import type {
@@ -11,12 +11,16 @@ import { hashPassword } from "../../tools/auth"
 
 export const userRepository = {
     findByEmailOrInitials: async (emailOrInitials: string) => {
+        const lower = emailOrInitials.toLowerCase()
         const results = await db
             .select()
             .from(users)
             .where(
                 and(
-                    or(eq(users.email, emailOrInitials), eq(users.initials, emailOrInitials)),
+                    or(
+                        eq(users.email, emailOrInitials),
+                        sql`lower(${users.initials}) = ${lower}`
+                    ),
                     eq(users.archived, false)
                 )
             )
@@ -65,6 +69,7 @@ export const userRepository = {
                 updatedAt: users.updatedAt,
             })
             .from(users)
+            .where(eq(users.isSystem, false))
     },
 
     findAllDetails: async (): Promise<UserDetailResponse[]> => {
@@ -83,6 +88,7 @@ export const userRepository = {
                 collaboratorType: users.collaboratorType,
             })
             .from(users)
+            .where(eq(users.isSystem, false))
     },
 
     create: async (userData: UserCreateInput): Promise<UserResponse> => {

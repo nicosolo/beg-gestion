@@ -75,6 +75,31 @@ describe("POST /user/login", () => {
 		const body = await res.json()
 		expect(body.error).toBe("Invalid credentials")
 	})
+
+	test("system user can login", async () => {
+		const res = await app.request("/user/login", {
+			method: "POST",
+			headers: jsonHeaders(),
+			body: JSON.stringify({ email: "system@test.com", password: "password123" }),
+		})
+		expect(res.status).toBe(200)
+
+		const body = await res.json()
+		expect(body.token).toBeDefined()
+		expect(body.user.email).toBe("system@test.com")
+	})
+
+	test("initials login is case insensitive", async () => {
+		const res = await app.request("/user/login", {
+			method: "POST",
+			headers: jsonHeaders(),
+			body: JSON.stringify({ email: "at", password: "password123" }),
+		})
+		expect(res.status).toBe(200)
+
+		const body = await res.json()
+		expect(body.user.initials).toBe("AT")
+	})
 })
 
 describe("GET /user", () => {
@@ -83,7 +108,7 @@ describe("GET /user", () => {
 		expect(res.status).toBe(401)
 	})
 
-	test("with auth returns 200 and array of users", async () => {
+	test("with auth returns 200 and array of users excluding system users", async () => {
 		const res = await app.request("/user", {
 			headers: { Authorization: `Bearer ${adminToken}` },
 		})
@@ -92,6 +117,9 @@ describe("GET /user", () => {
 		const body = await res.json()
 		expect(Array.isArray(body)).toBe(true)
 		expect(body.length).toBeGreaterThanOrEqual(3)
+		// system user should not appear in the list
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		expect(body.find((u: any) => u.email === "system@test.com")).toBeUndefined()
 	})
 })
 

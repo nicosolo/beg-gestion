@@ -129,11 +129,12 @@
                 <!-- Expenses and Description -->
                 <div class="space-y-4">
                     <div>
-                        <Label>{{ $t("time.columns.description") }}</Label>
+                        <Label>{{ $t("time.columns.description") }} <span class="text-red-500">*</span></Label>
                         <Textarea
                             v-model="activity.description"
                             rows="3"
                             :disabled="loading || isLocked"
+                            required
                         />
                     </div>
                 </div>

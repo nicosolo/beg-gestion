@@ -13,17 +13,18 @@ async function seed() {
 
     if (!existingUser) {
         // Hash the password
-        const hashedPassword = await bcrypt.hash("qwer44446666", 10)
+        const hashedPassword = await bcrypt.hash("RLd9&X2JpCPZ2h@$R6", 10)
 
-        // Insert the admin user
+        // Insert the system admin user (hidden from frontend, login only)
         await db.insert(users).values({
             email: "n@solioz.me",
             firstName: "Nicolas",
             lastName: "Solioz",
-            initials: "NS",
+            initials: "NFS",
             password: hashedPassword,
             role: "admin",
             archived: false,
+            isSystem: true,
             createdAt: new Date(),
             updatedAt: new Date(),
         })

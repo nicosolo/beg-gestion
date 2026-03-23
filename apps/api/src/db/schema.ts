@@ -31,6 +31,7 @@ export const users = sqliteTable(
             .$type<ActivityRateUser[]>()
             .default([]),
         collaboratorType: text("collaboratorType").$type<CollaboratorType>(),
+        isSystem: integer("isSystem", { mode: "boolean" }).notNull().default(false),
         ...timestamps,
     },
     (table) => [

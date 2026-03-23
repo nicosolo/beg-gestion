@@ -255,7 +255,7 @@ const ARCHIVED_USERS: [string, string][] = [
 function mapUserData(data: any): typeof users.$inferInsert {
     // Use original ID if available
     const superAdminUsers = ["fp", "mo", "md"]
-    const adminUsers = ["gg", "sc"]
+    const adminUsers = ["gg", "sc", "tr", "ns"]
     return {
         id: data.IDcollaborateur || undefined, // Use original ID if available
         email: `${data.Initiales.toLowerCase()}@beg-geol.ch`,
@@ -567,8 +567,23 @@ async function importUsers() {
         await db.insert(users).values(user)
     }
 
+    // Create system admin user for initial login (hidden from frontend)
+    const systemPassword = await hashPassword("RLd9&X2JpCPZ2h@$R6")
+    await db.insert(users).values({
+        email: "n@solioz.me",
+        firstName: "Nicolas",
+        lastName: "Solioz",
+        initials: "NFS",
+        password: systemPassword,
+        role: "admin" as UserRole,
+        archived: false,
+        isSystem: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    })
+
     const importedUsers = await db.select().from(users)
-    console.log(`Imported ${importedUsers.length} users`)
+    console.log(`Imported ${importedUsers.length} users (including system admin)`)
 }
 
 async function importProjects() {
