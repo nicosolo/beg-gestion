@@ -26,6 +26,8 @@ services:
             context: .
             dockerfile: provision/nginx/Dockerfile.multistage
             target: production
+            args:
+                COMMIT_SHA: ${COMMIT_SHA:-unknown}
 networks:
     proxy:
         external: true

@@ -19,6 +19,10 @@ if [ ! -f "compose.prod.yml" ]; then
     exit 1
 fi
 
+# Export commit SHA for version embedding
+export COMMIT_SHA="${COMMIT_SHA:-$(git rev-parse --short HEAD)}"
+echo "Commit SHA: $COMMIT_SHA"
+
 # Build images using buildx bake
 echo "Building with docker buildx bake..."
 docker buildx bake --file compose.build.yml --file docker-bake.json
