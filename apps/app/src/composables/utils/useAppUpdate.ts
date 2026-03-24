@@ -34,17 +34,23 @@ export function useAppUpdate() {
         check()
     })
 
+    function onVisibilityChange() {
+        if (document.visibilityState === "visible") check()
+    }
+
     onMounted(() => {
         if (!started) {
             started = true
             check()
             timer = setInterval(check, POLL_INTERVAL)
         }
+        document.addEventListener("visibilitychange", onVisibilityChange)
     })
 
     onUnmounted(() => {
         if (timer) clearInterval(timer)
         started = false
+        document.removeEventListener("visibilitychange", onVisibilityChange)
     })
 
     function reload() {
