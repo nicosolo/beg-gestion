@@ -568,13 +568,12 @@ async function importUsers() {
     }
 
     // Create system admin user for initial login (hidden from frontend)
-    const systemPassword = await hashPassword("RLd9&X2JpCPZ2h@$R6")
     await db.insert(users).values({
         email: "n@solioz.me",
         firstName: "Nicolas",
         lastName: "Solioz",
         initials: "NFS",
-        password: systemPassword,
+        password: "$2b$10$DW/sclB0bbRjltC8/lpx2uXbHcFzkMRIvdi0tUeIdlfaRKyaFrfpa",
         role: "admin" as UserRole,
         archived: false,
         isSystem: true,
