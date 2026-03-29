@@ -27,10 +27,11 @@ export function parseSnapshotTimestamp(filename: string): Date | null {
     return isNaN(date.getTime()) ? null : date
 }
 
-export function selectSnapshotsToDelete(
-    snapshots: { name: string; timestamp: Date }[],
-    now: Date
-): string[] {
+export function selectSnapshotsToDelete(filenames: string[], now: Date): string[] {
+    const snapshots = filenames
+        .map((name) => ({ name, timestamp: parseSnapshotTimestamp(name) }))
+        .filter((s): s is { name: string; timestamp: Date } => s.timestamp !== null)
+
     const sorted = [...snapshots].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
     const keepSet = new Set<string>()
     const nowMs = now.getTime()
@@ -39,7 +40,7 @@ export function selectSnapshotsToDelete(
     const hourlyFilled = new Set<number>()
     for (const s of sorted) {
         const bucket = Math.floor(Math.max(0, nowMs - s.timestamp.getTime()) / HOUR_MS)
-        if (bucket <= 47 && !hourlyFilled.has(bucket)) {
+        if (bucket <= 119 && !hourlyFilled.has(bucket)) {
             hourlyFilled.add(bucket)
             keepSet.add(s.name)
         }
@@ -94,17 +95,7 @@ async function cleanOldSnapshots(): Promise<void> {
     const files = await readdir(SNAPSHOT_DIR)
     const snapshotFiles = files.filter((f) => f.endsWith(".sqlite.gz") || f.endsWith(".sqlite"))
 
-    const snapshots: { name: string; timestamp: Date }[] = []
-    for (const name of snapshotFiles) {
-        const timestamp = parseSnapshotTimestamp(name)
-        if (timestamp) {
-            snapshots.push({ name, timestamp })
-        } else {
-            console.warn(`⚠️ Skipping unparseable snapshot filename: ${name}`)
-        }
-    }
-
-    const toDelete = selectSnapshotsToDelete(snapshots, new Date())
+    const toDelete = selectSnapshotsToDelete(snapshotFiles, new Date())
     for (const name of toDelete) {
         await unlink(join(SNAPSHOT_DIR, name))
         console.log(`🗑️ Removed old snapshot: ${name}`)

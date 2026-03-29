@@ -14,7 +14,6 @@ import { locationRoutes } from "@src/routes/location"
 import { workloadRoutes } from "@src/routes/workloads"
 import unbilledRoutes from "@src/routes/unbilled"
 import { vatRateRoutes } from "@src/routes/vatRate"
-import { importRoutes } from "@src/routes/import"
 import { monthlyHoursRoutes } from "@src/routes/monthlyHours"
 import { auditLogRoutes } from "@src/routes/auditLog"
 import { PORT, DB_FILE_PATH } from "@src/config"
@@ -53,7 +52,6 @@ const app = new Hono()
     .route("/workloads", workloadRoutes)
     .route("/unbilled", unbilledRoutes)
     .route("/vat-rate", vatRateRoutes)
-    .route("/import", importRoutes)
     .route("/monthly-hours", monthlyHoursRoutes)
     .route("/audit-log", auditLogRoutes)
 

@@ -643,6 +643,8 @@ async function findFabFiles(dir: string): Promise<string[]> {
 
 // Main import function
 export async function importInvoices(mandatsDir: string = MANDATS_BASE_PATH): Promise<void> {
+    console.log("Import is disabled")
+    return
     console.log(`Searching for .fab files in ${mandatsDir}...`)
 
     const fabFiles = await findFabFiles(mandatsDir)
@@ -665,6 +667,8 @@ export async function importInvoices(mandatsDir: string = MANDATS_BASE_PATH): Pr
 
 // Standalone script entry point
 async function main() {
+    console.log("Import is disabled")
+    return
     const mandatsDir = process.argv[2] || MANDATS_BASE_PATH
     await importInvoices(mandatsDir)
 }

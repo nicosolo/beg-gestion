@@ -24,7 +24,13 @@ import fs from "fs/promises"
 import { existsSync } from "fs"
 import path from "path"
 import { hashPassword } from "@src/tools/auth"
-import type { ActivityRateUser, ClassPresets, ClassSchema, Company, UserRole } from "@beg/validations"
+import type {
+    ActivityRateUser,
+    ClassPresets,
+    ClassSchema,
+    Company,
+    UserRole,
+} from "@beg/validations"
 import { updateProjectActivityDates } from "./repositories/activity.repository"
 import { importProjectCoordinatesFromCsv } from "../scripts/import-project-coordinates"
 
@@ -250,6 +256,7 @@ const ARCHIVED_USERS: [string, string][] = [
     ["Tess", "Calderon"],
     ["Vincent", "Boitelet"],
     ["Yasin", "Khanabeigi"],
+    ["Erika", "Aymon"],
 ]
 
 function mapUserData(data: any): typeof users.$inferInsert {
@@ -266,7 +273,9 @@ function mapUserData(data: any): typeof users.$inferInsert {
             const initials = data.Initiales?.toLowerCase()
             const mapped = PASSWORD_HASH_MAP[initials]
             if (!mapped) {
-                console.warn(`No password hash found for user ${data.Prénom} ${data.Nom} (${initials}), using random password`)
+                console.warn(
+                    `No password hash found for user ${data.Prénom} ${data.Nom} (${initials}), using random password`
+                )
                 return crypto.randomUUID()
             }
             return mapped
@@ -821,20 +830,118 @@ async function importActivityTypes() {
 
     // Class presets per activity code: { cadre, chefDeProjet, collaborateur, operateur, secretaire, stagiaire }
     const classPresetsMap: Record<string, ClassPresets> = {
-        Ex: { cadre: "B", chefDeProjet: "C", collaborateur: "C", operateur: "D", secretaire: "R", stagiaire: "G" },
-        Ec: { cadre: "C", chefDeProjet: "C", collaborateur: "D", operateur: "E", secretaire: "G", stagiaire: "G" },
-        Eo: { cadre: "C", chefDeProjet: "C", collaborateur: "D", operateur: "E", secretaire: "G", stagiaire: "G" },
-        Er: { cadre: "B", chefDeProjet: "C", collaborateur: "D", operateur: "E", secretaire: "G", stagiaire: "G" },
-        Es: { cadre: "C", chefDeProjet: "C", collaborateur: "D", operateur: "E", secretaire: "G", stagiaire: "G" },
-        Et: { cadre: "C", chefDeProjet: "C", collaborateur: "D", operateur: "E", secretaire: "R", stagiaire: "G" },
-        Ee: { cadre: "D", chefDeProjet: "E", collaborateur: "E", operateur: "E", secretaire: "R", stagiaire: "G" },
-        Ed: { cadre: "C", chefDeProjet: "C", collaborateur: "D", operateur: "E", secretaire: "R", stagiaire: "G" },
-        Ef: { cadre: "D", chefDeProjet: "F", collaborateur: "F", operateur: "G", secretaire: "G", stagiaire: "G" },
-        Em: { cadre: "E", chefDeProjet: "F", collaborateur: "G", operateur: "G", secretaire: "G", stagiaire: "G" },
-        Nf: { cadre: "R", chefDeProjet: "R", collaborateur: "R", operateur: "R", secretaire: "R", stagiaire: "R" },
-        Ga: { cadre: "R", chefDeProjet: "R", collaborateur: "R", operateur: "R", secretaire: "R", stagiaire: "R" },
-        Gc: { cadre: "R", chefDeProjet: "R", collaborateur: "R", operateur: "R", secretaire: "R", stagiaire: "R" },
-        Gr: { cadre: "R", chefDeProjet: "R", collaborateur: "R", operateur: "R", secretaire: "R", stagiaire: "R" },
+        Ex: {
+            cadre: "B",
+            chefDeProjet: "C",
+            collaborateur: "C",
+            operateur: "D",
+            secretaire: "R",
+            stagiaire: "G",
+        },
+        Ec: {
+            cadre: "C",
+            chefDeProjet: "C",
+            collaborateur: "D",
+            operateur: "E",
+            secretaire: "G",
+            stagiaire: "G",
+        },
+        Eo: {
+            cadre: "C",
+            chefDeProjet: "C",
+            collaborateur: "D",
+            operateur: "E",
+            secretaire: "G",
+            stagiaire: "G",
+        },
+        Er: {
+            cadre: "B",
+            chefDeProjet: "C",
+            collaborateur: "D",
+            operateur: "E",
+            secretaire: "G",
+            stagiaire: "G",
+        },
+        Es: {
+            cadre: "C",
+            chefDeProjet: "C",
+            collaborateur: "D",
+            operateur: "E",
+            secretaire: "G",
+            stagiaire: "G",
+        },
+        Et: {
+            cadre: "C",
+            chefDeProjet: "C",
+            collaborateur: "D",
+            operateur: "E",
+            secretaire: "R",
+            stagiaire: "G",
+        },
+        Ee: {
+            cadre: "D",
+            chefDeProjet: "E",
+            collaborateur: "E",
+            operateur: "E",
+            secretaire: "R",
+            stagiaire: "G",
+        },
+        Ed: {
+            cadre: "C",
+            chefDeProjet: "C",
+            collaborateur: "D",
+            operateur: "E",
+            secretaire: "R",
+            stagiaire: "G",
+        },
+        Ef: {
+            cadre: "D",
+            chefDeProjet: "F",
+            collaborateur: "F",
+            operateur: "G",
+            secretaire: "G",
+            stagiaire: "G",
+        },
+        Em: {
+            cadre: "E",
+            chefDeProjet: "F",
+            collaborateur: "G",
+            operateur: "G",
+            secretaire: "G",
+            stagiaire: "G",
+        },
+        Nf: {
+            cadre: "R",
+            chefDeProjet: "R",
+            collaborateur: "R",
+            operateur: "R",
+            secretaire: "R",
+            stagiaire: "R",
+        },
+        Ga: {
+            cadre: "R",
+            chefDeProjet: "R",
+            collaborateur: "R",
+            operateur: "R",
+            secretaire: "R",
+            stagiaire: "R",
+        },
+        Gc: {
+            cadre: "R",
+            chefDeProjet: "R",
+            collaborateur: "R",
+            operateur: "R",
+            secretaire: "R",
+            stagiaire: "R",
+        },
+        Gr: {
+            cadre: "R",
+            chefDeProjet: "R",
+            collaborateur: "R",
+            operateur: "R",
+            secretaire: "R",
+            stagiaire: "R",
+        },
     }
 
     const activityTypesToInsert: (typeof activityTypes.$inferInsert)[] = []

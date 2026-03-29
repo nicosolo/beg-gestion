@@ -21,7 +21,6 @@ import VatRateListView from "../views/vatRate/VatRateListView.vue"
 import MonthlyHoursListView from "../views/monthlyHours/MonthlyHoursListView.vue"
 import LoginView from "../views/LoginView.vue"
 import AuditLogListView from "../views/auditLog/AuditLogListView.vue"
-import DatabaseImportView from "../views/admin/DatabaseImportView.vue"
 import AppSettingsView from "../views/settings/AppSettingsView.vue"
 import DownloadAppView from "../views/download/DownloadAppView.vue"
 import { useAuthStore } from "../stores/auth"
@@ -185,13 +184,6 @@ const router = createRouter({
             path: "/audit-log",
             name: "audit-log-list",
             component: AuditLogListView,
-            meta: { requiresAuth: true, requiresAdmin: true },
-        },
-        // Admin routes
-        {
-            path: "/admin/import",
-            name: "database-import",
-            component: DatabaseImportView,
             meta: { requiresAuth: true, requiresAdmin: true },
         },
         // App settings (Tauri only)

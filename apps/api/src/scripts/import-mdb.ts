@@ -12,9 +12,12 @@ import { existsSync } from "fs"
 import { rm } from "fs/promises"
 import path from "path"
 import { MS_ACCESS_DB_PATH } from "@src/config"
+import { rebuildAllProjectSearchIndex } from "@src/db/fts"
 
 export async function importMdbToSqlite() {
     try {
+        console.log("Import is disabled")
+        return
         // Get MDB path from command line argument or environment variable
         const mdbPath = MS_ACCESS_DB_PATH
 
@@ -57,6 +60,12 @@ export async function importMdbToSqlite() {
         console.log("🧹 Step 3: Cleaning up temporary files...")
         await rm(tempExportDir, { recursive: true, force: true })
         console.log(`✓ Removed temporary directory: ${tempExportDir}`)
+        console.log("")
+
+        // Step 4: Rebuild FTS index
+        console.log("🔄 Step 4: Rebuilding FTS index...")
+        console.log("-".repeat(40))
+        await rebuildAllProjectSearchIndex()
         console.log("")
 
         console.log("=".repeat(60))

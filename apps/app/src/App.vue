@@ -175,12 +175,6 @@ const navigation = computed(() =>
                     current: route.name === "audit-log-list",
                     visible: hasAdminAccess.value,
                 },
-                {
-                    name: "Import DB",
-                    to: { name: "database-import" },
-                    current: route.name === "database-import",
-                    visible: hasAdminAccess.value,
-                },
             ].filter((item) => item.visible !== false),
             // Mark parent as current if any child is current
             get current() {

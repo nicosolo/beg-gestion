@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test"
 import { parseSnapshotTimestamp, selectSnapshotsToDelete } from "../snapshot"
 
-function snapsAt(date: Date): { name: string; timestamp: Date } {
+function snapsAt(date: Date): string {
     const ts = date.toISOString().replace(/[:.]/g, "-").slice(0, 19)
-    return { name: `db-${ts}.sqlite.gz`, timestamp: date }
+    return `db-${ts}.sqlite.gz`
 }
 
 function hoursAgo(now: Date, hours: number): Date {
@@ -63,7 +63,7 @@ describe("selectSnapshotsToDelete", () => {
         // Hours 0-47 kept by hourly. Hours 48-49 both in daily bucket 2,
         // only newest (hour 48) kept — hour 49 deleted
         expect(toDelete.length).toBe(1)
-        expect(toDelete).toContain(snapsAt(hoursAgo(now, 49)).name)
+        expect(toDelete).toContain(snapsAt(hoursAgo(now, 49)))
     })
 
     test("daily tier keeps snapshots beyond 48h", () => {
@@ -128,8 +128,8 @@ describe("selectSnapshotsToDelete", () => {
         // Many beyond week 8 / month 12 should be deleted (except if yearly)
         expect(toDelete.length).toBeGreaterThan(0)
         // Day 0 and day 1 kept (hourly/daily), verify they're not deleted
-        expect(toDelete).not.toContain(snapsAt(daysAgo(now, 0)).name)
-        expect(toDelete).not.toContain(snapsAt(daysAgo(now, 1)).name)
+        expect(toDelete).not.toContain(snapsAt(daysAgo(now, 0)))
+        expect(toDelete).not.toContain(snapsAt(daysAgo(now, 1)))
     })
 
     test("future snapshots are kept", () => {

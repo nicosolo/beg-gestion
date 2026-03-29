@@ -33,15 +33,8 @@
                     <div>
                         <Label>{{ $t("projects.title") }}</Label>
                         <ProjectSelect
-                            v-if="isNewEntry && !props.projectId && !props.defaultProjectId"
                             v-model="activity.projectId"
-                            :disabled="loading"
-                            required
-                        />
-                        <ProjectSelect
-                            v-else
-                            v-model="activity.projectId"
-                            :disabled="loading || !isLocked || isBilledFullyLocked"
+                            :disabled="loading || isBilledFullyLocked"
                             required
                         />
                     </div>
@@ -359,6 +352,7 @@ const saveActivity = async (keepOpen: boolean = false) => {
             const updateData: ActivityUpdateInput = isLocked.value
                 ? { projectId: activityData.projectId }
                 : {
+                      projectId: activityData.projectId,
                       activityTypeId: activityData.activityTypeId,
                       date: activityData.date,
                       duration: activityData.duration,
