@@ -1,4 +1,4 @@
-import { mkdir, readdir, unlink, readFile, writeFile } from "node:fs/promises"
+import { mkdir, readdir, rename, unlink, readFile, writeFile } from "node:fs/promises"
 import { join, dirname, basename } from "node:path"
 import { gzipSync } from "node:zlib"
 import { DB_FILE_PATH } from "@src/config"
@@ -11,6 +11,9 @@ const HOUR_MS = 3_600_000
 const DAY_MS = 86_400_000
 const WEEK_MS = 7 * DAY_MS
 
+const TIER_PREFIXES = ["hourly-", "daily-", "weekly-", "monthly-", "yearly-"] as const
+export type SnapshotTier = "hourly" | "daily" | "weekly" | "monthly" | "yearly"
+
 function formatTimestamp(): string {
     const now = new Date()
     return now.toISOString().replace(/[:.]/g, "-").slice(0, 19)
@@ -20,29 +23,40 @@ async function ensureSnapshotDir(): Promise<void> {
     await mkdir(SNAPSHOT_DIR, { recursive: true })
 }
 
+export function stripTierPrefix(filename: string): string {
+    for (const prefix of TIER_PREFIXES) {
+        if (filename.startsWith(prefix)) return filename.slice(prefix.length)
+    }
+    return filename
+}
+
 export function parseSnapshotTimestamp(filename: string): Date | null {
-    const match = filename.match(/^db-(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})\.sqlite/)
+    const base = stripTierPrefix(filename)
+    const match = base.match(/^db-(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})\.sqlite/)
     if (!match) return null
     const date = new Date(`${match[1]}T${match[2]}:${match[3]}:${match[4]}Z`)
     return isNaN(date.getTime()) ? null : date
 }
 
-export function selectSnapshotsToDelete(filenames: string[], now: Date): string[] {
+export function classifySnapshots(
+    filenames: string[],
+    now: Date
+): { toDelete: string[]; tiers: Map<string, SnapshotTier> } {
     const snapshots = filenames
         .map((name) => ({ name, timestamp: parseSnapshotTimestamp(name) }))
         .filter((s): s is { name: string; timestamp: Date } => s.timestamp !== null)
 
     const sorted = [...snapshots].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-    const keepSet = new Set<string>()
+    const tiers = new Map<string, SnapshotTier>()
     const nowMs = now.getTime()
 
-    // Hourly: 48 buckets (0-47)
+    // Hourly: 120 buckets (0-119)
     const hourlyFilled = new Set<number>()
     for (const s of sorted) {
         const bucket = Math.floor(Math.max(0, nowMs - s.timestamp.getTime()) / HOUR_MS)
         if (bucket <= 119 && !hourlyFilled.has(bucket)) {
             hourlyFilled.add(bucket)
-            keepSet.add(s.name)
+            tiers.set(s.name, "hourly")
         }
     }
 
@@ -52,7 +66,7 @@ export function selectSnapshotsToDelete(filenames: string[], now: Date): string[
         const bucket = Math.floor(Math.max(0, nowMs - s.timestamp.getTime()) / DAY_MS)
         if (bucket <= 6 && !dailyFilled.has(bucket)) {
             dailyFilled.add(bucket)
-            keepSet.add(s.name)
+            tiers.set(s.name, "daily")
         }
     }
 
@@ -62,7 +76,7 @@ export function selectSnapshotsToDelete(filenames: string[], now: Date): string[
         const bucket = Math.floor(Math.max(0, nowMs - s.timestamp.getTime()) / WEEK_MS)
         if (bucket <= 7 && !weeklyFilled.has(bucket)) {
             weeklyFilled.add(bucket)
-            keepSet.add(s.name)
+            tiers.set(s.name, "weekly")
         }
     }
 
@@ -74,7 +88,7 @@ export function selectSnapshotsToDelete(filenames: string[], now: Date): string[
             (now.getUTCMonth() - s.timestamp.getUTCMonth())
         if (bucket >= 0 && bucket <= 11 && !monthlyFilled.has(bucket)) {
             monthlyFilled.add(bucket)
-            keepSet.add(s.name)
+            tiers.set(s.name, "monthly")
         }
     }
 
@@ -84,22 +98,38 @@ export function selectSnapshotsToDelete(filenames: string[], now: Date): string[
         const bucket = now.getUTCFullYear() - s.timestamp.getUTCFullYear()
         if (bucket >= 1 && !yearlyFilled.has(bucket)) {
             yearlyFilled.add(bucket)
-            keepSet.add(s.name)
+            tiers.set(s.name, "yearly")
         }
     }
 
-    return sorted.filter((s) => !keepSet.has(s.name)).map((s) => s.name)
+    const toDelete = sorted.filter((s) => !tiers.has(s.name)).map((s) => s.name)
+    return { toDelete, tiers }
+}
+
+export function selectSnapshotsToDelete(filenames: string[], now: Date): string[] {
+    return classifySnapshots(filenames, now).toDelete
 }
 
 async function cleanOldSnapshots(): Promise<void> {
     const files = await readdir(SNAPSHOT_DIR)
     const snapshotFiles = files.filter((f) => f.endsWith(".sqlite.gz") || f.endsWith(".sqlite"))
 
-    const toDelete = selectSnapshotsToDelete(snapshotFiles, new Date())
+    const { toDelete, tiers } = classifySnapshots(snapshotFiles, new Date())
+
     for (const name of toDelete) {
         await unlink(join(SNAPSHOT_DIR, name))
         console.log(`🗑️ Removed old snapshot: ${name}`)
         audit(null, "SYS", "prune", "snapshot", null, { file: name })
+    }
+
+    // Rename files to match their tier prefix
+    for (const [name, tier] of tiers) {
+        const base = stripTierPrefix(name)
+        const expected = `${tier}-${base}`
+        if (name !== expected) {
+            await rename(join(SNAPSHOT_DIR, name), join(SNAPSHOT_DIR, expected))
+            console.log(`📁 ${name} → ${expected}`)
+        }
     }
 }
 
@@ -108,7 +138,7 @@ export async function createSnapshot(): Promise<string> {
 
     const timestamp = formatTimestamp()
     const tempPath = join(SNAPSHOT_DIR, `db-${timestamp}.sqlite`)
-    const snapshotPath = `${tempPath}.gz`
+    const snapshotPath = join(SNAPSHOT_DIR, `hourly-db-${timestamp}.sqlite.gz`)
 
     // VACUUM INTO creates a consistent copy safe for live DBs
     sqlite.exec(`VACUUM INTO '${tempPath}'`)

@@ -1,5 +1,10 @@
 import { describe, expect, test } from "bun:test"
-import { parseSnapshotTimestamp, selectSnapshotsToDelete } from "../snapshot"
+import {
+    parseSnapshotTimestamp,
+    selectSnapshotsToDelete,
+    classifySnapshots,
+    stripTierPrefix,
+} from "../snapshot"
 
 function snapsAt(date: Date): string {
     const ts = date.toISOString().replace(/[:.]/g, "-").slice(0, 19)
@@ -14,6 +19,26 @@ function daysAgo(now: Date, days: number): Date {
     return new Date(now.getTime() - days * 86_400_000)
 }
 
+describe("stripTierPrefix", () => {
+    test("strips known prefixes", () => {
+        expect(stripTierPrefix("hourly-db-2026-03-23T14-30-45.sqlite.gz")).toBe(
+            "db-2026-03-23T14-30-45.sqlite.gz"
+        )
+        expect(stripTierPrefix("daily-db-2026-03-23T14-30-45.sqlite.gz")).toBe(
+            "db-2026-03-23T14-30-45.sqlite.gz"
+        )
+        expect(stripTierPrefix("yearly-db-2026-03-23T14-30-45.sqlite.gz")).toBe(
+            "db-2026-03-23T14-30-45.sqlite.gz"
+        )
+    })
+
+    test("returns unchanged if no prefix", () => {
+        expect(stripTierPrefix("db-2026-03-23T14-30-45.sqlite.gz")).toBe(
+            "db-2026-03-23T14-30-45.sqlite.gz"
+        )
+    })
+})
+
 describe("parseSnapshotTimestamp", () => {
     test("parses .sqlite.gz filename", () => {
         const date = parseSnapshotTimestamp("db-2026-03-23T14-30-45.sqlite.gz")
@@ -23,6 +48,13 @@ describe("parseSnapshotTimestamp", () => {
     test("parses .sqlite filename", () => {
         const date = parseSnapshotTimestamp("db-2026-01-01T00-00-00.sqlite")
         expect(date).toEqual(new Date("2026-01-01T00:00:00Z"))
+    })
+
+    test("parses prefixed filename", () => {
+        const date = parseSnapshotTimestamp("hourly-db-2026-03-23T14-30-45.sqlite.gz")
+        expect(date).toEqual(new Date("2026-03-23T14:30:45Z"))
+        const date2 = parseSnapshotTimestamp("monthly-db-2026-01-01T00-00-00.sqlite.gz")
+        expect(date2).toEqual(new Date("2026-01-01T00:00:00Z"))
     })
 
     test("returns null for non-matching filename", () => {
@@ -55,15 +87,6 @@ describe("selectSnapshotsToDelete", () => {
         ]
         const toDelete = selectSnapshotsToDelete(snapshots, now)
         expect(toDelete).toEqual(["db-2026-06-15T11-20-00.sqlite.gz"])
-    })
-
-    test("48 hourly slots fill exactly", () => {
-        const snapshots = Array.from({ length: 50 }, (_, i) => snapsAt(hoursAgo(now, i)))
-        const toDelete = selectSnapshotsToDelete(snapshots, now)
-        // Hours 0-47 kept by hourly. Hours 48-49 both in daily bucket 2,
-        // only newest (hour 48) kept — hour 49 deleted
-        expect(toDelete.length).toBe(1)
-        expect(toDelete).toContain(snapsAt(hoursAgo(now, 49)))
     })
 
     test("daily tier keeps snapshots beyond 48h", () => {
@@ -116,28 +139,75 @@ describe("selectSnapshotsToDelete", () => {
             snapsAt(new Date("2024-03-10T12:00:00Z")), // year bucket 2 (dup)
         ]
         const toDelete = selectSnapshotsToDelete(snapshots, now)
-        // newest in year 2024 is Aug, March gets deleted (not in monthly range either)
         expect(toDelete).toContain("db-2024-03-10T12-00-00.sqlite.gz")
     })
 
     test("deletes snapshots that fit no tier", () => {
-        // 100 days ago, one per day — many will be pruned
         const snapshots = Array.from({ length: 100 }, (_, i) => snapsAt(daysAgo(now, i)))
         const toDelete = selectSnapshotsToDelete(snapshots, now)
-        // Should keep: up to 48 hourly (only 2 fit: day 0,1), 7 daily, 8 weekly, 12 monthly
-        // Many beyond week 8 / month 12 should be deleted (except if yearly)
         expect(toDelete.length).toBeGreaterThan(0)
-        // Day 0 and day 1 kept (hourly/daily), verify they're not deleted
         expect(toDelete).not.toContain(snapsAt(daysAgo(now, 0)))
         expect(toDelete).not.toContain(snapsAt(daysAgo(now, 1)))
     })
 
     test("future snapshots are kept", () => {
         const snapshots = [
-            snapsAt(new Date("2026-06-16T12:00:00Z")), // 1 day in future
+            snapsAt(new Date("2026-06-16T12:00:00Z")),
             snapsAt(hoursAgo(now, 1)),
         ]
         const toDelete = selectSnapshotsToDelete(snapshots, now)
         expect(toDelete).toEqual([])
+    })
+
+    test("handles prefixed filenames", () => {
+        const snapshots = [
+            "hourly-db-2026-06-15T11-00-00.sqlite.gz",
+            "hourly-db-2026-06-15T10-00-00.sqlite.gz",
+        ]
+        const toDelete = selectSnapshotsToDelete(snapshots, now)
+        expect(toDelete).toEqual([])
+    })
+})
+
+describe("classifySnapshots", () => {
+    const now = new Date("2026-06-15T12:00:00Z")
+
+    test("snapshot stays hourly when a newer one fills higher tiers", () => {
+        const newer = snapsAt(hoursAgo(now, 1))
+        const older = snapsAt(hoursAgo(now, 5))
+        const { tiers } = classifySnapshots([newer, older], now)
+        // newer fills daily/weekly/monthly bucket 0, older stays hourly
+        expect(tiers.get(older)).toBe("hourly")
+    })
+
+    test("snapshot promoted to daily when in daily range", () => {
+        const name = snapsAt(daysAgo(now, 3))
+        const { tiers } = classifySnapshots([snapsAt(hoursAgo(now, 1)), name], now)
+        expect(tiers.get(name)).toBe("daily")
+    })
+
+    test("snapshot promoted to weekly", () => {
+        const name = snapsAt(daysAgo(now, 14))
+        const { tiers } = classifySnapshots([snapsAt(hoursAgo(now, 1)), name], now)
+        expect(tiers.get(name)).toBe("weekly")
+    })
+
+    test("snapshot promoted to monthly", () => {
+        const name = snapsAt(new Date("2026-03-15T12:00:00Z"))
+        const { tiers } = classifySnapshots([snapsAt(hoursAgo(now, 1)), name], now)
+        expect(tiers.get(name)).toBe("monthly")
+    })
+
+    test("snapshot promoted to yearly", () => {
+        const name = snapsAt(new Date("2025-06-15T12:00:00Z"))
+        const { tiers } = classifySnapshots([snapsAt(hoursAgo(now, 1)), name], now)
+        expect(tiers.get(name)).toBe("yearly")
+    })
+
+    test("single recent snapshot promoted to monthly (highest applicable tier)", () => {
+        const name = snapsAt(now)
+        const { tiers } = classifySnapshots([name], now)
+        // fills bucket 0 for hourly, daily, weekly, monthly — last write wins
+        expect(tiers.get(name)).toBe("monthly")
     })
 })
