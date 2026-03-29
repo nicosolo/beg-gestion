@@ -668,6 +668,7 @@ async function importProjects() {
                         ? ("active" as const)
                         : ("draft" as const),
                 ended: rawProject.Etat === "Terminé",
+                billingStatus: rawProject.Etat || null,
                 subProjectName: rawProject["Sous-mandat"]?.trim() || null,
             } satisfies typeof projects.$inferInsert
 

@@ -73,6 +73,9 @@ export const invoiceRepository = {
     if (filter.visaByUserId) {
       where.push(eq(invoices.visaByUserId, filter.visaByUserId))
     }
+    if (filter.inChargeUserId) {
+      where.push(eq(invoices.inChargeUserId, filter.inChargeUserId))
+    }
     if (filter.fromDate) {
       where.push(gte(invoices.issueDate, filter.fromDate))
     }

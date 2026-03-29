@@ -24,6 +24,7 @@ const VISA_USER_INITIALS: Record<string, string> = {
     "0": "fp",
     "1": "js",
     "2": "mo",
+    "3": "md",
 }
 
 interface FabData {
@@ -90,11 +91,11 @@ function parseFabFile(content: string): FabData {
     return result
 }
 
-// Parse date in DD.MM.YY or DD.MM.YYYY format
+// Parse date in DD.MM.YYYY, DD/MM/YYYY, or DD.MM.YY format
 function parseFabDate(dateStr: string): Date | null {
     if (!dateStr || dateStr.trim() === "") return null
 
-    const parts = dateStr.split(".")
+    const parts = dateStr.split(/[./]/)
     if (parts.length !== 3) return null
 
     const day = parseInt(parts[0], 10)
@@ -258,13 +259,19 @@ function mapBillingMode(edtMode: string): BillingMode {
     }
 }
 
-// Map edtVisa and edtBon to InvoiceStatus
-// - vise: if edtBon=1 (approved) AND visa user is set
-// - draft: otherwise
-function mapInvoiceStatus(edtVisa: string, edtBon: string): InvoiceStatus {
-    const isApproved = edtBon === "1"
-    const hasVisaUser = !!VISA_USER_INITIALS[edtVisa]
-    return isApproved && hasVisaUser ? "sent" : "controle"
+// Map edtBon + edtVisa to InvoiceStatus, using project billingStatus from Access DB
+// edtBon=1 + edtVisa>=0 + Etat="Terminé": sent (approved + project completed)
+// edtBon=1 + edtVisa>=0: vise (approved with visa user)
+// everything else: draft
+function mapInvoiceStatus(
+    edtVisa: string,
+    edtBon: string,
+    projectBillingStatus: string | null
+): InvoiceStatus {
+    const approved = edtBon === "1" && edtVisa !== "-1"
+    if (!approved) return "draft"
+    if (projectBillingStatus === "Terminé") return "sent"
+    return "vise"
 }
 
 // Get visa user from legacy edtVisa index
@@ -292,6 +299,14 @@ async function getUserIdByInitials(initials: string): Promise<number | null> {
         .limit(1)
 
     return user?.id ?? null
+}
+
+// Parse date from filename (e.g. "8132 INF F 2024-03-08.fab" → 2024-03-08)
+function parseDateFromFilename(filename: string): Date | null {
+    const match = filename.match(/(\d{4})-(\d{2})-(\d{2})/)
+    if (!match) return null
+    const date = new Date(`${match[1]}-${match[2]}-${match[3]}T00:00:00Z`)
+    return isNaN(date.getTime()) ? null : date
 }
 
 // Generate invoice number from filename
@@ -336,12 +351,11 @@ async function importInvoiceFromFab(fabPath: string): Promise<boolean> {
         const { projectNumber, subProjectName } = parseProjectCode(rawCode)
 
         // Find project by projectNumber and optionally subProjectName
-        let project: { id: number } | undefined
+        let project: { id: number; billingStatus: string | null } | undefined
 
         if (subProjectName) {
-            // Query with subProjectName filter
             const subProjectResults = await db
-                .select({ id: projects.id })
+                .select({ id: projects.id, billingStatus: projects.billingStatus })
                 .from(projects)
                 .where(
                     and(
@@ -353,13 +367,15 @@ async function importInvoiceFromFab(fabPath: string): Promise<boolean> {
 
             project = subProjectResults[0]
         } else {
-            // No subProjectName - look for project without subProjectName or take first match
             const mainProjectResults = await db
-                .select({ id: projects.id, subProjectName: projects.subProjectName })
+                .select({
+                    id: projects.id,
+                    subProjectName: projects.subProjectName,
+                    billingStatus: projects.billingStatus,
+                })
                 .from(projects)
                 .where(eq(projects.projectNumber, projectNumber))
 
-            // Prefer project without subProjectName, otherwise take first
             project = mainProjectResults.find((p) => !p.subProjectName) || mainProjectResults[0]
         }
 
@@ -389,10 +405,12 @@ async function importInvoiceFromFab(fabPath: string): Promise<boolean> {
         }
 
         // Parse dates
-        const periodStart = parseFabDate(fabData.internal["De"]) || new Date()
-        const periodEnd = parseFabDate(fabData.internal["A"]) || new Date()
+        const filenameDate = parseDateFromFilename(path.basename(fabPath))
+        const periodStart = parseFabDate(fabData.internal["De"]) || filenameDate || new Date()
+        const periodEnd = parseFabDate(fabData.internal["A"]) || filenameDate || new Date()
         const visaDate = parseFabDate(fabData.datas["edtVisaDate"])
-        const issueDate = parseFabDate(fabData.datas["edtLast"]) || visaDate || new Date()
+        const edtLast = parseFabDate(fabData.datas["edtLast"])
+        const issueDate = edtLast || visaDate || filenameDate || periodEnd
 
         // Parse multiline fields
         const clientAddress = parseMultiline(fabData.datas, "edtAdresse")
@@ -446,7 +464,11 @@ async function importInvoiceFromFab(fabPath: string): Promise<boolean> {
                 reference: d["edtObjet"] || "",
                 type: mapInvoiceType(d["edtType"]),
                 billingMode: mapBillingMode(d["edtMode"]),
-                status: mapInvoiceStatus(d["edtVisa"] || "", d["edtBon"] || "0"),
+                status: mapInvoiceStatus(
+                    d["edtVisa"] || "",
+                    d["edtBon"] || "0",
+                    project.billingStatus
+                ),
                 issueDate,
                 dueDate: null,
                 periodStart,
@@ -457,9 +479,9 @@ async function importInvoiceFromFab(fabPath: string): Promise<boolean> {
                 description: otherServices,
                 note,
                 otherServices: "",
-                visaDate,
+                visaDate: d["edtBon"] === "1" ? visaDate : null,
                 visaByUserId: visaUser?.id ?? null,
-                visaBy: visaUser?.firstName ?? null,
+                visaBy: d["edtBon"] === "1" ? (visaUser?.firstName ?? null) : null,
                 inChargeUserId,
                 legacyInvoicePath: fabPath.replace("/mandats/", ""),
                 feesBase,
@@ -484,8 +506,8 @@ async function importInvoiceFromFab(fabPath: string): Promise<boolean> {
                 vatRate,
                 vatAmount,
                 totalTTC,
-                createdAt: new Date(),
-                updatedAt: new Date(),
+                createdAt: issueDate,
+                updatedAt: edtLast || visaDate || issueDate,
             })
             .returning({ id: invoices.id })
 
@@ -643,8 +665,19 @@ async function findFabFiles(dir: string): Promise<string[]> {
 
 // Main import function
 export async function importInvoices(mandatsDir: string = MANDATS_BASE_PATH): Promise<void> {
-    console.log("Import is disabled")
-    return
+    // console.log("Import is disabled")
+    // return
+
+    // Clear all invoice-related tables (child tables first)
+    console.log("🗑️ Clearing invoice tables...")
+    await db.delete(invoiceDocuments)
+    await db.delete(invoiceSituations)
+    await db.delete(invoiceAdjudications)
+    await db.delete(invoiceOffers)
+    await db.delete(invoiceRates)
+    await db.delete(invoices)
+    console.log("✓ Invoice tables cleared")
+
     console.log(`Searching for .fab files in ${mandatsDir}...`)
 
     const fabFiles = await findFabFiles(mandatsDir)
@@ -667,8 +700,8 @@ export async function importInvoices(mandatsDir: string = MANDATS_BASE_PATH): Pr
 
 // Standalone script entry point
 async function main() {
-    console.log("Import is disabled")
-    return
+    // console.log("Import is disabled")
+    // return
     const mandatsDir = process.argv[2] || MANDATS_BASE_PATH
     await importInvoices(mandatsDir)
 }

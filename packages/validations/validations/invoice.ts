@@ -382,6 +382,7 @@ export const invoiceFilterSchema = z
         projectId: z.coerce.number().optional(),
         status: InvoiceStatusEnum.optional(),
         visaByUserId: z.coerce.number().optional(),
+        inChargeUserId: z.coerce.number().optional(),
         fromDate: z.coerce.date().optional(),
         toDate: z.coerce.date().optional(),
         sortBy: z

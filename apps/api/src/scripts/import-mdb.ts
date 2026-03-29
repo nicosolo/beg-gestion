@@ -16,8 +16,8 @@ import { rebuildAllProjectSearchIndex } from "@src/db/fts"
 
 export async function importMdbToSqlite() {
     try {
-        console.log("Import is disabled")
-        return
+        // console.log("Import is disabled")
+        // return
         // Get MDB path from command line argument or environment variable
         const mdbPath = MS_ACCESS_DB_PATH
 

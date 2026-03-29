@@ -160,6 +160,7 @@ export const projects = sqliteTable(
         offerAmount: real("offerAmount"),
         status: text("status").$type<ProjectStatus>().notNull().default("active"),
         ended: integer("ended", { mode: "boolean" }).default(false),
+        billingStatus: text("billing_status"),
         archived: integer("archived", { mode: "boolean" }).default(false),
         ...timestamps,
     },

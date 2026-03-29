@@ -139,6 +139,7 @@ const { errorAlert } = useAlert()
 const filters = reactive<InvoiceFilterModel>({
     status: "",
     visaByUserId: null,
+    inChargeUserId: null,
     fromDate: undefined,
     toDate: undefined,
     sortBy: "date",
@@ -187,6 +188,7 @@ const onSortChange = (sort: { key: string; direction: "asc" | "desc" }) => {
 const onFilterChange = (newFilters: InvoiceFilterModel) => {
     filters.status = newFilters.status
     filters.visaByUserId = newFilters.visaByUserId
+    filters.inChargeUserId = newFilters.inChargeUserId
     filters.fromDate = newFilters.fromDate
     filters.toDate = newFilters.toDate
     filters.sortBy = newFilters.sortBy
@@ -259,6 +261,9 @@ const loadInvoices = async (page?: number) => {
         }
         if (filters.visaByUserId) {
             query.visaByUserId = filters.visaByUserId
+        }
+        if (filters.inChargeUserId) {
+            query.inChargeUserId = filters.inChargeUserId
         }
         if (filters.fromDate) {
             query.fromDate = filters.fromDate

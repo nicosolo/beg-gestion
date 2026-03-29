@@ -3,14 +3,23 @@
         <div class="flex flex-col lg:flex-row gap-4">
             <!-- Left section: Filters -->
             <div class="flex-1">
-                <!-- Row 1: Status, Visa User, Sort -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Row 1: Status, In Charge, Visa User, Sort -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="form-group">
                         <Label>{{ $t("invoice.status.title") }}</Label>
                         <InvoiceStatusSelect
                             :model-value="filterData.status || undefined"
                             allow-deselect
                             @update:model-value="filterData.status = $event || ''; emitChange()"
+                        />
+                    </div>
+                    <div class="form-group">
+                        <Label>{{ $t("invoice.inChargeUser") }}</Label>
+                        <UserSelect
+                            id="inChargeUserIdFilter"
+                            v-model="filterData.inChargeUserId"
+                            :placeholder="$t('common.all')"
+                            @update:model-value="emitChange"
                         />
                     </div>
                     <div class="form-group" v-if="isRole('admin')">
@@ -92,6 +101,7 @@ export type SortOrder = "asc" | "desc"
 export interface InvoiceFilterModel {
     status: InvoiceStatus | ""
     visaByUserId: number | null
+    inChargeUserId: number | null
     fromDate?: Date
     toDate?: Date
     sortBy: InvoiceSortBy
@@ -114,6 +124,7 @@ const emit = defineEmits<{
 const filterData = reactive<InvoiceFilterModel>({
     status: props.filter.status,
     visaByUserId: props.filter.visaByUserId,
+    inChargeUserId: props.filter.inChargeUserId,
     fromDate: props.filter.fromDate,
     toDate: props.filter.toDate,
     sortBy: props.filter.sortBy,
@@ -139,6 +150,7 @@ watch(
     (newFilter) => {
         filterData.status = newFilter.status
         filterData.visaByUserId = newFilter.visaByUserId
+        filterData.inChargeUserId = newFilter.inChargeUserId
         filterData.fromDate = newFilter.fromDate
         filterData.toDate = newFilter.toDate
         filterData.sortBy = newFilter.sortBy
@@ -156,6 +168,7 @@ const emitChange = () => {
 const resetFilters = () => {
     filterData.status = ""
     filterData.visaByUserId = null
+    filterData.inChargeUserId = null
     filterData.fromDate = undefined
     filterData.toDate = undefined
     filterData.sortBy = "date"

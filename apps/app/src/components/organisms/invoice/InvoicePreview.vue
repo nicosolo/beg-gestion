@@ -58,11 +58,16 @@
                             Visa
                         </td>
                         <td class="border border-gray-300 p-1 text-sm">
-                            <template v-if="invoice.visaByUserId || invoice.visaBy">
-                                {{ invoice.visaDate ? formatDate(invoice.visaDate) : "-" }} -
-                                {{  invoice.visaBy || "-" }}
+                            <template v-if="invoice.visaBy">
+                                {{ formatDate(invoice.visaDate) }} -
+                                {{ invoice.visaBy }}
                             </template>
-                            <template v-else> Pas de visa </template>
+                            <template v-else>
+                                Pas de visa
+                                <span v-if="invoice.visaByUser" class="text-gray-500">
+                                    (à viser par {{ invoice.visaByUser.firstName }})
+                                </span>
+                            </template>
                         </td>
                     </tr>
                     <tr v-if="invoice.inChargeUserId">
@@ -306,7 +311,7 @@
                     <tr
                         v-if="
                             invoice.expensesPackagePercentage !== null &&
-                                invoice.expensesTotalExpenses !== null
+                            invoice.expensesTotalExpenses !== null
                         "
                     >
                         <td class="border border-gray-300 p-1 text-sm" colspan="2">
@@ -694,7 +699,6 @@ const projectUrl = computed(() => {
     const path = `/project/${props.invoice.project.id}/view`
     return `beg-gestion:/${path}`
 })
-
 </script>
 
 <style scoped>
