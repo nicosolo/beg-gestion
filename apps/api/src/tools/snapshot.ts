@@ -50,33 +50,16 @@ export function classifySnapshots(
     const tiers = new Map<string, SnapshotTier>()
     const nowMs = now.getTime()
 
-    // Hourly: 120 buckets (0-119)
-    const hourlyFilled = new Set<number>()
-    for (const s of sorted) {
-        const bucket = Math.floor(Math.max(0, nowMs - s.timestamp.getTime()) / HOUR_MS)
-        if (bucket <= 119 && !hourlyFilled.has(bucket)) {
-            hourlyFilled.add(bucket)
-            tiers.set(s.name, "hourly")
-        }
-    }
+    // Process highest tier first so lower tiers overwrite — the prefix
+    // reflects the *lowest* tier keeping a snapshot (hourly wins over daily, etc.)
 
-    // Daily: 7 buckets (0-6)
-    const dailyFilled = new Set<number>()
+    // Yearly: keep one per calendar year, no limit
+    const yearlyFilled = new Set<number>()
     for (const s of sorted) {
-        const bucket = Math.floor(Math.max(0, nowMs - s.timestamp.getTime()) / DAY_MS)
-        if (bucket <= 6 && !dailyFilled.has(bucket)) {
-            dailyFilled.add(bucket)
-            tiers.set(s.name, "daily")
-        }
-    }
-
-    // Weekly: 8 buckets (0-7)
-    const weeklyFilled = new Set<number>()
-    for (const s of sorted) {
-        const bucket = Math.floor(Math.max(0, nowMs - s.timestamp.getTime()) / WEEK_MS)
-        if (bucket <= 7 && !weeklyFilled.has(bucket)) {
-            weeklyFilled.add(bucket)
-            tiers.set(s.name, "weekly")
+        const bucket = now.getUTCFullYear() - s.timestamp.getUTCFullYear()
+        if (bucket >= 1 && !yearlyFilled.has(bucket)) {
+            yearlyFilled.add(bucket)
+            tiers.set(s.name, "yearly")
         }
     }
 
@@ -92,13 +75,33 @@ export function classifySnapshots(
         }
     }
 
-    // Yearly: keep one per calendar year, no limit
-    const yearlyFilled = new Set<number>()
+    // Weekly: 8 buckets (0-7)
+    const weeklyFilled = new Set<number>()
     for (const s of sorted) {
-        const bucket = now.getUTCFullYear() - s.timestamp.getUTCFullYear()
-        if (bucket >= 1 && !yearlyFilled.has(bucket)) {
-            yearlyFilled.add(bucket)
-            tiers.set(s.name, "yearly")
+        const bucket = Math.floor(Math.max(0, nowMs - s.timestamp.getTime()) / WEEK_MS)
+        if (bucket <= 7 && !weeklyFilled.has(bucket)) {
+            weeklyFilled.add(bucket)
+            tiers.set(s.name, "weekly")
+        }
+    }
+
+    // Daily: 7 buckets (0-6)
+    const dailyFilled = new Set<number>()
+    for (const s of sorted) {
+        const bucket = Math.floor(Math.max(0, nowMs - s.timestamp.getTime()) / DAY_MS)
+        if (bucket <= 6 && !dailyFilled.has(bucket)) {
+            dailyFilled.add(bucket)
+            tiers.set(s.name, "daily")
+        }
+    }
+
+    // Hourly: 120 buckets (0-119)
+    const hourlyFilled = new Set<number>()
+    for (const s of sorted) {
+        const bucket = Math.floor(Math.max(0, nowMs - s.timestamp.getTime()) / HOUR_MS)
+        if (bucket <= 120 && !hourlyFilled.has(bucket)) {
+            hourlyFilled.add(bucket)
+            tiers.set(s.name, "hourly")
         }
     }
 

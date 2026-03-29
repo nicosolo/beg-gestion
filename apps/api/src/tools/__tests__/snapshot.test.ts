@@ -172,42 +172,35 @@ describe("selectSnapshotsToDelete", () => {
 describe("classifySnapshots", () => {
     const now = new Date("2026-06-15T12:00:00Z")
 
-    test("snapshot stays hourly when a newer one fills higher tiers", () => {
-        const newer = snapsAt(hoursAgo(now, 1))
-        const older = snapsAt(hoursAgo(now, 5))
-        const { tiers } = classifySnapshots([newer, older], now)
-        // newer fills daily/weekly/monthly bucket 0, older stays hourly
-        expect(tiers.get(older)).toBe("hourly")
+    test("recent snapshot classified as hourly (lowest applicable tier)", () => {
+        const name = snapsAt(hoursAgo(now, 1))
+        const { tiers } = classifySnapshots([name], now)
+        expect(tiers.get(name)).toBe("hourly")
     })
 
-    test("snapshot promoted to daily when in daily range", () => {
-        const name = snapsAt(daysAgo(now, 3))
-        const { tiers } = classifySnapshots([snapsAt(hoursAgo(now, 1)), name], now)
+    test("snapshot outside hourly range classified as daily", () => {
+        // 6 days ago = outside 120h hourly range, in daily bucket 6
+        const recent = snapsAt(hoursAgo(now, 1))
+        const name = snapsAt(daysAgo(now, 6))
+        const { tiers } = classifySnapshots([recent, name], now)
         expect(tiers.get(name)).toBe("daily")
     })
 
-    test("snapshot promoted to weekly", () => {
+    test("snapshot outside daily range classified as weekly", () => {
         const name = snapsAt(daysAgo(now, 14))
         const { tiers } = classifySnapshots([snapsAt(hoursAgo(now, 1)), name], now)
         expect(tiers.get(name)).toBe("weekly")
     })
 
-    test("snapshot promoted to monthly", () => {
+    test("snapshot outside weekly range classified as monthly", () => {
         const name = snapsAt(new Date("2026-03-15T12:00:00Z"))
         const { tiers } = classifySnapshots([snapsAt(hoursAgo(now, 1)), name], now)
         expect(tiers.get(name)).toBe("monthly")
     })
 
-    test("snapshot promoted to yearly", () => {
+    test("snapshot from prior year classified as yearly", () => {
         const name = snapsAt(new Date("2025-06-15T12:00:00Z"))
         const { tiers } = classifySnapshots([snapsAt(hoursAgo(now, 1)), name], now)
         expect(tiers.get(name)).toBe("yearly")
-    })
-
-    test("single recent snapshot promoted to monthly (highest applicable tier)", () => {
-        const name = snapsAt(now)
-        const { tiers } = classifySnapshots([name], now)
-        // fills bucket 0 for hourly, daily, weekly, monthly — last write wins
-        expect(tiers.get(name)).toBe("monthly")
     })
 })
