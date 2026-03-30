@@ -45,19 +45,19 @@
             <div class="flex flex-wrap gap-6 text-sm">
                 <div v-if="totals.duration !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                        >{{ $t("time.columns.duration") }}:</span
+                    >{{ $t("time.columns.duration") }}:</span
                     >
                     <span class="text-gray-900">{{ formatDuration(totals.duration || 0) }}</span>
                 </div>
                 <div v-if="totals.kilometers !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                        >{{ $t("time.columns.kilometers") }}:</span
+                    >{{ $t("time.columns.kilometers") }}:</span
                     >
                     <span class="text-gray-900">{{ formatNumber(totals.kilometers || 0) }} km</span>
                 </div>
                 <div v-if="totals.expenses !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                        >{{ $t("time.columns.expenses") }}:</span
+                    >{{ $t("time.columns.expenses") }}:</span
                     >
                     <span class="text-gray-900">{{ formatCurrency(totals.expenses || 0) }}</span>
                 </div>
@@ -81,82 +81,56 @@
                 <form
                     @submit.prevent="emit('quick-add-submit')"
                     @keydown.enter.prevent="emit('quick-add-submit')"
-                    class="grid border-b-2 border-indigo-200 bg-indigo-50/50"
-                    :style="{ gridTemplateColumns: gtc }"
+                    class="border-b-2 border-indigo-200 bg-indigo-50/50"
                 >
+                    <!-- Desktop: grid row matching table columns -->
                     <div
-                        v-for="col in columns"
-                        :key="'qa-' + col.key"
-                        class="px-2 py-1 border-r border-gray-200 last:border-r-0 min-w-0 flex items-center"
+                        v-if="isDesktop"
+                        class="grid"
+                        :style="{ gridTemplateColumns: gtc }"
                     >
-                        <DateField
-                            v-if="col.key === 'date'"
-                            class="w-full"
-                            input-class-name="!px-1"
-                            v-model="quickAdd.date"
-                        />
-                        <ProjectSelect
-                            v-else-if="col.key === 'project'"
-                            v-model="quickAdd.projectId"
-                            :class-name="
-                                'w-full' + (qaInvalid('project') ? ' !border-red-500' : '')
-                            "
-                        />
-                        <ActivityTypeSelect
-                            v-else-if="col.key === 'activityType'"
-                            v-model="quickAdd.activityTypeId"
-                            :class-name="
-                                'w-full !px-1' +
-                                (qaInvalid('activityType') ? ' !border-red-500' : '')
-                            "
-                        />
-                        <InputNumber
-                            v-else-if="col.key === 'duration'"
-                            v-model.number="quickAdd.duration"
-                            type="time"
-                            :min="0"
-                            :class="
-                                'w-full bg-white' +
-                                (qaInvalid('duration') ? ' !border-red-500' : '')
-                            "
-                        />
-                        <InputNumber
-                            v-else-if="col.key === 'kilometers'"
-                            v-model.number="quickAdd.kilometers"
-                            type="distance"
-                            :min="0"
-                            class="w-full bg-white"
-                        />
-                        <InputNumber
-                            v-else-if="col.key === 'expenses'"
-                            v-model.number="quickAdd.expenses"
-                            type="amount"
-                            :min="0"
-                            class="w-full bg-white"
-                        />
-                        <input
-                            v-else-if="col.key === 'description'"
-                            v-model="quickAdd.description"
-                            type="text"
-                            :placeholder="$t('time.columns.description')"
-                            :class="[
-                                'w-full h-9 pl-3 pr-8 py-2 text-sm border rounded-md outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white',
-                                qaInvalid('description') ? 'border-red-500' : 'border-gray-300',
-                            ]"
-                        />
-                        <div v-else-if="col.key === 'actions'" class="flex justify-end w-full">
-                            <Button
-                                full-width
-                                type="submit"
-                                variant="primary"
-                                size="sm"
-                                :loading="quickAddSaving"
-                                :disabled="!quickAddValid"
-                            >
-                                {{ $t("common.create") }}
-                            </Button>
+                        <div
+                            v-for="col in columns"
+                            :key="'qa-' + col.key"
+                            class="px-2 py-1 border-r border-gray-200 last:border-r-0 min-w-0 flex items-center"
+                        >
+                            <template v-if="qaFields.includes(col.key)">
+                                <QuickAddField
+                                    :col-key="col.key"
+                                    v-model:quick-add="quickAdd"
+                                    :qa-invalid="qaInvalid"
+                                    :quick-add-saving="quickAddSaving"
+                                    :quick-add-valid="quickAddValid"
+                                />
+                            </template>
                         </div>
-                        <!-- Other columns (user, rateClass, billed, disbursement): empty -->
+                    </div>
+                    <!-- Mobile: vertical card layout matching DataTable mobile rows -->
+                    <div v-else class="flex flex-col">
+                        <div
+                            v-for="col in qaColumns"
+                            :key="'qa-m-' + col.key"
+                            class="border-b border-gray-100/50 last:border-b-0"
+                        >
+                            <div class="flex">
+                                <div
+                                    v-if="col.key !== 'actions'"
+                                    class="px-2 py-1 text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3 flex items-center"
+                                >
+                                    {{ col.label }}
+                                </div>
+                                <div class="px-3 py-1 flex-1">
+                                    <QuickAddField
+                                        :col-key="col.key"
+                                        :quick-add="quickAdd"
+                                        :qa-invalid="qaInvalid"
+                                        :quick-add-saving="quickAddSaving"
+                                        :quick-add-valid="quickAddValid"
+                                        @quick-add-submit="emit('quick-add-submit')"
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </template>
@@ -240,19 +214,19 @@
             <div class="flex flex-wrap gap-6 text-sm">
                 <div v-if="totals.duration !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                        >{{ $t("time.columns.duration") }}:</span
+                    >{{ $t("time.columns.duration") }}:</span
                     >
                     <span class="text-gray-900">{{ formatDuration(totals.duration || 0) }}</span>
                 </div>
                 <div v-if="totals.kilometers !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                        >{{ $t("time.columns.kilometers") }}:</span
+                    >{{ $t("time.columns.kilometers") }}:</span
                     >
                     <span class="text-gray-900">{{ formatNumber(totals.kilometers || 0) }} km</span>
                 </div>
                 <div v-if="totals.expenses !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                        >{{ $t("time.columns.expenses") }}:</span
+                    >{{ $t("time.columns.expenses") }}:</span
                     >
                     <span class="text-gray-900">{{ formatCurrency(totals.expenses || 0) }}</span>
                 </div>
@@ -264,6 +238,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue"
 import { useI18n } from "vue-i18n"
+import { useMediaQuery } from "@vueuse/core"
 import DataTable, { type Column } from "@/components/molecules/DataTable.vue"
 import Button from "@/components/atoms/Button.vue"
 import { useFormat } from "@/composables/utils/useFormat"
@@ -275,10 +250,7 @@ import TruncateWithTooltip from "@/components/atoms/TruncateWithTooltip.vue"
 import { useAlert } from "@/composables/utils/useAlert"
 import { useAuthStore } from "@/stores/auth"
 import { useActivityLock } from "@/composables/utils/useActivityLock"
-import ProjectSelect from "@/components/organisms/project/ProjectSelect.vue"
-import ActivityTypeSelect from "@/components/organisms/activityType/ActivityTypeSelect.vue"
-import InputNumber from "@/components/atoms/InputNumber.vue"
-import DateField from "@/components/molecules/DateField.vue"
+import QuickAddField from "./QuickAddField.vue"
 
 const { isRole } = useAuthStore()
 const { formatDuration, formatDate, formatNumber, formatCurrency } = useFormat()
@@ -315,6 +287,15 @@ const emit = defineEmits<{
     "activities-updated": []
     "quick-add-submit": []
 }>()
+
+// Match DataTable's mobile breakpoint (md = 768px)
+const isDesktop = useMediaQuery("(min-width: 768px)")
+
+// Quick-add field keys (columns that have inputs)
+const qaFields = ["date", "project", "activityType", "duration", "kilometers", "expenses", "description", "actions"]
+
+// Filtered columns for mobile quick-add (only fields with inputs)
+const qaColumns = computed(() => columns.value.filter((col) => qaFields.includes(col.key)))
 
 // Quick-add validation
 const qaInvalid = (field: string) => {

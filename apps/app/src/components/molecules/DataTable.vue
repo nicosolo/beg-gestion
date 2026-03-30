@@ -63,11 +63,11 @@
                             <div class="flex">
                                 <div
                                     v-if="!column.actions && !column.fullWidth"
-                                    class="px-2 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2"
+                                    class="px-2 py-1 text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2"
                                 >
                                     {{ column.label }}
                                 </div>
-                                <div class="px-3 py-2 flex-1">
+                                <div class="px-3 py-1 flex-1">
                                     <div
                                         v-if="column.fullWidth"
                                         class="text-xs font-medium text-gray-500 uppercase tracking-wider -mx-1"
@@ -116,11 +116,11 @@
                         class="flex border-b border-gray-200 last:border-b-0"
                     >
                         <div
-                            class="px-2 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2"
+                            class="px-2 py-1 text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2"
                         >
                             {{ column.label }}
                         </div>
-                        <div class="px-3 py-2 font-medium flex-1">
+                        <div class="px-3 py-1 font-medium flex-1">
                             <slot :name="`total:${column.key}`" :column="column"> </slot>
                         </div>
                     </div>
