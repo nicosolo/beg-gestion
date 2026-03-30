@@ -17,8 +17,8 @@ import { computed, ref } from "vue"
 const {
     modelValue,
     type = "number",
-    step = 1,
     min,
+    step,
 } = defineProps<{
     modelValue: number | null
     type?: "percentage" | "amount" | "number" | "distance" | "time"
