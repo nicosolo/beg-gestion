@@ -135,7 +135,7 @@ export default {
             projectCount:
                 "{count} mandat(s) affiché(s) - zoomez ou déplacez la carte pour en voir plus",
             noProjects: "Aucun mandat avec coordonnées à afficher",
-            filterInfo: "Limité à 100 mandats les plus récents",
+            filterInfo: "Limité à 100 sur l'affichage",
         },
         legend: {
             red: "Heures non facturées, dernière activité > 60 jours",
