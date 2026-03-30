@@ -101,15 +101,15 @@ export default {
     auth: {
         login: "Connexion",
         welcome: "Bienvenue",
-        email: "Email",
+        email: "Initiales",
         password: "Mot de passe",
         signIn: "Se connecter",
         loggingIn: "Connexion en cours...",
-        enterEmailOrInitials: "Saisissez email ou initiales",
+        enterEmailOrInitials: "Saisissez vos initiales",
         enterPassword: "Saisissez votre mot de passe",
         invalidCredentials: "Identifiants invalides",
         sessionExpired: "Votre session a expiré. Veuillez vous reconnecter.",
-        bothFieldsRequired: "Veuillez saisir votre email et mot de passe",
+        bothFieldsRequired: "Veuillez saisir vos initiales et mot de passe",
         loginError: "Une erreur est survenue lors de la connexion",
     },
     shared: {
