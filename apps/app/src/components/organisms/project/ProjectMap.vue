@@ -21,9 +21,10 @@ export interface MapBounds {
 
 interface Props {
     projects: ProjectMapItemResponse[]
+    clustering?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), { clustering: true })
 const emit = defineEmits<{
     boundsChanged: [bounds: MapBounds]
 }>()
@@ -245,8 +246,8 @@ const createMarkers = async () => {
         }
     }
 
-    // Add marker clustering with consistent indigo color
-    if (markers.length > 0) {
+    // Add marker clustering
+    if (markers.length > 0 && props.clustering) {
         markerClusterer = new MarkerClusterer({
             map,
             markers,

@@ -56,6 +56,7 @@
 
             <ProjectMap
                 :projects="projects ?? []"
+                :clustering="false"
                 class="min-h-[500px] h-[calc(100vh-800px)] lg:h-[calc(100vh-600px)] md:h-[calc(100vh-500px)] w-full"
                 @bounds-changed="handleBoundsChanged"
             />
