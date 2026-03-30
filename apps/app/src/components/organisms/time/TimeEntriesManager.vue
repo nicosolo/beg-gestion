@@ -88,6 +88,12 @@
                 @activities-updated="loadActivities"
                 :hide-columns="hideColumns"
                 :disable-selection="disableSelection"
+                v-model:quick-add="quickAdd"
+                :quick-add-saving="quickAddSaving"
+                :quick-add-valid="isQuickAddValid"
+                :quick-add-attempted="quickAddAttempted"
+                :show-project-in-quick-add="showProjectFilter"
+                @quick-add-submit="handleQuickAdd"
             />
 
             <Pagination
@@ -114,7 +120,11 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onActivated, computed } from "vue"
-import { useFetchActivityList, useExportActivities } from "@/composables/api/useActivity"
+import {
+    useFetchActivityList,
+    useExportActivities,
+    useCreateActivity,
+} from "@/composables/api/useActivity"
 import TimeFilterPanel from "@/components/organisms/time/TimeFilterPanel.vue"
 import TimeTable from "@/components/organisms/time/TimeTable.vue"
 import Pagination from "@/components/organisms/Pagination.vue"
@@ -122,8 +132,15 @@ import LoadingOverlay from "@/components/atoms/LoadingOverlay.vue"
 import TimeEntryModal from "@/components/organisms/time/TimeEntryModal.vue"
 import Button from "@/components/atoms/Button.vue"
 import DropdownMenu from "@/components/atoms/DropdownMenu.vue"
-import type { ActivityFilter, ActivityResponse, ActivityListResponse } from "@beg/validations"
+import type {
+    ActivityFilter,
+    ActivityResponse,
+    ActivityListResponse,
+    ActivityCreateInput,
+} from "@beg/validations"
 import { useExcelExport } from "@/composables/utils/useExcelExport"
+import { useAlert } from "@/composables/utils/useAlert"
+import { useAuthStore } from "@/stores/auth"
 
 interface Props {
     emptyMessage?: string
@@ -147,6 +164,9 @@ const props = withDefaults(defineProps<Props>(), {
 // API client
 const { get: fetchActivities, loading, data } = useFetchActivityList()
 const { get: exportActivities, loading: exportLoading } = useExportActivities()
+const { post: createActivity, loading: quickAddSaving } = useCreateActivity()
+const { successAlert, errorAlert } = useAlert()
+const { user: currentUser } = useAuthStore()
 
 // Excel export
 const { exportToExcel } = useExcelExport()
@@ -272,6 +292,55 @@ const openAddModal = () => {
 const onTimeEntrySaved = () => {
     // Reload activities to update the list
     loadActivities()
+}
+
+// Quick-add inline form
+const defaultQuickAdd = (): ActivityCreateInput => ({
+    projectId: props.initialFilter?.projectId || 0,
+    activityTypeId: 0,
+    date: new Date(),
+    duration: 0,
+    kilometers: 0,
+    expenses: 0,
+    description: "",
+    billed: false,
+    userId: currentUser?.id,
+})
+
+const quickAdd = ref<ActivityCreateInput>(defaultQuickAdd())
+const quickAddAttempted = ref(false)
+
+const isQuickAddValid = computed(
+    () =>
+        quickAdd.value.projectId > 0 &&
+        !!quickAdd.value.activityTypeId &&
+        Number(quickAdd.value.activityTypeId) > 0 &&
+        quickAdd.value.duration > 0 &&
+        quickAdd.value.description.trim().length > 0
+)
+
+const handleQuickAdd = async () => {
+    quickAddAttempted.value = true
+    if (!isQuickAddValid.value) return
+    try {
+        await createActivity({
+            body: {
+                ...quickAdd.value,
+                activityTypeId: Number(quickAdd.value.activityTypeId),
+            },
+        })
+        successAlert("Entrée créée")
+        quickAddAttempted.value = false
+        // Reset form but keep project and date
+        const prevProjectId = quickAdd.value.projectId
+        const prevDate = quickAdd.value.date
+        quickAdd.value = defaultQuickAdd()
+        quickAdd.value.projectId = prevProjectId
+        quickAdd.value.date = prevDate
+        loadActivities()
+    } catch {
+        errorAlert("Erreur lors de la création")
+    }
 }
 
 // Export handler

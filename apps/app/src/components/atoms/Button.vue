@@ -10,6 +10,7 @@
             variantClasses,
             sizeClasses,
             props.disabled ? 'cursor-not-allowed opacity-60' : '',
+            props.fullWidth ? 'w-full' : '',
             props.className,
         ]"
         :disabled="props.to || props.href ? undefined : props.disabled || props.loading"
@@ -42,6 +43,7 @@ interface Props {
     to?: RouteLocationRaw
     href?: string
     loading?: boolean
+    fullWidth?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {

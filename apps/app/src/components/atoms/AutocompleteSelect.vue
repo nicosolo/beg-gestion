@@ -39,7 +39,7 @@
         <!-- Dropdown -->
         <div
             v-if="showDropdown"
-            class="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-h-30 max-h-60 overflow-auto"
+            class="absolute z-20 w-full md:min-w-96 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-h-30 max-h-60 overflow-auto"
         >
             <!-- Min search length hint (async mode only) -->
             <div

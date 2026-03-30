@@ -1,9 +1,6 @@
 <template>
     <div class="bg-white rounded-lg drop-shadow-sm">
-        <div v-if="items.length === 0" class="p-8 text-center">
-            <p class="text-gray-500">{{ emptyMessage }}</p>
-        </div>
-        <div v-else>
+        <div>
             <!-- Header row (visible only on desktop) -->
             <div
                 v-if="isDesktop"
@@ -28,6 +25,13 @@
                         </div>
                     </TruncateWithTooltip>
                 </div>
+            </div>
+
+            <!-- Before rows slot -->
+            <slot name="before-rows" :grid-template-columns="gridTemplateColumns" :columns="columns" />
+
+            <div v-if="items.length === 0 && !$slots['before-rows']" class="p-8 text-center">
+                <p class="text-gray-500">{{ emptyMessage }}</p>
             </div>
 
             <!-- Data rows -->

@@ -45,19 +45,19 @@
             <div class="flex flex-wrap gap-6 text-sm">
                 <div v-if="totals.duration !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                    >{{ $t("time.columns.duration") }}:</span
+                        >{{ $t("time.columns.duration") }}:</span
                     >
                     <span class="text-gray-900">{{ formatDuration(totals.duration || 0) }}</span>
                 </div>
                 <div v-if="totals.kilometers !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                    >{{ $t("time.columns.kilometers") }}:</span
+                        >{{ $t("time.columns.kilometers") }}:</span
                     >
                     <span class="text-gray-900">{{ formatNumber(totals.kilometers || 0) }} km</span>
                 </div>
                 <div v-if="totals.expenses !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                    >{{ $t("time.columns.expenses") }}:</span
+                        >{{ $t("time.columns.expenses") }}:</span
                     >
                     <span class="text-gray-900">{{ formatCurrency(totals.expenses || 0) }}</span>
                 </div>
@@ -76,6 +76,91 @@
             :selectable="!disableSelection"
             mobile-breakpoint="md"
         >
+            <!-- Inline quick-add row -->
+            <template v-if="quickAdd" #before-rows="{ gridTemplateColumns: gtc }">
+                <form
+                    @submit.prevent="emit('quick-add-submit')"
+                    @keydown.enter.prevent="emit('quick-add-submit')"
+                    class="hidden md:grid border-b-2 border-indigo-200 bg-indigo-50/50"
+                    :style="{ gridTemplateColumns: gtc }"
+                >
+                    <div
+                        v-for="col in columns"
+                        :key="'qa-' + col.key"
+                        class="px-2 py-1 border-r border-gray-200 last:border-r-0 min-w-0 flex items-center"
+                    >
+                        <input
+                            v-if="col.key === 'date'"
+                            type="date"
+                            v-model="quickAddDateStr"
+                            class="!px-1 w-full h-9 pl-3 pr-1 py-2 text-sm border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                        />
+                        <ProjectSelect
+                            v-else-if="col.key === 'project'"
+                            v-model="quickAdd.projectId"
+                            :class-name="
+                                'w-full' + (qaInvalid('project') ? ' !border-red-500' : '')
+                            "
+                        />
+                        <ActivityTypeSelect
+                            v-else-if="col.key === 'activityType'"
+                            v-model="quickAdd.activityTypeId"
+                            :class-name="
+                                'w-full !px-1' +
+                                (qaInvalid('activityType') ? ' !border-red-500' : '')
+                            "
+                        />
+                        <InputNumber
+                            v-else-if="col.key === 'duration'"
+                            v-model.number="quickAdd.duration"
+                            type="time"
+                            :min="0"
+                            :class="
+                                'w-full bg-white' +
+                                (qaInvalid('duration') ? ' !border-red-500' : '')
+                            "
+                        />
+                        <InputNumber
+                            v-else-if="col.key === 'kilometers'"
+                            v-model.number="quickAdd.kilometers"
+                            type="distance"
+                            :min="0"
+                            class="w-full bg-white"
+                        />
+                        <InputNumber
+                            v-else-if="col.key === 'expenses'"
+                            v-model.number="quickAdd.expenses"
+                            type="amount"
+                            :min="0"
+                            class="w-full bg-white"
+                        />
+                        <input
+                            v-else-if="col.key === 'description'"
+                            v-model="quickAdd.description"
+                            type="text"
+                            :placeholder="$t('time.columns.description')"
+                            :class="[
+                                'w-full h-9 pl-3 pr-8 py-2 text-sm border rounded-md outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white',
+                                qaInvalid('description') ? 'border-red-500' : 'border-gray-300',
+                            ]"
+                        />
+                        <div v-else-if="col.key === 'actions'" class="flex justify-end w-full">
+                            <Button
+                                full-width
+                                type="submit"
+                                variant="primary"
+                                size="sm"
+                                :loading="quickAddSaving"
+                                :disabled="!quickAddValid"
+                            >
+                                {{ $t("common.create") }}
+                            </Button>
+                        </div>
+                        <!-- Other columns (user, rateClass, billed, disbursement): empty -->
+                    </div>
+                </form>
+            </template>
+
             <template #cell:user="{ item }">
                 {{ item.user ? `${item.user.initials}` : "-" }}
             </template>
@@ -155,19 +240,19 @@
             <div class="flex flex-wrap gap-6 text-sm">
                 <div v-if="totals.duration !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                    >{{ $t("time.columns.duration") }}:</span
+                        >{{ $t("time.columns.duration") }}:</span
                     >
                     <span class="text-gray-900">{{ formatDuration(totals.duration || 0) }}</span>
                 </div>
                 <div v-if="totals.kilometers !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                    >{{ $t("time.columns.kilometers") }}:</span
+                        >{{ $t("time.columns.kilometers") }}:</span
                     >
                     <span class="text-gray-900">{{ formatNumber(totals.kilometers || 0) }} km</span>
                 </div>
                 <div v-if="totals.expenses !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                    >{{ $t("time.columns.expenses") }}:</span
+                        >{{ $t("time.columns.expenses") }}:</span
                     >
                     <span class="text-gray-900">{{ formatCurrency(totals.expenses || 0) }}</span>
                 </div>
@@ -184,12 +269,15 @@ import Button from "@/components/atoms/Button.vue"
 import { useFormat } from "@/composables/utils/useFormat"
 import { useUpdateActivity } from "@/composables/api/useActivity"
 import { useBulkUpdateActivities } from "@/composables/api/useActivityBulk"
-import type { ActivityResponse } from "@beg/validations"
+import type { ActivityResponse, ActivityCreateInput } from "@beg/validations"
 import { truncateText } from "@/utils/text"
 import TruncateWithTooltip from "@/components/atoms/TruncateWithTooltip.vue"
 import { useAlert } from "@/composables/utils/useAlert"
 import { useAuthStore } from "@/stores/auth"
 import { useActivityLock } from "@/composables/utils/useActivityLock"
+import ProjectSelect from "@/components/organisms/project/ProjectSelect.vue"
+import ActivityTypeSelect from "@/components/organisms/activityType/ActivityTypeSelect.vue"
+import InputNumber from "@/components/atoms/InputNumber.vue"
 
 const { isRole } = useAuthStore()
 const { formatDuration, formatDate, formatNumber, formatCurrency } = useFormat()
@@ -211,15 +299,54 @@ interface Props {
         direction: "asc" | "desc"
     }
     disableSelection?: boolean
+    quickAddSaving?: boolean
+    quickAddValid?: boolean
+    quickAddAttempted?: boolean
+    showProjectInQuickAdd?: boolean
 }
 
 const props = defineProps<Props>()
+const quickAdd = defineModel<ActivityCreateInput | null>("quickAdd", { default: null })
 
 const emit = defineEmits<{
     "sort-change": [sort: { key: string; direction: "asc" | "desc" }]
     edit: [activityId: number]
     "activities-updated": []
+    "quick-add-submit": []
 }>()
+
+// Quick-add validation
+const qaInvalid = (field: string) => {
+    if (!props.quickAddAttempted || !quickAdd.value) return false
+    const v = quickAdd.value
+    switch (field) {
+        case "project":
+            return !v.projectId || v.projectId <= 0
+        case "activityType":
+            return !v.activityTypeId || Number(v.activityTypeId) <= 0
+        case "duration":
+            return !v.duration || v.duration <= 0
+        case "description":
+            return !v.description?.trim()
+        default:
+            return false
+    }
+}
+
+// Quick-add date string computed
+const quickAddDateStr = computed({
+    get: () => {
+        const d = quickAdd.value?.date
+        if (!d) return ""
+        const date = d instanceof Date ? d : new Date(d)
+        return date.toISOString().split("T")[0]
+    },
+    set: (val: string) => {
+        if (quickAdd.value) {
+            quickAdd.value.date = val ? new Date(val + "T00:00:00") : new Date()
+        }
+    },
+})
 
 // API composables
 const updateActivityApi = useUpdateActivity()
@@ -230,7 +357,7 @@ const selectedRows = ref<Set<string | number>>(new Set())
 const dataTableRef = ref<any>(null)
 
 const defaultColumns: Column[] = [
-    { key: "date", label: t("time.columns.date"), sortKey: "date", width: "7rem" },
+    { key: "date", label: t("time.columns.date"), sortKey: "date", width: "8rem" },
     { key: "user", label: t("time.columns.user"), sortKey: "userId", width: "3rem" },
     { key: "rateClass", label: t("time.columns.rateClass"), width: "3rem" },
     { key: "project", label: t("time.columns.project"), sortKey: "projectId", width: "11rem" },
