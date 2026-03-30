@@ -7,6 +7,7 @@
             :disabled="disabled"
             :min="minString"
             :max="maxString"
+            :class="inputClassName"
             @update:model-value="handleDateChange"
         />
     </div>
@@ -24,21 +25,30 @@ interface DateFieldProps {
     labelClassName?: string
     min?: Date
     max?: Date
+    inputClassName?: string
 }
 
-const { label, modelValue, disabled, labelClassName, min, max } = defineProps<DateFieldProps>()
+const { label, modelValue, disabled, labelClassName, min, max, inputClassName } =
+    defineProps<DateFieldProps>()
 
 const emit = defineEmits<{
     (e: "update:modelValue", value?: Date): void
 }>()
 
+function toLocalDateString(date: Date) {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, "0")
+    const day = String(date.getDate()).padStart(2, "0")
+    return `${year}-${month}-${day}`
+}
+
 const dateString = computed(() => {
     if (!modelValue) return ""
-    return modelValue.toISOString().split("T")[0]
+    return toLocalDateString(modelValue)
 })
 
-const minString = computed(() => min?.toISOString().split("T")[0])
-const maxString = computed(() => max?.toISOString().split("T")[0])
+const minString = computed(() => (min ? toLocalDateString(min) : undefined))
+const maxString = computed(() => (max ? toLocalDateString(max) : undefined))
 
 function handleDateChange(value: string) {
     if (!value) {

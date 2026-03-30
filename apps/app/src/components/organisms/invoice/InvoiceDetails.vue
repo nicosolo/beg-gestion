@@ -781,9 +781,9 @@ watch(
 )
 // Discount and package type states
 const discountType = ref<"percentage" | "fixed">(
-    invoice.value.feesDiscountAmount && invoice.value.feesDiscountAmount > 0
-        ? "fixed"
-        : "percentage"
+    invoice.value.feesDiscountPercentage && invoice.value.feesDiscountPercentage > 0
+        ? "percentage"
+        : "fixed"
 )
 const packageType = ref<"percentage" | "fixed">(
     invoice.value.expensesPackagePercentage && invoice.value.expensesPackagePercentage > 0

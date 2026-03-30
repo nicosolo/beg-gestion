@@ -45,19 +45,19 @@
             <div class="flex flex-wrap gap-6 text-sm">
                 <div v-if="totals.duration !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                    >{{ $t("time.columns.duration") }}:</span
+                        >{{ $t("time.columns.duration") }}:</span
                     >
                     <span class="text-gray-900">{{ formatDuration(totals.duration || 0) }}</span>
                 </div>
                 <div v-if="totals.kilometers !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                    >{{ $t("time.columns.kilometers") }}:</span
+                        >{{ $t("time.columns.kilometers") }}:</span
                     >
                     <span class="text-gray-900">{{ formatNumber(totals.kilometers || 0) }} km</span>
                 </div>
                 <div v-if="totals.expenses !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                    >{{ $t("time.columns.expenses") }}:</span
+                        >{{ $t("time.columns.expenses") }}:</span
                     >
                     <span class="text-gray-900">{{ formatCurrency(totals.expenses || 0) }}</span>
                 </div>
@@ -81,7 +81,7 @@
                 <form
                     @submit.prevent="emit('quick-add-submit')"
                     @keydown.enter.prevent="emit('quick-add-submit')"
-                    class="hidden md:grid border-b-2 border-indigo-200 bg-indigo-50/50"
+                    class="grid border-b-2 border-indigo-200 bg-indigo-50/50"
                     :style="{ gridTemplateColumns: gtc }"
                 >
                     <div
@@ -89,11 +89,11 @@
                         :key="'qa-' + col.key"
                         class="px-2 py-1 border-r border-gray-200 last:border-r-0 min-w-0 flex items-center"
                     >
-                        <input
+                        <DateField
                             v-if="col.key === 'date'"
-                            type="date"
-                            v-model="quickAddDateStr"
-                            class="!px-1 w-full h-9 pl-3 pr-1 py-2 text-sm border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                            class="w-full"
+                            input-class-name="!px-1"
+                            v-model="quickAdd.date"
                         />
                         <ProjectSelect
                             v-else-if="col.key === 'project'"
@@ -107,7 +107,7 @@
                             v-model="quickAdd.activityTypeId"
                             :class-name="
                                 'w-full !px-1' +
-                                    (qaInvalid('activityType') ? ' !border-red-500' : '')
+                                (qaInvalid('activityType') ? ' !border-red-500' : '')
                             "
                         />
                         <InputNumber
@@ -117,7 +117,7 @@
                             :min="0"
                             :class="
                                 'w-full bg-white' +
-                                    (qaInvalid('duration') ? ' !border-red-500' : '')
+                                (qaInvalid('duration') ? ' !border-red-500' : '')
                             "
                         />
                         <InputNumber
@@ -240,19 +240,19 @@
             <div class="flex flex-wrap gap-6 text-sm">
                 <div v-if="totals.duration !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                    >{{ $t("time.columns.duration") }}:</span
+                        >{{ $t("time.columns.duration") }}:</span
                     >
                     <span class="text-gray-900">{{ formatDuration(totals.duration || 0) }}</span>
                 </div>
                 <div v-if="totals.kilometers !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                    >{{ $t("time.columns.kilometers") }}:</span
+                        >{{ $t("time.columns.kilometers") }}:</span
                     >
                     <span class="text-gray-900">{{ formatNumber(totals.kilometers || 0) }} km</span>
                 </div>
                 <div v-if="totals.expenses !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                    >{{ $t("time.columns.expenses") }}:</span
+                        >{{ $t("time.columns.expenses") }}:</span
                     >
                     <span class="text-gray-900">{{ formatCurrency(totals.expenses || 0) }}</span>
                 </div>
@@ -278,6 +278,7 @@ import { useActivityLock } from "@/composables/utils/useActivityLock"
 import ProjectSelect from "@/components/organisms/project/ProjectSelect.vue"
 import ActivityTypeSelect from "@/components/organisms/activityType/ActivityTypeSelect.vue"
 import InputNumber from "@/components/atoms/InputNumber.vue"
+import DateField from "@/components/molecules/DateField.vue"
 
 const { isRole } = useAuthStore()
 const { formatDuration, formatDate, formatNumber, formatCurrency } = useFormat()
@@ -332,21 +333,6 @@ const qaInvalid = (field: string) => {
             return false
     }
 }
-
-// Quick-add date string computed
-const quickAddDateStr = computed({
-    get: () => {
-        const d = quickAdd.value?.date
-        if (!d) return ""
-        const date = d instanceof Date ? d : new Date(d)
-        return date.toISOString().split("T")[0]
-    },
-    set: (val: string) => {
-        if (quickAdd.value) {
-            quickAdd.value.date = val ? new Date(val + "T00:00:00") : new Date()
-        }
-    },
-})
 
 // API composables
 const updateActivityApi = useUpdateActivity()

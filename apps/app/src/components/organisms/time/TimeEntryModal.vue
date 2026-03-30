@@ -3,6 +3,7 @@
         :model-value="modelValue"
         @update:model-value="$emit('update:modelValue', $event)"
         :title="isNewEntry ? $t('time.new') : $t('common.edit')"
+        mobile-full-screen
     >
         <form @submit.prevent="handleSubmit" ref="formRef" id="timeEntryForm">
             <div class="space-y-4">

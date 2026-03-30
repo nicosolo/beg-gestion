@@ -23,7 +23,6 @@
 
                     <!-- Center modal -->
                     <span
-                        v-if="!mobileFullScreen"
                         class="hidden sm:inline-block sm:align-middle sm:h-screen"
                         aria-hidden="true"
                     >&#8203;</span
@@ -32,7 +31,7 @@
                     <div
                         :class="[
                             mobileFullScreen
-                                ? 'fixed inset-0 bg-white overflow-y-auto sm:relative sm:inset-auto sm:rounded-lg sm:shadow-xl sm:my-8 sm:align-middle sm:w-full'
+                                ? 'fixed inset-0 bg-white overflow-y-auto sm:relative sm:inset-auto sm:inline-block sm:rounded-lg sm:shadow-xl sm:my-8 sm:align-middle sm:w-full'
                                 : 'inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:w-full',
                             sizeClasses,
                         ]"
@@ -40,7 +39,7 @@
                     >
                         <div class="bg-white p-4">
                             <div class="sm:flex sm:items-start">
-                                <div class="mt-3 text-left w-full">
+                                <div class="text-left w-full">
                                     <div class="flex items-center justify-between mb-4">
                                         <h3
                                             class="text-lg leading-6 font-medium text-gray-900"
@@ -51,7 +50,7 @@
                                         <button
                                             v-if="mobileFullScreen"
                                             @click="closeDialog"
-                                            class="sm:hidden p-2 -mr-2 text-gray-400 hover:text-gray-500"
+                                            class="p-2 -mr-2 text-gray-400 hover:text-gray-500"
                                         >
                                             <svg
                                                 class="h-6 w-6"
