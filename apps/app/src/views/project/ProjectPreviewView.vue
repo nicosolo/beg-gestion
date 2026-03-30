@@ -330,11 +330,12 @@
                         :available-users="availableUsers"
                         :initial-filter="{
                             projectId: projectId,
-                            userId: projectData.projectManagers.some(
-                                (pm) => pm.id === authStore.user?.id
-                            )
-                                ? undefined
-                                : authStore.user?.id,
+                            userId: authStore.user?.id && availableUsers.includes(authStore.user.id) &&
+                                !projectData.projectManagers.some(
+                                    (pm) => pm.id === authStore.user?.id
+                                )
+                                ? authStore.user?.id
+                                : undefined,
                             fromDate: initialFromDate,
                             toDate: initialToDate,
                         }"
