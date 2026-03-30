@@ -45,19 +45,19 @@
             <div class="flex flex-wrap gap-6 text-sm">
                 <div v-if="totals.duration !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                        >{{ $t("time.columns.duration") }}:</span
+                    >{{ $t("time.columns.duration") }}:</span
                     >
                     <span class="text-gray-900">{{ formatDuration(totals.duration || 0) }}</span>
                 </div>
                 <div v-if="totals.kilometers !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                        >{{ $t("time.columns.kilometers") }}:</span
+                    >{{ $t("time.columns.kilometers") }}:</span
                     >
                     <span class="text-gray-900">{{ formatNumber(totals.kilometers || 0) }} km</span>
                 </div>
                 <div v-if="totals.expenses !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                        >{{ $t("time.columns.expenses") }}:</span
+                    >{{ $t("time.columns.expenses") }}:</span
                     >
                     <span class="text-gray-900">{{ formatCurrency(totals.expenses || 0) }}</span>
                 </div>
@@ -107,7 +107,7 @@
                             v-model="quickAdd.activityTypeId"
                             :class-name="
                                 'w-full !px-1' +
-                                (qaInvalid('activityType') ? ' !border-red-500' : '')
+                                    (qaInvalid('activityType') ? ' !border-red-500' : '')
                             "
                         />
                         <InputNumber
@@ -117,7 +117,7 @@
                             :min="0"
                             :class="
                                 'w-full bg-white' +
-                                (qaInvalid('duration') ? ' !border-red-500' : '')
+                                    (qaInvalid('duration') ? ' !border-red-500' : '')
                             "
                         />
                         <InputNumber
@@ -240,19 +240,19 @@
             <div class="flex flex-wrap gap-6 text-sm">
                 <div v-if="totals.duration !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                        >{{ $t("time.columns.duration") }}:</span
+                    >{{ $t("time.columns.duration") }}:</span
                     >
                     <span class="text-gray-900">{{ formatDuration(totals.duration || 0) }}</span>
                 </div>
                 <div v-if="totals.kilometers !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                        >{{ $t("time.columns.kilometers") }}:</span
+                    >{{ $t("time.columns.kilometers") }}:</span
                     >
                     <span class="text-gray-900">{{ formatNumber(totals.kilometers || 0) }} km</span>
                 </div>
                 <div v-if="totals.expenses !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                        >{{ $t("time.columns.expenses") }}:</span
+                    >{{ $t("time.columns.expenses") }}:</span
                     >
                     <span class="text-gray-900">{{ formatCurrency(totals.expenses || 0) }}</span>
                 </div>
