@@ -176,15 +176,20 @@ export const projectRepository = {
         const sortExpressions = []
 
         if (ftsRankedIds.length > 0) {
-            const cases = ftsRankedIds.map((id, i) => sql`WHEN ${id} THEN ${i}`)
+            // Boost: exact match (0), starts with (1), others (2)
+            const searchText = text!.trim().toLowerCase()
+            const startsWithPattern = `${searchText}%`
             sortExpressions.push(
-                sql`CASE ${projects.id} ${sql.join(cases, sql` `)} ELSE ${ftsRankedIds.length} END`
+                sql`CASE WHEN LOWER(${projects.name}) = ${searchText} THEN 0 WHEN LOWER(${projects.name}) LIKE ${startsWithPattern} THEN 1 ELSE 2 END`
             )
         }
 
         // Add the main sort column
         const sortDirection = sortOrder === "desc" ? desc(sortColumn) : asc(sortColumn)
         sortExpressions.push(sortDirection)
+
+        // Secondary sort by project number for stable ordering
+        sortExpressions.push(asc(projects.projectNumber))
 
         // Build the main query with a subquery to filter by project manager if needed
         let baseQuery = db
