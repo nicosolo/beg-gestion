@@ -31,7 +31,10 @@ const ensureDragDropListener = async () => {
                 position?: { x: number; y: number }
             }
 
-            const pos = payload.position ?? { x: 0, y: 0 }
+            const rawPos = payload.position ?? { x: 0, y: 0 }
+            // Tauri reports physical (device) pixels; convert to CSS logical pixels
+            const scale = window.devicePixelRatio || 1
+            const pos = { x: rawPos.x / scale, y: rawPos.y / scale }
 
             if (payload.type === "over" || payload.type === "enter") {
                 isDragging.value = true
