@@ -14,7 +14,7 @@ import fs from "fs/promises"
 import { existsSync } from "fs"
 import path from "path"
 import type { InvoiceType, BillingMode, InvoiceStatus } from "@beg/validations"
-import { storeFileFromPath } from "../services/file-storage.service"
+import { storeFileFromPath, deleteFile } from "../services/file-storage.service"
 
 // Base path for mandats in container
 const MANDATS_BASE_PATH = "/mandats"
@@ -400,8 +400,46 @@ async function importInvoiceFromFab(fabPath: string): Promise<boolean> {
             .limit(1)
 
         if (existingInvoice.length > 0) {
-            console.log(`Replacing existing invoice ${invoiceNumber} for project ${projectId}`)
-            await db.delete(invoices).where(eq(invoices.id, existingInvoice[0].id))
+            console.log(
+                `Replacing existing invoice -------------------------------- ${invoiceNumber} for project ${projectId}`
+            )
+            const existingId = existingInvoice[0].id
+
+            // Delete stored files before cascade-deleting DB records
+            const fileTables = [
+                { table: invoiceOffers, col: invoiceOffers.invoiceId, fileCol: invoiceOffers.file },
+                {
+                    table: invoiceAdjudications,
+                    col: invoiceAdjudications.invoiceId,
+                    fileCol: invoiceAdjudications.file,
+                },
+                {
+                    table: invoiceSituations,
+                    col: invoiceSituations.invoiceId,
+                    fileCol: invoiceSituations.file,
+                },
+                {
+                    table: invoiceDocuments,
+                    col: invoiceDocuments.invoiceId,
+                    fileCol: invoiceDocuments.file,
+                },
+            ] as const
+            for (const { table, col, fileCol } of fileTables) {
+                const rows = await db
+                    .select({ file: fileCol })
+                    .from(table)
+                    .where(eq(col, existingId))
+                if (rows.length > 0) {
+                    console.log(
+                        `Deleting files for ${existingId} OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO`
+                    )
+                    await Promise.all(rows.filter((r) => r.file).map((r) => deleteFile(r.file)))
+                }
+            }
+
+            await db.delete(invoices).where(eq(invoices.id, existingId))
+        } else {
+            console.log(`NEW INVOICE -----------------------`)
         }
 
         // Parse dates
@@ -417,6 +455,10 @@ async function importInvoiceFromFab(fabPath: string): Promise<boolean> {
         const recipientAddress = parseMultiline(fabData.datas, "edtEnvoi")
         const otherServices = parseMultiline(fabData.datas, "edtPrestations")
         const note = parseMultiline(fabData.datas, "edtComment")
+        const remarksOtherServices = parseMultiline(fabData.datas, "memAutres")
+        const remarksTravelExpenses = parseMultiline(fabData.datas, "memKm")
+        const remarksExpenses = parseMultiline(fabData.datas, "memFrais")
+        const remarksThirdPartyExpenses = parseMultiline(fabData.datas, "memTiers")
 
         // Parse rate grid values
         const d = fabData.datas
@@ -479,6 +521,10 @@ async function importInvoiceFromFab(fabPath: string): Promise<boolean> {
                 description: otherServices,
                 note,
                 otherServices: "",
+                remarksOtherServices,
+                remarksTravelExpenses,
+                remarksExpenses,
+                remarksThirdPartyExpenses,
                 visaDate: d["edtBon"] === "1" ? visaDate : null,
                 visaByUserId: visaUser?.id ?? null,
                 visaBy: d["edtBon"] === "1" ? (visaUser?.firstName ?? null) : null,
@@ -667,16 +713,6 @@ async function findFabFiles(dir: string): Promise<string[]> {
 export async function importInvoices(mandatsDir: string = MANDATS_BASE_PATH): Promise<void> {
     // console.log("Import is disabled")
     // return
-
-    // Clear all invoice-related tables (child tables first)
-    console.log("🗑️ Clearing invoice tables...")
-    await db.delete(invoiceDocuments)
-    await db.delete(invoiceSituations)
-    await db.delete(invoiceAdjudications)
-    await db.delete(invoiceOffers)
-    await db.delete(invoiceRates)
-    await db.delete(invoices)
-    console.log("✓ Invoice tables cleared")
 
     console.log(`Searching for .fab files in ${mandatsDir}...`)
 
