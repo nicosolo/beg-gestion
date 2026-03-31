@@ -3,7 +3,7 @@
         <div class="w-full lg:w-2/3">
             <section class="mb-8">
                 <h2 class="text-lg font-medium mb-4 bg-gray-100 p-2 text-center">HONORAIRES</h2>
-
+                <!-- <pre>{{ invoice }}</pre> -->
                 <div class="border border-gray-200 rounded overflow-x-scroll">
                     <table
                         class="w-full divide-y divide-gray-200 text-left min-w-[550px] table-fixed"
@@ -72,12 +72,37 @@
                             </tr>
                             <!-- Subtotal row before discount -->
                             <tr class="font-medium bg-gray-50">
-                                <td class="px-4 py-2">Sous-total</td>
+                                <td class="px-4 py-2">Total h.</td>
                                 <td class="px-4 py-2">{{ formatDuration(feesBase) }}</td>
                                 <td class="px-4 py-2">{{ formatDuration(feesAdjusted) }}</td>
                                 <td class="px-4 py-2"></td>
                                 <td class="px-4 py-2 text-right">
                                     {{ formatCurrency(feesFinalTotal) }}
+                                </td>
+                            </tr>
+                            <!-- Other fees row -->
+                            <tr>
+                                <td class="px-4 py-2">Autres honoraires</td>
+                                <td class="px-4 py-2" colspan="3">
+                                    <InputNumber
+                                        v-model="invoice.feesOthers"
+                                        :step="100"
+                                        :currency="true"
+                                        class="w-24"
+                                    />
+                                </td>
+                                <td class="px-4 py-2 text-right">
+                                    {{ formatCurrency(invoice.feesOthers || 0) }}
+                                </td>
+                            </tr>
+                            <!-- Subtotal row before discount -->
+                            <tr class="font-medium bg-gray-50">
+                                <td class="px-4 py-2">Sous-total</td>
+                                <td class="px-4 py-2"></td>
+                                <td class="px-4 py-2"></td>
+                                <td class="px-4 py-2"></td>
+                                <td class="px-4 py-2 text-right">
+                                    {{ formatCurrency(feesTotalBeforeDiscount) }}
                                 </td>
                             </tr>
                             <!-- Discount row -->
@@ -132,7 +157,7 @@
                                             class="w-20"
                                         />
                                         <span v-if="discountType === 'percentage'" class="text-sm"
-                                        >%</span
+                                            >%</span
                                         >
                                         <InputNumber
                                             v-if="discountType === 'fixed'"
@@ -147,25 +172,11 @@
                                 </td>
                                 <td class="px-4 py-2 text-right text-red-600">
                                     <span v-if="hasDiscount"
-                                    >- {{ formatCurrency(discountAmount) }}</span
+                                        >- {{ formatCurrency(discountAmount) }}</span
                                     >
                                 </td>
                             </tr>
-                            <!-- Other fees row -->
-                            <tr>
-                                <td class="px-4 py-2">Autres honoraires</td>
-                                <td class="px-4 py-2" colspan="3">
-                                    <InputNumber
-                                        v-model="invoice.feesOthers"
-                                        :step="100"
-                                        :currency="true"
-                                        class="w-24"
-                                    />
-                                </td>
-                                <td class="px-4 py-2 text-right">
-                                    {{ formatCurrency(invoice.feesOthers || 0) }}
-                                </td>
-                            </tr>
+
                             <!-- Final total row -->
                             <tr class="font-medium bg-gray-100">
                                 <td class="px-4 py-2">TOTAL HONORAIRES</td>
@@ -256,7 +267,7 @@
                                 </td>
                             </tr>
                             <!-- Third-party expenses -->
-                            <tr v-if="!hasPackage">
+                            <tr>
                                 <td class="px-4 py-2">Frais tiers</td>
                                 <td class="px-4 py-2" colspan="3">
                                     <InputNumber
@@ -320,7 +331,7 @@
                                             class="w-20"
                                         />
                                         <span v-if="packageType === 'percentage'" class="text-sm"
-                                        >%</span
+                                            >%</span
                                         >
                                         <InputNumber
                                             v-if="packageType === 'fixed'"
@@ -503,18 +514,18 @@
                 :initial-filter="
                     isNewInvoice
                         ? {
-                            projectId: invoice.projectId,
-                            includeBilled: false,
-                            includeUnbilled: true,
-                            fromDate: undefined,
-                            toDate: undefined,
-                        }
+                              projectId: invoice.projectId,
+                              includeBilled: false,
+                              includeUnbilled: true,
+                              fromDate: undefined,
+                              toDate: undefined,
+                          }
                         : {
-                            invoiceId: parseInt(invoice.id),
-                            limit: 30,
-                            fromDate: undefined,
-                            toDate: undefined,
-                        }
+                              invoiceId: parseInt(invoice.id),
+                              limit: 30,
+                              fromDate: undefined,
+                              toDate: undefined,
+                          }
                 "
                 :show-project-filter="false"
                 :hide-columns="['project', 'billed', 'disbursement', 'actions']"
@@ -665,6 +676,9 @@ const feesBase = computed(() => invoice.value.feesBase || 0)
 const feesAdjusted = computed(() => invoice.value.feesAdjusted || 0)
 const feesFinalTotal = computed(() => invoice.value.feesFinalTotal || 0)
 const feesTotal = computed(() => invoice.value.feesTotal || 0)
+const feesTotalBeforeDiscount = computed(
+    () => invoice.value.feesFinalTotal + invoice.value.feesOthers
+)
 
 const hasDiscount = computed(
     () =>
@@ -695,18 +709,23 @@ watch(
     { deep: true, immediate: true }
 )
 
+// Recalculate discount amount when feesFinalTotal changes (percentage discount)
+watch(
+    () => invoice.value.feesFinalTotal,
+    (feesFinalTotal) => {
+        if ((invoice.value.feesDiscountPercentage || 0) > 0) {
+            invoice.value.feesDiscountAmount =
+                ((feesFinalTotal || 0) * (invoice.value.feesDiscountPercentage || 0)) / 100
+        }
+    }
+)
+
 // Watch for discount/other fees changes and recalculate feesTotal
 watch(
-    [
-        () => invoice.value.feesFinalTotal,
-        () => invoice.value.feesDiscountAmount,
-        () => invoice.value.feesOthers,
-    ],
+    [() => feesTotalBeforeDiscount.value, () => invoice.value.feesDiscountAmount],
     () => {
         invoice.value.feesTotal =
-            (invoice.value.feesFinalTotal || 0) -
-            (invoice.value.feesDiscountAmount || 0) +
-            (invoice.value.feesOthers || 0)
+            feesTotalBeforeDiscount.value - (invoice.value.feesDiscountAmount || 0)
     },
     { immediate: true }
 )
@@ -723,23 +742,31 @@ watch(
 
 // Calculate total expenses: package fixed amount
 watch(
-    () => invoice.value.expensesPackageAmount,
-    (amount) => {
-        if (amount !== null) {
-            invoice.value.expensesTotalExpenses = amount || 0
+    [() => invoice.value.expensesPackageAmount, () => invoice.value.expensesThirdPartyAmount],
+    () => {
+        if (invoice.value.expensesPackageAmount !== null) {
+            invoice.value.expensesTotalExpenses =
+                invoice.value.expensesPackageAmount + invoice.value.expensesThirdPartyAmount || 0
         }
     },
     { immediate: true }
 )
 
-// Calculate total expenses: package percentage
+// Calculate total expenses: package percentage (based on fees before discount)
 watch(
-    [() => invoice.value.expensesPackagePercentage, () => invoice.value.feesTotal],
+    [
+        () => invoice.value.expensesPackagePercentage,
+        () => feesTotalBeforeDiscount.value,
+        () => invoice.value.expensesThirdPartyAmount,
+    ],
     () => {
         if ((invoice.value.expensesPackagePercentage || 0) > 0) {
-            invoice.value.expensesTotalExpenses =
-                ((invoice.value.feesTotal || 0) * (invoice.value.expensesPackagePercentage || 0)) /
+            const amount =
+                ((feesTotalBeforeDiscount.value || 0) *
+                    (invoice.value.expensesPackagePercentage || 0)) /
                 100
+            invoice.value.expensesPackageAmount = amount
+            invoice.value.expensesTotalExpenses = amount + invoice.value.expensesThirdPartyAmount
         }
     },
     { immediate: true }
@@ -889,7 +916,7 @@ const togglePackage = () => {
         // Apply default package based on current type
         if (packageType.value === "percentage") {
             invoice.value.expensesPackagePercentage = 4
-            invoice.value.expensesPackageAmount = (invoice.value.feesTotal || 0) * 0.04
+            invoice.value.expensesPackageAmount = (invoice.value.feesFinalTotal || 0) * 0.04
         } else {
             invoice.value.expensesPackageAmount = 500
             invoice.value.expensesPackagePercentage = 0
@@ -905,7 +932,7 @@ const setPackageType = (type: "percentage" | "fixed") => {
         // Convert to percentage if was fixed
         if (invoice.value.expensesPackagePercentage !== null) {
             invoice.value.expensesPackagePercentage = 4
-            invoice.value.expensesPackageAmount = (invoice.value.feesTotal || 0) * 0.04
+            invoice.value.expensesPackageAmount = (invoice.value.feesFinalTotal || 0) * 0.04
         }
     } else {
         // Convert to fixed if was percentage
@@ -919,9 +946,9 @@ const setPackageType = (type: "percentage" | "fixed") => {
 // Update package percentage
 const updatePackagePercentage = (value: number) => {
     invoice.value.expensesPackagePercentage = value
-    // Calculate package amount based on current feesTotal from invoice
-    if (value && invoice.value.feesTotal) {
-        invoice.value.expensesPackageAmount = (invoice.value.feesTotal * value) / 100
+    // Calculate package amount based on fees before discount
+    if (value && invoice.value.feesFinalTotal) {
+        invoice.value.expensesPackageAmount = (invoice.value.feesFinalTotal * value) / 100
     } else {
         invoice.value.expensesPackageAmount = 0
     }

@@ -311,7 +311,7 @@
                     <tr
                         v-if="
                             invoice.expensesPackagePercentage !== null &&
-                                invoice.expensesTotalExpenses !== null
+                            invoice.expensesTotalExpenses !== null
                         "
                     >
                         <td class="border border-gray-300 p-1 text-sm" colspan="2">
@@ -431,9 +431,10 @@
                         >
                             Remarques prestations
                         </td>
-                        <td class="border border-gray-300 p-1 text-sm">
-                            {{ invoice.remarksOtherServices }}
-                        </td>
+                        <td
+                            class="border border-gray-300 p-1 text-sm"
+                            v-html="nl2br(invoice.remarksOtherServices)"
+                        ></td>
                     </tr>
                     <tr v-if="invoice.remarksTravelExpenses">
                         <td
@@ -441,9 +442,10 @@
                         >
                             Remarques déplacements
                         </td>
-                        <td class="border border-gray-300 p-1 text-sm">
-                            {{ invoice.remarksTravelExpenses }}
-                        </td>
+                        <td
+                            class="border border-gray-300 p-1 text-sm"
+                            v-html="nl2br(invoice.remarksTravelExpenses)"
+                        ></td>
                     </tr>
                     <tr v-if="invoice.remarksExpenses">
                         <td
@@ -451,9 +453,10 @@
                         >
                             Remarques frais
                         </td>
-                        <td class="border border-gray-300 p-1 text-sm">
-                            {{ invoice.remarksExpenses }}
-                        </td>
+                        <td
+                            class="border border-gray-300 p-1 text-sm"
+                            v-html="nl2br(invoice.remarksExpenses)"
+                        ></td>
                     </tr>
                     <tr v-if="invoice.remarksThirdPartyExpenses">
                         <td
@@ -461,9 +464,10 @@
                         >
                             Remarques frais tiers
                         </td>
-                        <td class="border border-gray-300 p-1 text-sm">
-                            {{ invoice.remarksThirdPartyExpenses }}
-                        </td>
+                        <td
+                            class="border border-gray-300 p-1 text-sm"
+                            v-html="nl2br(invoice.remarksThirdPartyExpenses)"
+                        ></td>
                     </tr>
                 </tbody>
             </table>
