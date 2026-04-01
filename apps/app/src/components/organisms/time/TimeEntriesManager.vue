@@ -88,7 +88,7 @@
                 @activities-updated="loadActivities"
                 :hide-columns="hideColumns"
                 :disable-selection="disableSelection"
-                v-model:quick-add="quickAdd"
+                v-model:quick-add="quickAddModel"
                 :quick-add-saving="quickAddSaving"
                 :quick-add-valid="isQuickAddValid"
                 :quick-add-attempted="quickAddAttempted"
@@ -151,6 +151,7 @@ interface Props {
     hideColumns?: string[]
     hideHeader?: boolean
     disableSelection?: boolean
+    hideQuickAdd?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -308,6 +309,12 @@ const defaultQuickAdd = (): ActivityCreateInput => ({
 })
 
 const quickAdd = ref<ActivityCreateInput>(defaultQuickAdd())
+const quickAddModel = computed({
+    get: () => (props.hideQuickAdd ? null : quickAdd.value),
+    set: (v) => {
+        if (v) quickAdd.value = v
+    },
+})
 const quickAddAttempted = ref(false)
 
 const isQuickAddValid = computed(

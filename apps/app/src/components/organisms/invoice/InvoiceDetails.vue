@@ -157,7 +157,7 @@
                                             class="w-20"
                                         />
                                         <span v-if="discountType === 'percentage'" class="text-sm"
-                                            >%</span
+                                        >%</span
                                         >
                                         <InputNumber
                                             v-if="discountType === 'fixed'"
@@ -172,7 +172,7 @@
                                 </td>
                                 <td class="px-4 py-2 text-right text-red-600">
                                     <span v-if="hasDiscount"
-                                        >- {{ formatCurrency(discountAmount) }}</span
+                                    >- {{ formatCurrency(discountAmount) }}</span
                                     >
                                 </td>
                             </tr>
@@ -331,7 +331,7 @@
                                             class="w-20"
                                         />
                                         <span v-if="packageType === 'percentage'" class="text-sm"
-                                            >%</span
+                                        >%</span
                                         >
                                         <InputNumber
                                             v-if="packageType === 'fixed'"
@@ -511,21 +511,22 @@
             </h2>
             <TimeEntriesManager
                 disable-selection
+                hide-quick-add
                 :initial-filter="
                     isNewInvoice
                         ? {
-                              projectId: invoice.projectId,
-                              includeBilled: false,
-                              includeUnbilled: true,
-                              fromDate: undefined,
-                              toDate: undefined,
-                          }
+                            projectId: invoice.projectId,
+                            includeBilled: false,
+                            includeUnbilled: true,
+                            fromDate: undefined,
+                            toDate: undefined,
+                        }
                         : {
-                              invoiceId: parseInt(invoice.id),
-                              limit: 30,
-                              fromDate: undefined,
-                              toDate: undefined,
-                          }
+                            invoiceId: parseInt(invoice.id),
+                            limit: 30,
+                            fromDate: undefined,
+                            toDate: undefined,
+                        }
                 "
                 :show-project-filter="false"
                 :hide-columns="['project', 'billed', 'disbursement', 'actions']"
