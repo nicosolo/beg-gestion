@@ -35,6 +35,7 @@ export const activityTypeRepository = {
             .from(activityTypes)
             .orderBy(asc(activityTypes.code), asc(activityTypes.name))
             .where(conditions.length > 0 ? and(...conditions) : undefined)
+            .orderBy(asc(activityTypes.name))
     },
 
     findById: async (id: number) => {
