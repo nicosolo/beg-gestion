@@ -77,7 +77,7 @@
                                 <td class="px-4 py-2">{{ formatDuration(feesAdjusted) }}</td>
                                 <td class="px-4 py-2"></td>
                                 <td class="px-4 py-2 text-right">
-                                    {{ formatCurrency(feesFinalTotal) }}
+                                    {{ formatCurrency(feesTotal) }}
                                 </td>
                             </tr>
                             <!-- Other fees row -->
@@ -157,7 +157,7 @@
                                             class="w-20"
                                         />
                                         <span v-if="discountType === 'percentage'" class="text-sm"
-                                        >%</span
+                                            >%</span
                                         >
                                         <InputNumber
                                             v-if="discountType === 'fixed'"
@@ -172,7 +172,7 @@
                                 </td>
                                 <td class="px-4 py-2 text-right text-red-600">
                                     <span v-if="hasDiscount"
-                                    >- {{ formatCurrency(discountAmount) }}</span
+                                        >- {{ formatCurrency(discountAmount) }}</span
                                     >
                                 </td>
                             </tr>
@@ -184,7 +184,7 @@
                                 <td class="px-4 py-2"></td>
                                 <td class="px-4 py-2"></td>
                                 <td class="px-4 py-2 text-right font-bold">
-                                    {{ formatCurrency(feesTotal) }}
+                                    {{ formatCurrency(feesFinalTotal) }}
                                 </td>
                             </tr>
                         </tbody>
@@ -331,7 +331,7 @@
                                             class="w-20"
                                         />
                                         <span v-if="packageType === 'percentage'" class="text-sm"
-                                        >%</span
+                                            >%</span
                                         >
                                         <InputNumber
                                             v-if="packageType === 'fixed'"
@@ -515,18 +515,18 @@
                 :initial-filter="
                     isNewInvoice
                         ? {
-                            projectId: invoice.projectId,
-                            includeBilled: false,
-                            includeUnbilled: true,
-                            fromDate: undefined,
-                            toDate: undefined,
-                        }
+                              projectId: invoice.projectId,
+                              includeBilled: false,
+                              includeUnbilled: true,
+                              fromDate: undefined,
+                              toDate: undefined,
+                          }
                         : {
-                            invoiceId: parseInt(invoice.id),
-                            limit: 30,
-                            fromDate: undefined,
-                            toDate: undefined,
-                        }
+                              invoiceId: parseInt(invoice.id),
+                              limit: 30,
+                              fromDate: undefined,
+                              toDate: undefined,
+                          }
                 "
                 :show-project-filter="false"
                 :hide-columns="['project', 'billed', 'disbursement', 'actions']"
@@ -677,9 +677,7 @@ const feesBase = computed(() => invoice.value.feesBase || 0)
 const feesAdjusted = computed(() => invoice.value.feesAdjusted || 0)
 const feesFinalTotal = computed(() => invoice.value.feesFinalTotal || 0)
 const feesTotal = computed(() => invoice.value.feesTotal || 0)
-const feesTotalBeforeDiscount = computed(
-    () => invoice.value.feesFinalTotal + invoice.value.feesOthers
-)
+const feesTotalBeforeDiscount = computed(() => invoice.value.feesTotal + invoice.value.feesOthers)
 
 const hasDiscount = computed(
     () =>
@@ -704,28 +702,28 @@ watch(
         if (!rates) return
         invoice.value.feesBase = rates.reduce((sum, rate) => sum + rate.base, 0)
         invoice.value.feesAdjusted = rates.reduce((sum, rate) => sum + rate.adjusted, 0)
-        invoice.value.feesFinalTotal = rates.reduce((sum, rate) => sum + rate.amount, 0)
+        invoice.value.feesTotal = rates.reduce((sum, rate) => sum + rate.amount, 0)
         invoice.value.feesMultiplicationFactor = 1
     },
     { deep: true, immediate: true }
 )
 
-// Recalculate discount amount when feesFinalTotal changes (percentage discount)
+// Recalculate discount amount when feesTotalBeforeDiscount changes (percentage discount)
 watch(
-    () => invoice.value.feesFinalTotal,
-    (feesFinalTotal) => {
+    () => feesTotalBeforeDiscount.value,
+    (total) => {
         if ((invoice.value.feesDiscountPercentage || 0) > 0) {
             invoice.value.feesDiscountAmount =
-                ((feesFinalTotal || 0) * (invoice.value.feesDiscountPercentage || 0)) / 100
+                ((total || 0) * (invoice.value.feesDiscountPercentage || 0)) / 100
         }
     }
 )
 
-// Watch for discount/other fees changes and recalculate feesTotal
+// Watch for discount/other fees changes and recalculate feesFinalTotal
 watch(
     [() => feesTotalBeforeDiscount.value, () => invoice.value.feesDiscountAmount],
     () => {
-        invoice.value.feesTotal =
+        invoice.value.feesFinalTotal =
             feesTotalBeforeDiscount.value - (invoice.value.feesDiscountAmount || 0)
     },
     { immediate: true }
@@ -795,13 +793,13 @@ watch(
 // Watch for final total calculations
 watch(
     [
-        () => invoice.value.feesTotal,
+        () => invoice.value.feesFinalTotal,
         () => invoice.value.expensesTotalExpenses,
         () => invoice.value.vatRate,
     ],
     () => {
         invoice.value.totalHT =
-            (invoice.value.feesTotal || 0) + (invoice.value.expensesTotalExpenses || 0)
+            (invoice.value.feesFinalTotal || 0) + (invoice.value.expensesTotalExpenses || 0)
         invoice.value.vatAmount = invoice.value.totalHT * ((invoice.value.vatRate || 0) / 100)
         invoice.value.totalTTC = invoice.value.totalHT + invoice.value.vatAmount
     },
@@ -862,7 +860,7 @@ const toggleDiscount = () => {
         // Apply default discount based on current type
         if (discountType.value === "percentage") {
             invoice.value.feesDiscountPercentage = 10
-            invoice.value.feesDiscountAmount = (invoice.value.feesFinalTotal || 0) * 0.1
+            invoice.value.feesDiscountAmount = (feesTotalBeforeDiscount.value || 0) * 0.1
         } else {
             invoice.value.feesDiscountAmount = 100
             invoice.value.feesDiscountPercentage = 0
@@ -878,7 +876,7 @@ const setDiscountType = (type: "percentage" | "fixed") => {
         // Convert to percentage if was fixed
         if (!invoice.value.feesDiscountPercentage || invoice.value.feesDiscountPercentage === 0) {
             invoice.value.feesDiscountPercentage = 10
-            invoice.value.feesDiscountAmount = (invoice.value.feesFinalTotal || 0) * 0.1
+            invoice.value.feesDiscountAmount = (feesTotalBeforeDiscount.value || 0) * 0.1
         }
     } else {
         // Convert to fixed if was percentage
@@ -892,8 +890,8 @@ const setDiscountType = (type: "percentage" | "fixed") => {
 // Update discount percentage
 const updateDiscountPercentage = (value: number) => {
     invoice.value.feesDiscountPercentage = value
-    if (value && invoice.value.feesFinalTotal) {
-        invoice.value.feesDiscountAmount = (invoice.value.feesFinalTotal * value) / 100
+    if (value && feesTotalBeforeDiscount.value) {
+        invoice.value.feesDiscountAmount = (feesTotalBeforeDiscount.value * value) / 100
     } else {
         invoice.value.feesDiscountAmount = 0
     }
@@ -917,7 +915,7 @@ const togglePackage = () => {
         // Apply default package based on current type
         if (packageType.value === "percentage") {
             invoice.value.expensesPackagePercentage = 4
-            invoice.value.expensesPackageAmount = (invoice.value.feesFinalTotal || 0) * 0.04
+            invoice.value.expensesPackageAmount = (invoice.value.feesTotal || 0) * 0.04
         } else {
             invoice.value.expensesPackageAmount = 500
             invoice.value.expensesPackagePercentage = 0
@@ -933,7 +931,7 @@ const setPackageType = (type: "percentage" | "fixed") => {
         // Convert to percentage if was fixed
         if (invoice.value.expensesPackagePercentage !== null) {
             invoice.value.expensesPackagePercentage = 4
-            invoice.value.expensesPackageAmount = (invoice.value.feesFinalTotal || 0) * 0.04
+            invoice.value.expensesPackageAmount = (invoice.value.feesTotal || 0) * 0.04
         }
     } else {
         // Convert to fixed if was percentage
@@ -948,8 +946,8 @@ const setPackageType = (type: "percentage" | "fixed") => {
 const updatePackagePercentage = (value: number) => {
     invoice.value.expensesPackagePercentage = value
     // Calculate package amount based on fees before discount
-    if (value && invoice.value.feesFinalTotal) {
-        invoice.value.expensesPackageAmount = (invoice.value.feesFinalTotal * value) / 100
+    if (value && invoice.value.feesTotal) {
+        invoice.value.expensesPackageAmount = (invoice.value.feesTotal * value) / 100
     } else {
         invoice.value.expensesPackageAmount = 0
     }

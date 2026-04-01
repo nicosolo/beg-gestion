@@ -275,6 +275,16 @@
                             {{ formatCurrency(invoice.feesOthers) }}
                         </td>
                     </tr>
+                    <tr v-if="invoice.feesOthers && invoice.feesOthers !== 0">
+                        <td class="border border-gray-300 p-1 text-sm font-bold" colspan="3">
+                            Sous-total
+                        </td>
+                        <td class="fac4 text-right border border-gray-300 p-1 text-sm font-bold">
+                            {{
+                                formatCurrency((invoice.feesTotal || 0) + (invoice.feesOthers || 0))
+                            }}
+                        </td>
+                    </tr>
                     <tr v-if="invoice.feesDiscountPercentage">
                         <td class="border border-gray-300 p-1 text-sm" colspan="2">Rabais</td>
                         <td class="text-right border border-gray-300 p-1 text-sm">
@@ -291,9 +301,11 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="border border-gray-300 p-1 text-sm" colspan="2">TOTAL</td>
+                        <td class="border border-gray-300 p-1 text-sm font-bold" colspan="2">
+                            TOTAL
+                        </td>
                         <td class="border border-gray-300 p-1 text-sm"></td>
-                        <td class="fac4 text-right border border-gray-300 p-1 text-sm">
+                        <td class="fac4 text-right border border-gray-300 p-1 text-sm font-bold">
                             {{ formatCurrency(invoice.feesFinalTotal || 0) }}
                         </td>
                     </tr>
