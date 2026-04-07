@@ -118,12 +118,11 @@
     <!-- Missing fields popup (when leaving draft) -->
     <Dialog v-model="showMissingFieldsDialog" title="Champs à compléter" size="md">
         <p class="text-sm text-gray-500 mb-4">
-            Les champs suivants ne sont pas remplis. Vous pouvez les compléter maintenant ou enregistrer sans.
+            Les champs suivants ne sont pas remplis. Vous pouvez les compléter maintenant ou
+            enregistrer sans.
         </p>
         <div class="mb-4">
-            <label class="text-sm font-medium text-gray-700 mb-1" for="missingNote">
-                Note
-            </label>
+            <label class="text-sm font-medium text-gray-700 mb-1" for="missingNote"> Note </label>
             <Textarea
                 id="missingNote"
                 v-model="invoice!.note"
@@ -138,9 +137,7 @@
             <Button variant="secondary" @click="confirmSaveWithoutFields" :loading="loading">
                 Enregistrer sans
             </Button>
-            <Button variant="secondary" @click="showMissingFieldsDialog = false">
-                Annuler
-            </Button>
+            <Button variant="secondary" @click="showMissingFieldsDialog = false"> Annuler </Button>
         </template>
     </Dialog>
 </template>
@@ -498,12 +495,33 @@ const convertInvoiceToInput = (invoice: Invoice): any => {
         remarksExpenses: invoice.remarksExpenses,
         remarksThirdPartyExpenses: invoice.remarksThirdPartyExpenses,
 
-        // Arrays
-        rates: invoice.rates || [],
-        offers: invoice.offers || [],
-        adjudications: invoice.adjudications || [],
-        situations: invoice.situations || [],
-        documents: invoice.documents || [],
+        // Arrays (sanitize null values that Zod z.number()/z.string() rejects)
+        rates: (invoice.rates || []).map((r) => ({
+            ...r,
+            base: r.base || 0,
+            adjusted: r.adjusted || 0,
+            hourlyRate: r.hourlyRate || 0,
+            amount: r.amount || 0,
+        })),
+        offers: (invoice.offers || []).map((e) => ({
+            ...e,
+            amount: e.amount ?? 0,
+            remark: e.remark ?? "",
+        })),
+        adjudications: (invoice.adjudications || []).map((e) => ({
+            ...e,
+            amount: e.amount ?? 0,
+            remark: e.remark ?? "",
+        })),
+        situations: (invoice.situations || []).map((e) => ({
+            ...e,
+            amount: e.amount ?? 0,
+            remark: e.remark ?? "",
+        })),
+        documents: (invoice.documents || []).map((e) => ({
+            ...e,
+            remark: e.remark ?? "",
+        })),
 
         // Activity IDs if present
         activityIds: invoice.activityIds,
@@ -536,7 +554,10 @@ watch(
     () => invoice.value?.status,
     async (newStatus, oldStatus) => {
         if (isUpdatingFromApi.value || skipVisaWatch.value) return
-        if ((oldStatus === "vise" || oldStatus === "sent") && (newStatus === "draft" || newStatus === "controle")) {
+        if (
+            (oldStatus === "vise" || oldStatus === "sent") &&
+            (newStatus === "draft" || newStatus === "controle")
+        ) {
             pendingVisaResetStatus.value = newStatus
             // Revert immediately, confirm dialog will apply if confirmed
             skipVisaWatch.value = true

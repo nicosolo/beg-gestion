@@ -85,21 +85,22 @@ export function classifySnapshots(
         }
     }
 
-    // Daily: 7 buckets (0-6)
+    // Daily: 14 buckets by calendar day (0-13), picks latest snapshot per day
+    const nowDay = Math.floor(nowMs / DAY_MS)
     const dailyFilled = new Set<number>()
     for (const s of sorted) {
-        const bucket = Math.floor(Math.max(0, nowMs - s.timestamp.getTime()) / DAY_MS)
-        if (bucket <= 6 && !dailyFilled.has(bucket)) {
+        const bucket = nowDay - Math.floor(s.timestamp.getTime() / DAY_MS)
+        if (bucket >= 0 && bucket <= 13 && !dailyFilled.has(bucket)) {
             dailyFilled.add(bucket)
             tiers.set(s.name, "daily")
         }
     }
 
-    // Hourly: 120 buckets (0-119)
+    // Hourly: 48 buckets (0-47)
     const hourlyFilled = new Set<number>()
     for (const s of sorted) {
         const bucket = Math.floor(Math.max(0, nowMs - s.timestamp.getTime()) / HOUR_MS)
-        if (bucket <= 120 && !hourlyFilled.has(bucket)) {
+        if (bucket <= 47 && !hourlyFilled.has(bucket)) {
             hourlyFilled.add(bucket)
             tiers.set(s.name, "hourly")
         }

@@ -75,7 +75,7 @@ describe("selectSnapshotsToDelete", () => {
     })
 
     test("all within 48h kept", () => {
-        const snapshots = Array.from({ length: 10 }, (_, i) => snapsAt(hoursAgo(now, i)))
+        const snapshots = Array.from({ length: 48 }, (_, i) => snapsAt(hoursAgo(now, i)))
         const toDelete = selectSnapshotsToDelete(snapshots, now)
         expect(toDelete).toEqual([])
     })
@@ -97,6 +97,14 @@ describe("selectSnapshotsToDelete", () => {
         ]
         const toDelete = selectSnapshotsToDelete(snapshots, now)
         expect(toDelete).toEqual([])
+    })
+
+    test("daily tier prefers latest snapshot of each calendar day", () => {
+        const early = snapsAt(new Date("2026-06-12T06:19:29Z")) // 3 days ago, morning
+        const late = snapsAt(new Date("2026-06-12T23:19:29Z")) // 3 days ago, evening
+        const { tiers, toDelete } = classifySnapshots([early, late], now)
+        expect(tiers.get(late)).toBe("daily")
+        expect(toDelete).toContain(early)
     })
 
     test("weekly tier keeps snapshots beyond 7 days", () => {
@@ -179,15 +187,15 @@ describe("classifySnapshots", () => {
     })
 
     test("snapshot outside hourly range classified as daily", () => {
-        // 6 days ago = outside 120h hourly range, in daily bucket 6
+        // 3 days ago = outside 48h hourly range, in daily bucket 3
         const recent = snapsAt(hoursAgo(now, 1))
-        const name = snapsAt(daysAgo(now, 6))
+        const name = snapsAt(daysAgo(now, 3))
         const { tiers } = classifySnapshots([recent, name], now)
         expect(tiers.get(name)).toBe("daily")
     })
 
     test("snapshot outside daily range classified as weekly", () => {
-        const name = snapsAt(daysAgo(now, 14))
+        const name = snapsAt(daysAgo(now, 21))
         const { tiers } = classifySnapshots([snapsAt(hoursAgo(now, 1)), name], now)
         expect(tiers.get(name)).toBe("weekly")
     })

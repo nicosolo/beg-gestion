@@ -56,6 +56,10 @@ const stepValue = computed(() => {
 
 function handleInput(event: Event) {
     let value = parseFloat((event.target as HTMLInputElement).value)
+    if (isNaN(value)) {
+        value = 0
+        ;(event.target as HTMLInputElement).value = "0"
+    }
     if (min !== undefined) {
         const minNum = typeof min === "string" ? parseFloat(min) : min
         if (!isNaN(minNum) && value < minNum) value = minNum

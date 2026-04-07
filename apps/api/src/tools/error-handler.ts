@@ -83,7 +83,15 @@ export function parseZodError(error: ZodError): ValidationErrorDetail[] {
 
 // Global error handler middleware
 export async function errorHandler(err: Error, c: Context) {
-    console.error(`[Error] ${new Date().toISOString()} ${c.req.method} ${c.req.path}`, err)
+    const details =
+        err instanceof ApiException && err.details
+            ? ` | details: ${JSON.stringify(err.details)}`
+            : err instanceof ZodError
+              ? ` | zod: ${JSON.stringify(err.errors)}`
+              : ""
+    console.error(
+        `[Error] ${new Date().toISOString()} ${c.req.method} ${c.req.path} — ${err.message}${details}`
+    )
 
     // Handle our custom API exceptions
     if (err instanceof ApiException) {
