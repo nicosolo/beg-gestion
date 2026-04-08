@@ -97,26 +97,6 @@ function createWorksheet(
     const durationCol = getColumnLetterByKey(columns, "duration")
     const kilometersCol = getColumnLetterByKey(columns, "kilometers")
     const expensesCol = getColumnLetterByKey(columns, "expenses")
-    console.log({
-        date: "Total",
-        duration:
-            hasData && durationCol
-                ? { formula: `SUM(${durationCol}${firstDataRow}:${durationCol}${lastDataRow})` }
-                : 0,
-        rate: "",
-        kilometers:
-            hasData && kilometersCol
-                ? {
-                      formula: `SUM(${kilometersCol}${firstDataRow}:${kilometersCol}${lastDataRow})`,
-                  }
-                : 0,
-        expenses:
-            hasData && expensesCol
-                ? { formula: `SUM(${expensesCol}${firstDataRow}:${expensesCol}${lastDataRow})` }
-                : 0,
-        billed: "",
-        ...(options.includeDisbursementColumn ? { disbursement: "" } : {}),
-    })
     const totalsRow = worksheet.addRow({
         date: "Total",
         duration:
@@ -140,16 +120,6 @@ function createWorksheet(
 
     totalsRow.font = { bold: true }
     totalsRow.getCell("A").alignment = { horizontal: "right" }
-
-    // Ensure empty numeric cells display zero instead of blank
-    for (const columnKey of ["duration", "kilometers", "expenses"]) {
-        const column = worksheet.getColumn(columnKey)
-        column.eachCell({ includeEmpty: false }, (cell, rowNumber) => {
-            if (rowNumber > 1 && typeof cell.value === "number") {
-                cell.value = Number(cell.value)
-            }
-        })
-    }
 }
 
 export async function buildActivitiesWorkbook(
@@ -188,8 +158,14 @@ export async function buildActivitiesWorkbook(
         for (const [, { userName, activities: userActivities }] of Object.entries(
             activitiesByUser
         )) {
-            const sheetName = userName.substring(0, 31) // Excel sheet name limit
+            // Excel sheet names: max 31 chars, no special chars
+            const sheetName = userName.replace(/[\\/*?[\]:]/g, "").substring(0, 31) || "Sans nom"
             createWorksheet(workbook, sheetName, userActivities, options)
+        }
+
+        // Ensure workbook has at least one sheet
+        if (workbook.worksheets.length === 0) {
+            createWorksheet(workbook, "Heures", [], options)
         }
     } else {
         // Create a single worksheet with all activities

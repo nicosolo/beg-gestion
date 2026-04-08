@@ -59,6 +59,20 @@
                     >
                         Visa
                     </Button>
+
+                    <Button
+                        v-if="canMarkAsSent"
+                        variant="primary"
+                        size="lg"
+                        class="w-full sm:w-auto"
+                        :loading="markingSent"
+                        @click="showSentConfirm = true"
+                    >
+                        <svg class="w-5 h-5 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        {{ $t("invoice.markAsSent") }}
+                    </Button>
                 </div>
             </div>
 
@@ -72,6 +86,15 @@
                 cancel-text="Annuler"
                 @confirm="handleVisa"
             />
+
+            <ConfirmDialog
+                v-model="showSentConfirm"
+                :title="$t('invoice.markAsSent')"
+                :message="$t('invoice.confirmMarkAsSent')"
+                :confirm-text="$t('common.confirm')"
+                :cancel-text="$t('common.cancel')"
+                @confirm="handleMarkAsSent"
+            />
         </template>
     </div>
 </template>
@@ -80,7 +103,7 @@
 import { ref, onMounted, computed } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import InvoicePreview from "@/components/organisms/invoice/InvoicePreview.vue"
-import { useFetchInvoice, useVisaInvoice } from "@/composables/api/useInvoice"
+import { useFetchInvoice, useVisaInvoice, useUpdateInvoice } from "@/composables/api/useInvoice"
 import type { InvoiceResponse } from "@beg/validations"
 import Button from "@/components/atoms/Button.vue"
 import { useAuthStore } from "@/stores/auth"
@@ -98,6 +121,7 @@ const { t } = useI18n()
 // API composable
 const { get: fetchInvoice, loading, error } = useFetchInvoice()
 const { post: postVisa, loading: visaLoading } = useVisaInvoice()
+const { put: updateInvoice, loading: markingSent } = useUpdateInvoice()
 
 // Invoice data
 const invoice = ref<InvoiceResponse | null>(null)
@@ -108,6 +132,11 @@ const canVisa = computed(() => {
     return isSuperAdmin && notVisaYet
 })
 const showVisaConfirm = ref(false)
+const showSentConfirm = ref(false)
+
+const canMarkAsSent = computed(() => {
+    return authStore.isRole("admin") && invoice.value?.status === "vise"
+})
 
 const openVisaDialog = () => {
     if (!invoiceId.value) {
@@ -134,6 +163,24 @@ const loadInvoice = async () => {
 
 const printInvoice = () => {
     window.print()
+}
+
+const handleMarkAsSent = async () => {
+    if (!invoiceId.value) return
+    try {
+        const updated = await updateInvoice({
+            params: { id: parseInt(invoiceId.value) },
+            body: { status: "sent", visaByUserId: authStore.user?.id },
+        })
+        if (updated) {
+            invoice.value = updated
+            successAlert(t("invoice.markedAsSent"))
+        }
+    } catch (error) {
+        console.error("Failed to mark invoice as sent:", error)
+    } finally {
+        showSentConfirm.value = false
+    }
 }
 
 const handleVisa = async () => {

@@ -323,7 +323,7 @@
                     <tr
                         v-if="
                             invoice.expensesPackagePercentage !== null &&
-                            invoice.expensesTotalExpenses !== null
+                                invoice.expensesTotalExpenses !== null
                         "
                     >
                         <td class="border border-gray-300 p-1 text-sm" colspan="2">

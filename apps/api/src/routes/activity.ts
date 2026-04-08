@@ -46,27 +46,33 @@ export const activityRoutes = new Hono<{ Variables: Variables }>()
     .get("/export", zValidator("query", activityExportFilterSchema), async (c) => {
         const filter = c.req.valid("query")
         const user = c.get("user")
-        const activities = await activityRepository.findAllForExport(user, filter)
-        const includeDisbursementColumn = hasRole(user.role, "admin")
 
-        const buffer = await buildActivitiesWorkbook(activities, {
-            includeDisbursementColumn,
-            perUser: filter.perUser ?? false,
-        })
+        try {
+            const activities = await activityRepository.findAllForExport(user, filter)
+            const includeDisbursementColumn = hasRole(user.role, "admin")
 
-        const today = new Date().toISOString().split("T")[0]
-        const filename = `heures-${today}.xlsx`
+            const buffer = await buildActivitiesWorkbook(activities, {
+                includeDisbursementColumn,
+                perUser: filter.perUser ?? false,
+            })
 
-        const headers = new Headers({
-            "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            "Content-Disposition": `attachment; filename="${filename}"`,
-            "Content-Length": buffer.byteLength.toString(),
-        })
+            const today = new Date().toISOString().split("T")[0]
+            const filename = `heures-${today}.xlsx`
 
-        return new Response(buffer, {
-            status: 200,
-            headers,
-        })
+            const headers = new Headers({
+                "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "Content-Disposition": `attachment; filename="${filename}"`,
+                "Content-Length": buffer.byteLength.toString(),
+            })
+
+            return new Response(buffer, {
+                status: 200,
+                headers,
+            })
+        } catch (error) {
+            console.error("Excel export failed:", error)
+            return c.json({ error: "Export failed" }, 500)
+        }
     })
     // Get activities where creator is not a project member (for project managers)
     .get(
@@ -267,6 +273,21 @@ export const activityRoutes = new Hono<{ Variables: Variables }>()
                 }
             }
 
+            // Disbursement can only be changed by admin
+            if (
+                activityData.disbursement !== undefined &&
+                activityData.disbursement !== existingActivity.disbursement &&
+                !hasRole(user.role, "admin") &&
+                !hasRole(user.role, "super_admin")
+            ) {
+                throwValidationError("Access denied", [
+                    {
+                        field: "disbursement",
+                        message: "Only admins can modify disbursement status",
+                    },
+                ])
+            }
+
             // Check billed toggle permission for non-admin users
             if (
                 activityData.billed !== undefined &&
@@ -347,7 +368,6 @@ export const activityRoutes = new Hono<{ Variables: Variables }>()
 
             const updatedActivity = await activityRepository.update(id, {
                 ...activityData,
-                disbursement: existingActivity.disbursement,
                 rate: rate,
                 rateClass: rateClass,
                 userId: userId,

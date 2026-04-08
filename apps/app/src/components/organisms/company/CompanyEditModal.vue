@@ -45,7 +45,7 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
     "update:modelValue": [value: boolean]
-    saved: []
+    saved: [id?: number]
 }>()
 
 const { t } = useI18n()
@@ -102,18 +102,21 @@ const saveCompany = async () => {
         return
     }
 
+    let savedId: number | undefined
     if (isNewCompany.value) {
-        await createCompany({ body: company.value })
+        const result = await createCompany({ body: company.value })
+        savedId = result?.id
         successAlert(t("company.createSuccess"))
     } else if (props.companyId) {
         await updateCompany({
             params: { id: props.companyId },
             body: company.value as CompanyUpdateInput,
         })
+        savedId = props.companyId
         successAlert(t("company.updateSuccess"))
     }
 
-    emit("saved")
+    emit("saved", savedId)
     closeModal()
 }
 

@@ -12,14 +12,15 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue"
+
 const props = defineProps<{
     variant?: "success" | "error" | "warning" | "info" | "amber" | "indigo" | "blue" | "muted"
     size?: "sm" | "md"
     className?: string
 }>()
 
-// Size classes
-const sizeClasses = (() => {
+const sizeClasses = computed(() => {
     switch (props.size) {
         case "md":
             return "px-3 py-1 text-sm"
@@ -27,10 +28,9 @@ const sizeClasses = (() => {
         default:
             return "px-2 text-xs leading-5"
     }
-})()
+})
 
-// Variant classes
-const variantClasses = (() => {
+const variantClasses = computed(() => {
     switch (props.variant) {
         case "success":
             return "bg-green-100 text-green-800"
@@ -51,5 +51,5 @@ const variantClasses = (() => {
         default:
             return "bg-gray-100 text-gray-800"
     }
-})()
+})
 </script>

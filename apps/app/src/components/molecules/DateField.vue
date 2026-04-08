@@ -53,8 +53,10 @@ const maxString = computed(() => (max ? toLocalDateString(max) : undefined))
 function handleDateChange(value: string) {
     if (!value) {
         emit("update:modelValue", undefined)
-    } else {
-        emit("update:modelValue", new Date(value))
+        return
     }
+    const year = parseInt(value.split("-")[0])
+    if (year < 1900) return
+    emit("update:modelValue", new Date(value))
 }
 </script>

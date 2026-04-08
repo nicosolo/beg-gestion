@@ -381,6 +381,8 @@ watch(filteredItems, (items) => {
     }
 })
 
+defineExpose({ loadInitialItem })
+
 // Cleanup on unmount
 onMounted(() => {
     return () => {

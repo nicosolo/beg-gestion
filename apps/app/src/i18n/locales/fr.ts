@@ -516,6 +516,10 @@ export default {
         confirmDelete: "Êtes-vous sûr de vouloir supprimer cette facture ?",
         deleteSuccess: "Facture supprimée avec succès",
         deleteError: "Erreur lors de la suppression de la facture",
+        markAsSent: "Marquer comme envoyée",
+        sendAction: "Envoyer",
+        markedAsSent: "Facture marquée comme envoyée",
+        confirmMarkAsSent: "Confirmer le passage au statut envoyée ?",
         type: {
             invoice: "Facture",
             final_invoice: "Facture finale",

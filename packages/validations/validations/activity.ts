@@ -43,6 +43,7 @@ export const activityCreateSchema = z.object({
     expenses: z.number().min(0, "Expenses must be non-negative"),
     description: z.string().min(1, "Description is required"),
     billed: z.boolean(),
+    disbursement: z.boolean().optional(),
     userId: z.number().optional(),
 })
 

@@ -118,6 +118,7 @@
                             <ClientSelect
                                 v-model="form.clientId"
                                 :placeholder="$t('common.select')"
+                                allow-create
                             />
                         </template>
                     </FormField>
@@ -126,6 +127,7 @@
                             <CompanySelect
                                 v-model="form.companyId"
                                 :placeholder="$t('common.select')"
+                                allow-create
                             />
                         </template>
                     </FormField>
@@ -134,6 +136,7 @@
                             <EngineerSelect
                                 v-model="form.engineerId"
                                 :placeholder="$t('common.select')"
+                                allow-create
                             />
                         </template>
                     </FormField>

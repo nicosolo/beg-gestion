@@ -60,6 +60,7 @@ export type ApiRoutes = typeof app
 const server = Bun.serve({
     port: PORT,
     fetch: app.fetch,
+    idleTimeout: 60,
 })
 
 console.log(`🚀 API Server running at http://localhost:${PORT}`)

@@ -1,6 +1,7 @@
 <template>
-    <div class="w-full">
+    <div class="flex gap-1 w-full">
         <AutocompleteSelect
+            ref="autocompleteRef"
             v-model="selected"
             mode="async"
             :items="engineers"
@@ -11,14 +12,33 @@
             :disabled="disabled"
             :display-field="(item) => item.name"
             value-field="id"
+            class="flex-1"
             @update:model-value="handleChange"
+        />
+        <Button
+            v-if="allowCreate && !disabled"
+            variant="ghost"
+            size="xs"
+            class-name="shrink-0 h-9 w-9 border border-gray-300"
+            :tooltip="$t('engineer.new')"
+            @click="showCreateModal = true"
+        >
+            +
+        </Button>
+
+        <EngineerEditModal
+            v-if="allowCreate"
+            v-model="showCreateModal"
+            @saved="onCreated($event)"
         />
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from "vue"
+import { ref, watch, onMounted, nextTick } from "vue"
 import AutocompleteSelect from "@/components/atoms/AutocompleteSelect.vue"
+import Button from "@/components/atoms/Button.vue"
+import EngineerEditModal from "@/components/organisms/engineer/EngineerEditModal.vue"
 import { useFetchEngineerList, useFetchEngineer } from "@/composables/api/useEngineer"
 import type { Engineer } from "@beg/validations"
 
@@ -27,11 +47,13 @@ interface Props {
     placeholder?: string
     required?: boolean
     disabled?: boolean
+    allowCreate?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
     required: false,
     disabled: false,
+    allowCreate: false,
 })
 
 const emit = defineEmits<{
@@ -40,8 +62,10 @@ const emit = defineEmits<{
 
 const { get: fetchEngineerListApi, loading } = useFetchEngineerList()
 const { get: fetchSingleEngineer } = useFetchEngineer()
+const autocompleteRef = ref<InstanceType<typeof AutocompleteSelect>>()
 const selected = ref<number | null | undefined | string>(props.modelValue || undefined)
 const engineers = ref<Engineer[]>([])
+const showCreateModal = ref(false)
 
 // Fetch selected item when modelValue changes
 const fetchSelectedItem = async () => {
@@ -55,7 +79,6 @@ const fetchSelectedItem = async () => {
             },
         })
         if (data) {
-            // Add the selected item to the engineers array if not already there
             engineers.value = [data, ...engineers.value.filter((e) => e.id !== data!.id)]
         }
     }
@@ -94,6 +117,21 @@ const fetchEngineers = async (search: string) => {
     if (response?.data) {
         engineers.value = response.data
     }
+}
+
+// After creating, refresh list and select it
+const onCreated = async (id?: number) => {
+    if (!id) return
+    const data = await fetchSingleEngineer({
+        params: { id },
+    })
+    if (data) {
+        engineers.value = [data, ...engineers.value.filter((e) => e.id !== data!.id)]
+    }
+    selected.value = id
+    handleChange(id)
+    await nextTick()
+    autocompleteRef.value?.loadInitialItem()
 }
 
 // Load initial data

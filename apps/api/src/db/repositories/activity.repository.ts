@@ -131,16 +131,13 @@ const buildFilterComponents = (filter: ActivityFilter, user?: Variables["user"])
     if (includeBilled) billingConditions.push(eq(activities.billed, true))
     if (includeUnbilled) billingConditions.push(eq(activities.billed, false))
 
-    // Disbursement filters - only for activities with expenses > 0
+    // Disbursement filters - for activities with expenses > 0 OR kilometers > 0
+    const hasDisbursableAmount = sql`(${activities.expenses} > 0 OR ${activities.kilometers} > 0)`
     const disbursementConditions = []
     if (includeDisbursed)
-        disbursementConditions.push(
-            and(eq(activities.disbursement, true), sql`${activities.expenses} > 0`)
-        )
+        disbursementConditions.push(and(eq(activities.disbursement, true), hasDisbursableAmount))
     if (includeNotDisbursed)
-        disbursementConditions.push(
-            and(eq(activities.disbursement, false), sql`${activities.expenses} > 0`)
-        )
+        disbursementConditions.push(and(eq(activities.disbursement, false), hasDisbursableAmount))
     if (user && !hasRole(user.role, "admin")) {
         whereConditions.push(eq(activityTypes.adminOnly, false))
     }

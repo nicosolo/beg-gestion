@@ -55,9 +55,40 @@
                 </template>
 
                 <template #cell:status="{ item }">
-                    <Badge :variant="getStatusVariant(item.status)">
-                        {{ $t(`invoice.status.${item.status}`) }}
-                    </Badge>
+                    <div class="flex items-center gap-2">
+                        <Badge :variant="getStatusVariant(item.status)">
+                            {{ $t(`invoice.status.${item.status}`) }}
+                        </Badge>
+                        <span
+                            v-if="item.status === 'vise' && isAdmin"
+                            class="inline-flex relative group"
+                        >
+                            <button
+                                class="p-1 text-indigo-600 hover:text-indigo-800 rounded hover:bg-indigo-50 cursor-pointer"
+                                :disabled="markingSentId === item.id"
+                                @click.stop="pendingSentId = item.id"
+                            >
+                                <svg
+                                    class="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                                    />
+                                </svg>
+                            </button>
+                            <span
+                                class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block whitespace-nowrap rounded bg-gray-700 px-2 py-1 text-xs text-white shadow"
+                            >
+                                {{ $t("invoice.sendAction") }}
+                            </span>
+                        </span>
+                    </div>
                 </template>
 
                 <template #cell:inChargeUser="{ item }">
@@ -83,6 +114,16 @@
                     </div>
                 </template>
             </DataTable>
+
+            <ConfirmDialog
+                v-model="showSentConfirm"
+                :title="$t('invoice.markAsSent')"
+                :message="$t('invoice.confirmMarkAsSent')"
+                :confirm-text="$t('common.confirm')"
+                :cancel-text="$t('common.cancel')"
+                @confirm="markAsSent"
+                @cancel="pendingSentId = null"
+            />
 
             <Pagination
                 v-if="totalCount > 0"
@@ -111,10 +152,12 @@ import InvoiceFilterPanel, {
     type InvoiceSortBy,
     type SortOrder,
 } from "@/components/organisms/invoice/InvoiceFilterPanel.vue"
-import { useFetchInvoiceList } from "@/composables/api/useInvoice"
+import { useFetchInvoiceList, useUpdateInvoice } from "@/composables/api/useInvoice"
 import { useAlert } from "@/composables/utils/useAlert"
 import type { InvoiceFilter } from "@beg/validations"
 import { useFormat } from "@/composables/utils/useFormat"
+import { useAuthStore } from "@/stores/auth"
+import ConfirmDialog from "@/components/molecules/ConfirmDialog.vue"
 
 interface Props {
     emptyMessage?: string
@@ -133,7 +176,18 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const { t } = useI18n()
-const { errorAlert } = useAlert()
+const { errorAlert, successAlert } = useAlert()
+const authStore = useAuthStore()
+const isAdmin = computed(() => authStore.isRole("admin"))
+const { put: updateInvoice } = useUpdateInvoice()
+const pendingSentId = ref<number | null>(null)
+const markingSentId = ref<number | null>(null)
+const showSentConfirm = computed({
+    get: () => pendingSentId.value !== null,
+    set: (v) => {
+        if (!v) pendingSentId.value = null
+    },
+})
 
 // Filter state
 const filters = reactive<InvoiceFilterModel>({
@@ -276,6 +330,24 @@ const loadInvoices = async (page?: number) => {
     } catch (err) {
         console.error("Failed to load invoices:", err)
         errorAlert(t("errors.loadingData"))
+    }
+}
+
+const markAsSent = async () => {
+    if (!pendingSentId.value) return
+    markingSentId.value = pendingSentId.value
+    try {
+        await updateInvoice({
+            params: { id: pendingSentId.value },
+            body: { status: "sent", visaByUserId: authStore.user?.id },
+        })
+        successAlert(t("invoice.markedAsSent"))
+        loadInvoices()
+    } catch {
+        // error shown by useAPI
+    } finally {
+        markingSentId.value = null
+        pendingSentId.value = null
     }
 }
 

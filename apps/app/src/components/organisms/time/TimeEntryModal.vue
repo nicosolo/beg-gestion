@@ -68,7 +68,7 @@
                     </div>
                     <div>
                         <Label
-                        >{{ $t("time.columns.activityType") }}
+                            >{{ $t("time.columns.activityType") }}
                             <span class="text-red-500">*</span></Label
                         >
                         <ActivityTypeSelect
@@ -84,7 +84,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <div>
                         <Label for="duration"
-                        >{{ $t("time.columns.duration") }}
+                            >{{ $t("time.columns.duration") }}
                             <span class="text-red-500">*</span></Label
                         >
                         <InputNumber
@@ -123,7 +123,10 @@
                 <!-- Expenses and Description -->
                 <div class="space-y-4">
                     <div>
-                        <Label>{{ $t("time.columns.description") }} <span class="text-red-500">*</span></Label>
+                        <Label
+                            >{{ $t("time.columns.description") }}
+                            <span class="text-red-500">*</span></Label
+                        >
                         <Textarea
                             v-model="activity.description"
                             rows="3"
@@ -164,12 +167,23 @@
             </div>
         </template>
     </Dialog>
+
+    <ConfirmDialog
+        v-model="showDeleteConfirm"
+        :title="$t('common.delete')"
+        :message="$t('time.alerts.confirmDelete')"
+        type="danger"
+        :confirm-text="$t('common.delete')"
+        @confirm="executeDelete"
+        @cancel="showDeleteConfirm = false"
+    />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue"
 import { useI18n } from "vue-i18n"
 import Dialog from "@/components/molecules/Dialog.vue"
+import ConfirmDialog from "@/components/molecules/ConfirmDialog.vue"
 import Button from "@/components/atoms/Button.vue"
 import Label from "@/components/atoms/Label.vue"
 import ProjectSelect from "@/components/organisms/project/ProjectSelect.vue"
@@ -396,7 +410,9 @@ const saveActivity = async (keepOpen: boolean = false) => {
 }
 
 // Delete activity
-const handleDelete = async () => {
+const showDeleteConfirm = ref(false)
+
+const handleDelete = () => {
     if (!props.activityId) return
 
     if (isLocked.value) {
@@ -404,19 +420,23 @@ const handleDelete = async () => {
         return
     }
 
-    if (!confirm(t("time.alerts.confirmDelete"))) {
-        return
-    }
+    showDeleteConfirm.value = true
+}
+
+const executeDelete = async () => {
+    if (!props.activityId) return
 
     try {
         await deleteActivity({
             params: { id: props.activityId },
         })
 
-        emit("saved", {} as ActivityResponse) // Trigger reload
+        showDeleteConfirm.value = false
+        emit("saved", {} as ActivityResponse)
         successAlert(t("time.alerts.entryDeleted"))
         closeModal()
     } catch (error) {
+        showDeleteConfirm.value = false
         if (error instanceof ApiError) {
             errorMessage.value = error.message
         } else {

@@ -54,7 +54,7 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
     "update:modelValue": [value: boolean]
-    saved: []
+    saved: [id?: number]
 }>()
 
 const { t } = useI18n()
@@ -108,18 +108,21 @@ const saveEngineer = async () => {
         return
     }
 
+    let savedId: number | undefined
     if (isNewEngineer.value) {
-        await createEngineer({ body: engineer.value })
+        const result = await createEngineer({ body: engineer.value })
+        savedId = result?.id
         successAlert(t("engineer.createSuccess"))
     } else if (props.engineerId) {
         await updateEngineer({
             params: { id: props.engineerId },
             body: engineer.value as EngineerUpdateInput,
         })
+        savedId = props.engineerId
         successAlert(t("engineer.updateSuccess"))
     }
 
-    emit("saved")
+    emit("saved", savedId)
     closeModal()
 }
 

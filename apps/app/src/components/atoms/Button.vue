@@ -1,18 +1,30 @@
 <template>
+    <TruncateWithTooltip
+        v-if="props.tooltip"
+        :content="props.tooltip"
+        :placement="props.tooltipPlacement"
+        text-class="!overflow-visible"
+    >
+        <component
+            :is="props.href ? 'a' : props.to ? 'router-link' : 'button'"
+            :type="props.to || props.href ? undefined : props.type"
+            :to="props.to"
+            :href="props.href"
+            :class="buttonClasses"
+            :disabled="props.to || props.href ? undefined : props.disabled || props.loading"
+            @click="$emit('click', $event)"
+        >
+            <LoadingSpinner v-if="props.loading" size="sm" color="white" class="mr-2" />
+            <slot></slot>
+        </component>
+    </TruncateWithTooltip>
     <component
+        v-else
         :is="props.href ? 'a' : props.to ? 'router-link' : 'button'"
         :type="props.to || props.href ? undefined : props.type"
         :to="props.to"
         :href="props.href"
-        :class="[
-            'rounded-md font-medium focus:outline-none focus:ring-2 cursor-pointer leading-none text-center flex items-center justify-center',
-            props.href ? 'inline-flex' : 'block',
-            variantClasses,
-            sizeClasses,
-            props.disabled ? 'cursor-not-allowed opacity-60' : '',
-            props.fullWidth ? 'w-full' : '',
-            props.className,
-        ]"
+        :class="buttonClasses"
         :disabled="props.to || props.href ? undefined : props.disabled || props.loading"
         @click="$emit('click', $event)"
     >
@@ -25,6 +37,7 @@
 import { computed } from "vue"
 import type { RouteLocationRaw } from "vue-router"
 import LoadingSpinner from "./LoadingSpinner.vue"
+import TruncateWithTooltip from "./TruncateWithTooltip.vue"
 
 interface Props {
     type?: "button" | "submit" | "reset"
@@ -44,10 +57,13 @@ interface Props {
     href?: string
     loading?: boolean
     fullWidth?: boolean
+    tooltip?: string
+    tooltipPlacement?: "top" | "bottom" | "left" | "right"
 }
 
 const props = withDefaults(defineProps<Props>(), {
     type: "button",
+    tooltipPlacement: "top",
 })
 
 defineEmits<{
@@ -91,4 +107,14 @@ const sizeClasses = computed(() => {
             return "text-sm px-4 py-2"
     }
 })
+
+const buttonClasses = computed(() => [
+    "rounded-md font-medium focus:outline-none focus:ring-2 cursor-pointer leading-none text-center flex items-center justify-center",
+    props.href ? "inline-flex" : "block",
+    variantClasses.value,
+    sizeClasses.value,
+    props.disabled ? "cursor-not-allowed opacity-60" : "",
+    props.fullWidth ? "w-full" : "",
+    props.className,
+])
 </script>

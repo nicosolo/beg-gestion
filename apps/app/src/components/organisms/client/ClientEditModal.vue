@@ -50,7 +50,7 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
     "update:modelValue": [value: boolean]
-    saved: []
+    saved: [id?: number]
 }>()
 
 const { t } = useI18n()
@@ -104,18 +104,21 @@ const saveClient = async () => {
         return
     }
 
+    let savedId: number | undefined
     if (isNewClient.value) {
-        await createClient({ body: client.value })
+        const result = await createClient({ body: client.value })
+        savedId = result?.id
         successAlert(t("client.createSuccess"))
     } else if (props.clientId) {
         await updateClient({
             params: { id: props.clientId },
             body: client.value as ClientUpdateInput,
         })
+        savedId = props.clientId
         successAlert(t("client.updateSuccess"))
     }
 
-    emit("saved")
+    emit("saved", savedId)
     closeModal()
 }
 
