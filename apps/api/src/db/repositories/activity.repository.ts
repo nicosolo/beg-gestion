@@ -266,7 +266,7 @@ export const activityRepository = {
                 ? baseQuery.where(and(...whereConditions)).orderBy(sortDirection, secondarySort)
                 : baseQuery.orderBy(sortDirection, secondarySort)
 
-        return await dataQuery.limit(20000)
+        return await dataQuery
     },
 
     findById: async (id: number, user: Variables["user"]) => {

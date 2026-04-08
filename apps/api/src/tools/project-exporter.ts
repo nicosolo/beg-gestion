@@ -1,134 +1,132 @@
-import ExcelJS from "exceljs"
+import { buildXlsx, type XlsxSheetData, type XlsxCellValue } from "./xlsx-writer"
 import type { ProjectResponse } from "@beg/validations"
 
 interface ProjectExportOptions {
     perUser?: boolean
 }
 
-/**
- * Convert column index (0-based) to Excel column letter (A, B, C, ..., Z, AA, AB, ...)
- */
+interface ColumnDef {
+    header: string
+    key: string
+    width: number
+    numFmt?: string
+    getValue: (project: ProjectResponse) => string | number | Date | null
+}
+
 function getColumnLetter(index: number): string {
     let letter = ""
     let num = index + 1
-
     while (num > 0) {
         const remainder = (num - 1) % 26
         letter = String.fromCharCode(65 + remainder) + letter
         num = Math.floor((num - 1) / 26)
     }
-
     return letter
 }
 
-/**
- * Get column letter by column key from worksheet
- */
-function getColumnLetterByKey(columns: Partial<ExcelJS.Column>[], key: string): string | undefined {
-    const index = columns.findIndex((col) => col.key === key)
-    return index >= 0 ? getColumnLetter(index) : undefined
-}
-
-function createWorksheet(
-    workbook: ExcelJS.Workbook,
-    sheetName: string,
-    projects: ProjectResponse[]
-) {
-    const worksheet = workbook.addWorksheet(sheetName)
-
-    const columns: Partial<ExcelJS.Column>[] = [
-        { header: "No Mandat", key: "projectNumber", width: 12 },
-        { header: "Nom", key: "name", width: 35 },
-        { header: "Responsable", key: "manager", width: 15 },
-        { header: "Client", key: "client", width: 25 },
-        { header: "Ingénieur", key: "engineer", width: 20 },
-        { header: "Localité", key: "location", width: 20 },
-        { header: "Date de début", key: "startDate", width: 14, style: { numFmt: "dd.mm.yyyy" } },
+function getColumns(): ColumnDef[] {
+    return [
+        { header: "No Mandat", key: "projectNumber", width: 12, getValue: (p) => p.projectNumber ?? "" },
+        { header: "Nom", key: "name", width: 35, getValue: (p) => p.name ?? "" },
+        {
+            header: "Responsable",
+            key: "manager",
+            width: 15,
+            getValue: (p) =>
+                p.projectManagers?.length
+                    ? p.projectManagers.map((m) => `${m.firstName} ${m.lastName}`).join(", ")
+                    : "",
+        },
+        { header: "Client", key: "client", width: 25, getValue: (p) => p.client?.name ?? "" },
+        { header: "Ingénieur", key: "engineer", width: 20, getValue: (p) => p.engineer?.name ?? "" },
+        { header: "Localité", key: "location", width: 20, getValue: (p) => p.location?.name ?? "" },
+        {
+            header: "Date de début",
+            key: "startDate",
+            width: 14,
+            numFmt: "dd.mm.yyyy",
+            getValue: (p) => (p.startDate ? new Date(p.startDate) : ""),
+        },
         {
             header: "Première activité",
             key: "firstActivityDate",
             width: 14,
-            style: { numFmt: "dd.mm.yyyy" },
+            numFmt: "dd.mm.yyyy",
+            getValue: (p) => (p.firstActivityDate ? new Date(p.firstActivityDate) : ""),
         },
         {
             header: "Dernière activité",
             key: "lastActivityDate",
             width: 14,
-            style: { numFmt: "dd.mm.yyyy" },
+            numFmt: "dd.mm.yyyy",
+            getValue: (p) => (p.lastActivityDate ? new Date(p.lastActivityDate) : ""),
         },
-        { header: "Total heures", key: "totalDuration", width: 12, style: { numFmt: "0.00" } },
+        {
+            header: "Total heures",
+            key: "totalDuration",
+            width: 12,
+            numFmt: "0.00",
+            getValue: (p) => p.totalDuration ?? 0,
+        },
         {
             header: "Heures non facturées",
             key: "unBilledDuration",
             width: 18,
-            style: { numFmt: "0.00" },
+            numFmt: "0.00",
+            getValue: (p) => p.unBilledDuration ?? 0,
         },
     ]
+}
 
-    worksheet.columns = columns
+function buildSheetData(sheetName: string, projects: ProjectResponse[]): XlsxSheetData {
+    const columns = getColumns()
+    const rows: XlsxCellValue[][] = []
 
+    // Header row
+    rows.push(
+        columns.map((col) => ({
+            value: col.header,
+            bold: true,
+            verticalAlignment: "center" as const,
+        }))
+    )
+
+    // Data rows
     for (const project of projects) {
-        worksheet.addRow({
-            projectNumber: project.projectNumber ?? "",
-            name: project.name ?? "",
-            manager: project.projectManagers?.length
-                ? project.projectManagers.map((m) => `${m.firstName} ${m.lastName}`).join(", ")
-                : "",
-            client: project.client?.name ?? "",
-            engineer: project.engineer?.name ?? "",
-            location: project.location?.name ?? "",
-            startDate: project.startDate ? new Date(project.startDate) : undefined,
-            firstActivityDate: project.firstActivityDate
-                ? new Date(project.firstActivityDate)
-                : undefined,
-            lastActivityDate: project.lastActivityDate
-                ? new Date(project.lastActivityDate)
-                : undefined,
-            totalDuration: project.totalDuration ?? 0,
-            unBilledDuration: project.unBilledDuration ?? 0,
-        })
+        rows.push(columns.map((col) => ({ value: col.getValue(project) })))
     }
 
-    const headerRow = worksheet.getRow(1)
-    headerRow.font = { bold: true }
-    headerRow.alignment = { vertical: "middle" }
-    worksheet.views = [{ state: "frozen", ySplit: 1 }]
-
+    // Totals row
     const hasData = projects.length > 0
     const firstDataRow = 2
     const lastDataRow = hasData ? firstDataRow + projects.length - 1 : firstDataRow - 1
+    const sumKeys = ["totalDuration", "unBilledDuration"]
 
-    // Get column letters dynamically based on column keys
-    const totalDurationCol = getColumnLetterByKey(columns, "totalDuration")
-    const unBilledDurationCol = getColumnLetterByKey(columns, "unBilledDuration")
-
-    const totalsRow = worksheet.addRow({
-        projectNumber: "Total",
-        totalDuration:
-            hasData && totalDurationCol
-                ? {
-                      formula: `SUM(${totalDurationCol}${firstDataRow}:${totalDurationCol}${lastDataRow})`,
-                  }
-                : 0,
-        unBilledDuration:
-            hasData && unBilledDurationCol
-                ? {
-                      formula: `SUM(${unBilledDurationCol}${firstDataRow}:${unBilledDurationCol}${lastDataRow})`,
-                  }
-                : 0,
-    })
-
-    totalsRow.font = { bold: true }
-    totalsRow.getCell("A").alignment = { horizontal: "right" }
-
-    // Ensure empty numeric cells display zero instead of blank
-    for (const columnKey of ["totalDuration", "unBilledDuration"]) {
-        const column = worksheet.getColumn(columnKey)
-        column.eachCell({ includeEmpty: false }, (cell, rowNumber) => {
-            if (rowNumber > 1 && typeof cell.value === "number") {
-                cell.value = Number(cell.value)
+    rows.push(
+        columns.map((col, c) => {
+            if (c === 0) {
+                return { value: "Total", bold: true, horizontalAlignment: "right" as const }
             }
+            if (sumKeys.includes(col.key)) {
+                const colLetter = getColumnLetter(c)
+                if (hasData) {
+                    return {
+                        value: null,
+                        formula: `SUM(${colLetter}${firstDataRow}:${colLetter}${lastDataRow})`,
+                        bold: true,
+                    }
+                }
+                return { value: 0, bold: true }
+            }
+            return { value: "" }
         })
+    )
+
+    return {
+        name: sheetName,
+        columns: columns.map((col) => ({ width: col.width, numFmt: col.numFmt })),
+        rows,
+        freezeRow: 1,
     }
 }
 
@@ -136,7 +134,7 @@ export async function buildProjectsWorkbook(
     projects: ProjectResponse[],
     options: ProjectExportOptions = {}
 ) {
-    const workbook = new ExcelJS.Workbook()
+    const sheets: XlsxSheetData[] = []
 
     if (options.perUser) {
         const projectsByManager = projects.reduce(
@@ -145,9 +143,7 @@ export async function buildProjectsWorkbook(
 
                 if (managers.length === 0) {
                     const key = "no-manager"
-                    if (!acc[key]) {
-                        acc[key] = { managerName: "Sans responsable", projects: [] }
-                    }
+                    if (!acc[key]) acc[key] = { managerName: "Sans responsable", projects: [] }
                     acc[key].projects.push(project)
                     return acc
                 }
@@ -155,9 +151,7 @@ export async function buildProjectsWorkbook(
                 for (const manager of managers) {
                     const key = manager.id
                     const managerName = `${manager.firstName} ${manager.lastName} (${manager.initials})`
-                    if (!acc[key]) {
-                        acc[key] = { managerName, projects: [] }
-                    }
+                    if (!acc[key]) acc[key] = { managerName, projects: [] }
                     acc[key].projects.push(project)
                 }
 
@@ -170,13 +164,11 @@ export async function buildProjectsWorkbook(
             projectsByManager
         )) {
             const sheetName = managerName.substring(0, 31)
-            createWorksheet(workbook, sheetName, managerProjects, options)
+            sheets.push(buildSheetData(sheetName, managerProjects))
         }
     } else {
-        // Create a single worksheet with all projects
-        createWorksheet(workbook, "Mandats", projects, options)
+        sheets.push(buildSheetData("Mandats", projects))
     }
 
-    const buffer = await workbook.xlsx.writeBuffer()
-    return Buffer.from(buffer)
+    return buildXlsx(sheets)
 }
