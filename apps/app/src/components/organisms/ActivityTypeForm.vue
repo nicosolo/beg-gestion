@@ -112,6 +112,54 @@
             <p class="text-xs text-gray-500 mt-1">
                 Attribue les classes aux collaborateurs selon leurs types
             </p>
+
+            <!-- Inline preview -->
+            <div v-if="formData.applyClasses" class="mt-3">
+                <div v-if="previewLoading" class="flex items-center gap-2 text-sm text-gray-500 py-2">
+                    <LoadingSpinner size="sm" />
+                    Chargement de l'aperçu...
+                </div>
+                <div v-else-if="previewChanges.length > 0" class="border border-gray-200 rounded-md overflow-hidden">
+                    <!-- Summary -->
+                    <div class="px-3 py-2 bg-gray-50 border-b border-gray-200 text-xs text-gray-600 flex flex-wrap gap-2">
+                        <span v-if="addCount" class="text-green-700 font-medium">{{ addCount }} ajout{{ addCount > 1 ? 's' : '' }}</span>
+                        <span v-if="updateCount" class="text-blue-700 font-medium">{{ updateCount }} modification{{ updateCount > 1 ? 's' : '' }}</span>
+                        <span v-if="removeCount" class="text-red-700 font-medium">{{ removeCount }} suppression{{ removeCount > 1 ? 's' : '' }}</span>
+                        <span v-if="unchangedCount" class="text-gray-400">{{ unchangedCount }} inchangé{{ unchangedCount > 1 ? 's' : '' }}</span>
+                    </div>
+                    <!-- Warning -->
+                    <div v-if="removeCount > 0" class="px-3 py-2 bg-red-50 border-b border-red-200 text-xs text-red-800">
+                        Attention : {{ removeCount }} collaborateur{{ removeCount > 1 ? 's' : '' }} perdra{{ removeCount > 1 ? 'ont' : '' }} cette activité.
+                    </div>
+                    <!-- Changes list -->
+                    <div class="max-h-48 overflow-y-auto divide-y divide-gray-100">
+                        <div
+                            v-for="change in visibleChanges"
+                            :key="change.userId"
+                            :class="['px-3 py-1.5 text-xs flex items-center justify-between', rowClass(change.action)]"
+                        >
+                            <span>
+                                <span class="font-medium">{{ change.initials }}</span>
+                                {{ change.firstName }} {{ change.lastName }}
+                                <span class="text-gray-400">({{ collaboratorTypeLabel(change.collaboratorType) }})</span>
+                            </span>
+                            <span class="flex items-center gap-1.5 shrink-0 ml-2">
+                                <span class="font-mono">{{ change.currentClass ?? '—' }}</span>
+                                <span class="text-gray-400">→</span>
+                                <span class="font-mono">{{ change.newClass ?? '—' }}</span>
+                                <span :class="['px-1.5 py-0.5 rounded text-[10px] font-medium', actionBadgeClass(change.action)]">
+                                    {{ actionLabel(change.action) }}
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                    <!-- Toggle unchanged -->
+                    <label v-if="unchangedCount > 0" class="flex items-center px-3 py-1.5 bg-gray-50 border-t border-gray-200 text-xs text-gray-500 cursor-pointer">
+                        <input v-model="showUnchanged" type="checkbox" class="mr-1.5 h-3 w-3 rounded border-gray-300" />
+                        Afficher les {{ unchangedCount }} inchangé{{ unchangedCount > 1 ? 's' : '' }}
+                    </label>
+                </div>
+            </div>
         </div>
 
         <div class="flex justify-end gap-2 pt-4">
@@ -133,11 +181,14 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue"
 import Button from "@/components/atoms/Button.vue"
+import LoadingSpinner from "@/components/atoms/LoadingSpinner.vue"
+import { usePreviewClassPresets } from "@/composables/api/useActivityType"
 import type {
     ActivityTypeResponse,
     ClassPresets,
     ClassSchema,
     CollaboratorType,
+    ClassPresetPreviewItem,
 } from "@beg/validations"
 
 interface Props {
@@ -210,6 +261,87 @@ const handleSubmit = () => {
             applyClasses: formData.value.applyClasses,
         })
     }
+}
+
+// Preview logic
+const { post: fetchPreview, loading: previewLoading } = usePreviewClassPresets()
+const previewChanges = ref<ClassPresetPreviewItem[]>([])
+const showUnchanged = ref(false)
+
+let previewDebounce: ReturnType<typeof setTimeout> | null = null
+
+const loadPreview = () => {
+    if (previewDebounce) clearTimeout(previewDebounce)
+    previewDebounce = setTimeout(async () => {
+        if (!formData.value.applyClasses) {
+            previewChanges.value = []
+            return
+        }
+        const result = await fetchPreview({
+            body: {
+                activityId: props.activityType?.id,
+                classPresets: formData.value.classPresets,
+            },
+        })
+        if (result) {
+            previewChanges.value = result.changes
+        }
+    }, 300)
+}
+
+watch(
+    () => formData.value.applyClasses,
+    (checked) => {
+        if (checked) loadPreview()
+        else previewChanges.value = []
+    }
+)
+
+watch(() => formData.value.classPresets, loadPreview, { deep: true })
+
+const visibleChanges = computed(() => {
+    if (showUnchanged.value) return previewChanges.value
+    return previewChanges.value.filter((c) => c.action !== "unchanged")
+})
+
+const addCount = computed(() => previewChanges.value.filter((c) => c.action === "add").length)
+const updateCount = computed(() => previewChanges.value.filter((c) => c.action === "update").length)
+const removeCount = computed(() => previewChanges.value.filter((c) => c.action === "remove").length)
+const unchangedCount = computed(() => previewChanges.value.filter((c) => c.action === "unchanged").length)
+
+const collaboratorTypeLabel = (type: string | null) => {
+    if (!type) return "Sans type"
+    return collaboratorTypes.find((ct) => ct.value === type)?.label ?? type
+}
+
+const actionLabel = (action: string) => {
+    const labels: Record<string, string> = {
+        add: "Ajout",
+        update: "Modifié",
+        remove: "Supprimé",
+        unchanged: "Inchangé",
+    }
+    return labels[action] ?? action
+}
+
+const actionBadgeClass = (action: string) => {
+    const classes: Record<string, string> = {
+        add: "bg-green-100 text-green-800",
+        update: "bg-blue-100 text-blue-800",
+        remove: "bg-red-100 text-red-800",
+        unchanged: "bg-gray-100 text-gray-500",
+    }
+    return classes[action] ?? ""
+}
+
+const rowClass = (action: string) => {
+    const classes: Record<string, string> = {
+        add: "bg-green-50/50",
+        update: "bg-blue-50/50",
+        remove: "bg-red-50/50",
+        unchanged: "",
+    }
+    return classes[action] ?? ""
 }
 
 // Initialize form data when activityType prop changes

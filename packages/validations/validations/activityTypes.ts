@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { timestampsSchema, classPresetsSchema } from "./base"
+import { timestampsSchema, classPresetsSchema, classSchema, collaboratorTypeSchema } from "./base"
 
 // Activity type creation schema
 export const activityTypeCreateSchema = z.object({
@@ -42,3 +42,28 @@ export const activityTypesArrayResponseSchema = z.array(activityTypeResponseSche
 export type ActivityTypeCreateInput = z.infer<typeof activityTypeCreateSchema>
 export type ActivityTypeUpdateInput = z.infer<typeof activityTypeUpdateSchema>
 export type ActivityTypeResponse = z.infer<typeof activityTypeResponseSchema>
+
+// Class preset preview schemas
+export const classPresetPreviewRequestSchema = z.object({
+    activityId: z.number().optional(),
+    classPresets: classPresetsSchema,
+})
+
+export const classPresetPreviewItemSchema = z.object({
+    userId: z.number(),
+    firstName: z.string(),
+    lastName: z.string(),
+    initials: z.string(),
+    collaboratorType: collaboratorTypeSchema.nullable(),
+    currentClass: classSchema.nullable(),
+    newClass: classSchema.nullable(),
+    action: z.enum(["add", "update", "remove", "unchanged"]),
+})
+
+export const classPresetPreviewResponseSchema = z.object({
+    changes: z.array(classPresetPreviewItemSchema),
+})
+
+export type ClassPresetPreviewRequest = z.infer<typeof classPresetPreviewRequestSchema>
+export type ClassPresetPreviewItem = z.infer<typeof classPresetPreviewItemSchema>
+export type ClassPresetPreviewResponse = z.infer<typeof classPresetPreviewResponseSchema>

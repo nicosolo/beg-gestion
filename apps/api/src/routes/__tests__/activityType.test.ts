@@ -447,6 +447,178 @@ describe("applyClasses", () => {
     })
 })
 
+describe("POST /activity-type/preview-classes", () => {
+    const previewPresets = {
+        cadre: "A",
+        chefDeProjet: "B",
+        collaborateur: "C",
+        operateur: "D",
+        secretaire: "E",
+        stagiaire: "F",
+        default: "R",
+    }
+
+    const setUser = async (uid: number, data: Record<string, unknown>) => {
+        const { eq } = await import("drizzle-orm")
+        await db.update(schema.users).set(data).where(eq(schema.users.id, uid))
+    }
+
+    test("non-admin returns 403", async () => {
+        const res = await app.request("/activity-type/preview-classes", {
+            method: "POST",
+            headers: jsonHeaders(userToken),
+            body: JSON.stringify({ classPresets: previewPresets }),
+        })
+        expect(res.status).toBe(403)
+    })
+
+    test("returns add action for new activity (no activityId)", async () => {
+        await setUser(userId, { activityRates: [], collaboratorType: "cadre" })
+
+        const res = await app.request("/activity-type/preview-classes", {
+            method: "POST",
+            headers: jsonHeaders(adminToken),
+            body: JSON.stringify({ classPresets: previewPresets }),
+        })
+        expect(res.status).toBe(200)
+
+        const body = await res.json()
+        const userChange = body.changes.find((c: { userId: number }) => c.userId === userId)
+        expect(userChange).toBeDefined()
+        expect(userChange.action).toBe("add")
+        expect(userChange.currentClass).toBeNull()
+        expect(userChange.newClass).toBe("A") // cadre preset
+    })
+
+    test("returns update action when class differs", async () => {
+        // Get an existing activity type
+        const allTypes = await db.select().from(schema.activityTypes)
+        const existingType = allTypes[0]
+
+        await setUser(userId, {
+            activityRates: [{ activityId: existingType.id, class: "G" }],
+            collaboratorType: "cadre",
+        })
+
+        const res = await app.request("/activity-type/preview-classes", {
+            method: "POST",
+            headers: jsonHeaders(adminToken),
+            body: JSON.stringify({
+                activityId: existingType.id,
+                classPresets: previewPresets,
+            }),
+        })
+        expect(res.status).toBe(200)
+
+        const body = await res.json()
+        const userChange = body.changes.find((c: { userId: number }) => c.userId === userId)
+        expect(userChange.action).toBe("update")
+        expect(userChange.currentClass).toBe("G")
+        expect(userChange.newClass).toBe("A")
+    })
+
+    test("returns unchanged when class matches", async () => {
+        const allTypes = await db.select().from(schema.activityTypes)
+        const existingType = allTypes[0]
+
+        await setUser(userId, {
+            activityRates: [{ activityId: existingType.id, class: "A" }],
+            collaboratorType: "cadre",
+        })
+
+        const res = await app.request("/activity-type/preview-classes", {
+            method: "POST",
+            headers: jsonHeaders(adminToken),
+            body: JSON.stringify({
+                activityId: existingType.id,
+                classPresets: previewPresets,
+            }),
+        })
+        expect(res.status).toBe(200)
+
+        const body = await res.json()
+        const userChange = body.changes.find((c: { userId: number }) => c.userId === userId)
+        expect(userChange.action).toBe("unchanged")
+    })
+
+    test("returns remove action when preset is null", async () => {
+        const allTypes = await db.select().from(schema.activityTypes)
+        const existingType = allTypes[0]
+
+        await setUser(userId, {
+            activityRates: [{ activityId: existingType.id, class: "B" }],
+            collaboratorType: "cadre",
+        })
+
+        const res = await app.request("/activity-type/preview-classes", {
+            method: "POST",
+            headers: jsonHeaders(adminToken),
+            body: JSON.stringify({
+                activityId: existingType.id,
+                classPresets: { ...previewPresets, cadre: null },
+            }),
+        })
+        expect(res.status).toBe(200)
+
+        const body = await res.json()
+        const userChange = body.changes.find((c: { userId: number }) => c.userId === userId)
+        expect(userChange.action).toBe("remove")
+        expect(userChange.currentClass).toBe("B")
+        expect(userChange.newClass).toBeNull()
+    })
+
+    test("skips archived users", async () => {
+        const { eq } = await import("drizzle-orm")
+        const pw = (await import("../../tools/auth")).hashPassword
+        const [archivedUser] = await db
+            .insert(schema.users)
+            .values({
+                email: "archived-preview@test.com",
+                firstName: "Archived",
+                lastName: "Preview",
+                initials: "AP",
+                password: await pw("pass"),
+                role: "user",
+                archived: true,
+                activityRates: [],
+            })
+            .returning()
+
+        const res = await app.request("/activity-type/preview-classes", {
+            method: "POST",
+            headers: jsonHeaders(adminToken),
+            body: JSON.stringify({ classPresets: previewPresets }),
+        })
+        expect(res.status).toBe(200)
+
+        const body = await res.json()
+        const archivedChange = body.changes.find(
+            (c: { userId: number }) => c.userId === archivedUser.id
+        )
+        expect(archivedChange).toBeUndefined()
+
+        await db.delete(schema.users).where(eq(schema.users.id, archivedUser.id))
+    })
+
+    test("uses default class for users without collaboratorType", async () => {
+        await setUser(userId, { activityRates: [], collaboratorType: null })
+
+        const res = await app.request("/activity-type/preview-classes", {
+            method: "POST",
+            headers: jsonHeaders(adminToken),
+            body: JSON.stringify({ classPresets: previewPresets }),
+        })
+        expect(res.status).toBe(200)
+
+        const body = await res.json()
+        const userChange = body.changes.find((c: { userId: number }) => c.userId === userId)
+        expect(userChange.newClass).toBe("R") // default preset
+        expect(userChange.action).toBe("add")
+
+        await setUser(userId, { collaboratorType: null })
+    })
+})
+
 describe("DELETE /activity-type/:id", () => {
     test("admin deletes activity type with no activities", async () => {
         // Create a throwaway type to delete

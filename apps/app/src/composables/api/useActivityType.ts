@@ -2,7 +2,9 @@ import {
     idParamSchema,
     activityTypeCreateSchema,
     activityTypeUpdateSchema,
+    classPresetPreviewRequestSchema,
     type ActivityTypeResponse,
+    type ClassPresetPreviewResponse,
 } from "@beg/validations"
 import { useGet, usePost, usePut, useDelete } from "./useAPI"
 
@@ -41,6 +43,17 @@ export function useUpdateActivityType() {
     >("activity-type/:id", {
         params: idParamSchema,
         body: activityTypeUpdateSchema,
+    })
+}
+
+export function usePreviewClassPresets() {
+    return usePost<
+        ClassPresetPreviewResponse,
+        {
+            body: typeof classPresetPreviewRequestSchema
+        }
+    >("activity-type/preview-classes", {
+        body: classPresetPreviewRequestSchema,
     })
 }
 
