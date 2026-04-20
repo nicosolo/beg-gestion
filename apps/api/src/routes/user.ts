@@ -181,7 +181,11 @@ export const userRoutes = new Hono<{ Variables: Variables }>()
                 return c.json({ error: "User not found" }, 404)
             }
 
-            if (userData.role === "super_admin" && currentUser.role !== "super_admin") {
+            if (
+                userData.role === "super_admin" &&
+                existingUser.role !== "super_admin" &&
+                currentUser.role !== "super_admin"
+            ) {
                 return c.json(
                     {
                         error: "Forbidden - Only a super_admin can assign the super_admin role",

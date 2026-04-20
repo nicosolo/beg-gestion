@@ -277,6 +277,22 @@ describe("PUT /user/:id - edge cases", () => {
 		expect(body.firstName).toBe("Updated")
 	})
 
+	test("admin can save super_admin with role unchanged in payload", async () => {
+		const listRes = await app.request("/user", {
+			headers: { Authorization: `Bearer ${adminToken}` },
+		})
+		const users = await listRes.json()
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const superAdmin = users.find((u: any) => u.role === "super_admin")
+
+		const res = await app.request(`/user/${superAdmin.id}`, {
+			method: "PUT",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({ firstName: "Updated2", role: "super_admin" }),
+		})
+		expect(res.status).toBe(200)
+	})
+
 	test("admin assigning super_admin role returns 403", async () => {
 		const res = await app.request(`/user/${userId}`, {
 			method: "PUT",
