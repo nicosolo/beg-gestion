@@ -258,7 +258,7 @@ describe("PUT /user/:id - edge cases", () => {
 		expect(res.status).toBe(404)
 	})
 
-	test("admin updating super_admin returns 403", async () => {
+	test("admin can update super_admin's non-role fields", async () => {
 		// Find the super_admin user id
 		const listRes = await app.request("/user", {
 			headers: { Authorization: `Bearer ${adminToken}` },
@@ -270,9 +270,11 @@ describe("PUT /user/:id - edge cases", () => {
 		const res = await app.request(`/user/${superAdmin.id}`, {
 			method: "PUT",
 			headers: jsonHeaders(adminToken),
-			body: JSON.stringify({ firstName: "Hacked" }),
+			body: JSON.stringify({ firstName: "Updated" }),
 		})
-		expect(res.status).toBe(403)
+		expect(res.status).toBe(200)
+		const body = await res.json()
+		expect(body.firstName).toBe("Updated")
 	})
 
 	test("admin assigning super_admin role returns 403", async () => {
