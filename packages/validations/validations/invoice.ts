@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { createPageResponseSchema, paginationSchema } from "./pagination"
-import { dateSchema, timestampsSchema } from "./base"
+import { booleanSchema, dateSchema, timestampsSchema } from "./base"
 
 // ============================================================================
 // Enums and Constants
@@ -395,6 +395,26 @@ export const invoiceFilterSchema = z
 
 export type InvoiceFilter = z.infer<typeof invoiceFilterSchema>
 export type InvoiceFilterInput = z.input<typeof invoiceFilterSchema>
+
+// Invoice export filter schema (reuses list filter, adds perUser)
+export const invoiceExportFilterSchema = z
+    .object({
+        projectId: z.coerce.number().optional(),
+        status: InvoiceStatusEnum.optional(),
+        visaByUserId: z.coerce.number().optional(),
+        inChargeUserId: z.coerce.number().optional(),
+        fromDate: z.coerce.date().optional(),
+        toDate: z.coerce.date().optional(),
+        sortBy: z
+            .enum(["date", "reference", "total", "status", "inChargeUser"])
+            .optional()
+            .default("date"),
+        sortOrder: z.enum(["asc", "desc"]).optional().default("desc"),
+        perUser: booleanSchema.default(false).optional(),
+    })
+
+export type InvoiceExportFilter = z.infer<typeof invoiceExportFilterSchema>
+export type InvoiceExportFilterInput = z.input<typeof invoiceExportFilterSchema>
 
 // ============================================================================
 // List Response Schema

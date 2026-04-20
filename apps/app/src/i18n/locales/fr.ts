@@ -510,6 +510,12 @@ export default {
         title: "Factures",
         titleSingular: "Facture",
         new: "Nouvelle facture",
+        export: {
+            button: "Exporter vers Excel",
+            exporting: "Export en cours...",
+            all: "Tout",
+            perUser: "Par responsable",
+        },
         invoiceNumber: "Numéro",
         issueDate: "Date",
         totalTTC: "Montant TTC",
