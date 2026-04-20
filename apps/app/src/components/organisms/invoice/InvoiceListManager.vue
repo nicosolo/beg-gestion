@@ -3,14 +3,64 @@
         <div class="mb-4" v-if="!hideHeader">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
                 <h2 class="text-lg font-semibold">{{ $t("invoice.title") }}</h2>
-                <Button
-                    variant="primary"
-                    size="md"
-                    class="w-full sm:w-auto"
-                    :to="{ name: 'invoice-new', query: { projectId: initialFilter?.projectId } }"
-                >
-                    {{ $t("invoice.new") }}
-                </Button>
+                <div class="flex flex-wrap gap-2 justify-start sm:justify-end">
+                    <DropdownMenu>
+                        <template #trigger="{ toggle }">
+                            <Button
+                                variant="secondary"
+                                size="md"
+                                class="w-full sm:w-auto"
+                                :disabled="exportLoading"
+                                @click="toggle"
+                            >
+                                {{
+                                    exportLoading
+                                        ? $t("invoice.export.exporting")
+                                        : $t("invoice.export.button")
+                                }}
+                            </Button>
+                        </template>
+                        <template #items="{ close }">
+                            <button
+                                @click="
+                                    () => {
+                                        handleExport(false)
+                                        close()
+                                    }
+                                "
+                                class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 cursor-pointer transition-colors"
+                                role="menuitem"
+                                type="button"
+                            >
+                                {{ $t("invoice.export.all") }}
+                            </button>
+                            <button
+                                @click="
+                                    () => {
+                                        handleExport(true)
+                                        close()
+                                    }
+                                "
+                                class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 cursor-pointer transition-colors"
+                                role="menuitem"
+                                type="button"
+                            >
+                                {{ $t("invoice.export.perUser") }}
+                            </button>
+                        </template>
+                    </DropdownMenu>
+                    <Button
+                        variant="primary"
+                        size="md"
+                        class="w-full sm:w-auto"
+                        :to="{
+                            name: 'invoice-new',
+                            query: { projectId: initialFilter?.projectId },
+                        }"
+                    >
+                        {{ $t("invoice.new") }}
+                    </Button>
+                </div>
             </div>
         </div>
 
@@ -144,6 +194,7 @@ import { ref, reactive, computed, onMounted, onActivated } from "vue"
 import { useI18n } from "vue-i18n"
 import Button from "@/components/atoms/Button.vue"
 import Badge from "@/components/atoms/Badge.vue"
+import DropdownMenu from "@/components/atoms/DropdownMenu.vue"
 import DataTable, { type Column } from "@/components/molecules/DataTable.vue"
 import Pagination from "@/components/organisms/Pagination.vue"
 import LoadingOverlay from "@/components/atoms/LoadingOverlay.vue"
@@ -152,10 +203,15 @@ import InvoiceFilterPanel, {
     type InvoiceSortBy,
     type SortOrder,
 } from "@/components/organisms/invoice/InvoiceFilterPanel.vue"
-import { useFetchInvoiceList, useUpdateInvoice } from "@/composables/api/useInvoice"
+import {
+    useFetchInvoiceList,
+    useUpdateInvoice,
+    useExportInvoices,
+} from "@/composables/api/useInvoice"
 import { useAlert } from "@/composables/utils/useAlert"
 import type { InvoiceFilter } from "@beg/validations"
 import { useFormat } from "@/composables/utils/useFormat"
+import { useExcelExport } from "@/composables/utils/useExcelExport"
 import { useAuthStore } from "@/stores/auth"
 import ConfirmDialog from "@/components/molecules/ConfirmDialog.vue"
 
@@ -285,6 +341,8 @@ const visibleColumns = computed(() => {
 })
 
 const { get: fetchInvoices, loading, error, data: invoicesData } = useFetchInvoiceList()
+const { get: exportInvoices, loading: exportLoading } = useExportInvoices()
+const { exportToExcel } = useExcelExport()
 
 const invoices = computed(() => invoicesData.value?.data || [])
 const totalCount = computed(() => invoicesData.value?.total || 0)
@@ -333,6 +391,27 @@ const loadInvoices = async (page?: number) => {
     }
 }
 
+const handleExport = async (perUser: boolean = false) => {
+    const query: Record<string, unknown> = {
+        sortBy: filters.sortBy,
+        sortOrder: filters.sortOrder,
+        perUser,
+        ...props.initialFilter,
+    }
+    if (filters.status) query.status = filters.status
+    if (filters.visaByUserId) query.visaByUserId = filters.visaByUserId
+    if (filters.inChargeUserId) query.inChargeUserId = filters.inChargeUserId
+    if (filters.fromDate) query.fromDate = filters.fromDate
+    if (filters.toDate) query.toDate = filters.toDate
+
+    const arrayBuffer = await exportInvoices({ query })
+
+    const today = new Date().toISOString().split("T")[0]
+    const filename = `factures-${today}.xlsx`
+
+    await exportToExcel(arrayBuffer, filename)
+}
+
 const markAsSent = async () => {
     if (!pendingSentId.value) return
     markingSentId.value = pendingSentId.value
@@ -373,5 +452,7 @@ const getStatusVariant = (status: string): "success" | "error" | "warning" | "in
 // Expose methods that parent components might need
 defineExpose({
     loadInvoices,
+    handleExport,
+    exportLoading,
 })
 </script>

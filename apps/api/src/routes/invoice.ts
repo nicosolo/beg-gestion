@@ -3,6 +3,7 @@ import type { Context } from "hono"
 import { zValidator } from "@hono/zod-validator"
 import {
     invoiceFilterSchema,
+    invoiceExportFilterSchema,
     invoiceResponseSchema,
     invoiceCreateSchema,
     invoiceUpdateSchema,
@@ -10,6 +11,7 @@ import {
     invoiceListResponse,
     type InvoiceCreateInput,
     type InvoiceUpdateInput,
+    type InvoiceResponse,
 } from "@beg/validations"
 import { invoiceRepository } from "../db/repositories/invoice.repository"
 import { authMiddleware } from "@src/tools/auth-middleware"
@@ -25,6 +27,7 @@ import { roleMiddleware, hasRole } from "@src/tools/role-middleware"
 import { z, ZodError } from "zod"
 import { normalizeStoredPath, fileBaseName, matchesStoredPath } from "@src/tools/file-utils"
 import { storeFile, serveFile } from "@src/services/file-storage.service"
+import { buildInvoicesWorkbook } from "@src/tools/invoice-exporter"
 import { audit } from "@src/tools/audit"
 
 type UploadedInvoiceFiles = {
@@ -205,6 +208,40 @@ export const invoiceRoutes = new Hono<{ Variables: Variables }>()
             return c.render(result, 200)
         }
     )
+    .get("/export", zValidator("query", invoiceExportFilterSchema), async (c) => {
+        const filter = c.req.valid("query")
+        const user = c.get("user")
+
+        try {
+            const result = await invoiceRepository.findAll(user, {
+                ...filter,
+                page: 1,
+                limit: 10000,
+            })
+
+            const buffer = await buildInvoicesWorkbook(result.data as InvoiceResponse[], {
+                perUser: filter.perUser ?? false,
+            })
+
+            const today = new Date().toISOString().split("T")[0]
+            const filename = `factures-${today}.xlsx`
+
+            const headers = new Headers({
+                "Content-Type":
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "Content-Disposition": `attachment; filename="${filename}"`,
+                "Content-Length": buffer.byteLength.toString(),
+            })
+
+            return new Response(buffer, {
+                status: 200,
+                headers,
+            })
+        } catch (error) {
+            console.error("Invoice Excel export failed:", error)
+            return c.json({ error: "Export failed" }, 500)
+        }
+    })
     .get(
         "/:id",
         zValidator("param", idParamSchema),

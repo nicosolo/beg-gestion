@@ -1,12 +1,13 @@
 import {
     idParamSchema,
     invoiceFilterSchema,
+    invoiceExportFilterSchema,
     invoiceCreateSchema,
     invoiceUpdateSchema,
     type InvoiceResponse,
     type InvoiceListResponse,
 } from "@beg/validations"
-import { useGet, usePost, usePut, useDelete } from "./useAPI"
+import { useGet, usePost, usePut, useDelete, useGetBinary } from "./useAPI"
 
 export function useFetchInvoice() {
     return useGet<
@@ -27,6 +28,14 @@ export function useFetchInvoiceList() {
         }
     >("invoice", {
         query: invoiceFilterSchema,
+    })
+}
+
+export function useExportInvoices() {
+    return useGetBinary<{
+        query: typeof invoiceExportFilterSchema
+    }>("invoice/export", {
+        query: invoiceExportFilterSchema,
     })
 }
 

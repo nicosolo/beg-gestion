@@ -5,9 +5,12 @@ import {
     activityTypeUpdateSchema,
     activityTypeResponseSchema,
     activityTypesArrayResponseSchema,
+    classPresetPreviewRequestSchema,
+    classPresetPreviewResponseSchema,
     idParamSchema,
     messageSchema,
     type ActivityTypeResponse,
+    type ClassPresetPreviewItem,
     ErrorCode,
 } from "@beg/validations"
 import { activityTypeRepository } from "../db/repositories/activityType.repository"
@@ -54,6 +57,47 @@ async function applyClassPresetsToUsers(activityId: number, classPresets: ClassP
     }
 }
 
+async function computeClassPresetChanges(
+    activityId: number | undefined,
+    classPresets: ClassPresets
+): Promise<ClassPresetPreviewItem[]> {
+    const allUsers = await userRepository.findAllDetails()
+    const eligibleUsers = allUsers.filter((u) => !u.archived)
+
+    const changes: ClassPresetPreviewItem[] = []
+
+    for (const user of eligibleUsers) {
+        const collabType = user.collaboratorType as CollaboratorType | null
+        const newClass = collabType ? classPresets[collabType] : classPresets.default ?? null
+
+        const existingRates: ActivityRateUser[] =
+            (user.activityRates as ActivityRateUser[] | null) || []
+        const existing = activityId
+            ? existingRates.find((r) => r.activityId === activityId)
+            : undefined
+        const currentClass = existing?.class ?? null
+
+        let action: ClassPresetPreviewItem["action"]
+        if (!currentClass && newClass) action = "add"
+        else if (currentClass && !newClass) action = "remove"
+        else if (currentClass && newClass && currentClass !== newClass) action = "update"
+        else action = "unchanged"
+
+        changes.push({
+            userId: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            initials: user.initials,
+            collaboratorType: collabType,
+            currentClass,
+            newClass,
+            action,
+        })
+    }
+
+    return changes
+}
+
 // Create the app and apply auth middleware to all routes
 export const activityTypeRoutes = new Hono<{ Variables: Variables }>()
     .use("/*", authMiddleware)
@@ -97,6 +141,21 @@ export const activityTypeRoutes = new Hono<{ Variables: Variables }>()
                 activityTypes = activityTypes.filter((at) => !at.adminOnly)
             }
             return c.render(activityTypes, 200)
+        }
+    )
+
+    // Preview class preset changes without applying
+    .post(
+        "/preview-classes",
+        roleMiddleware("admin"),
+        zValidator("json", classPresetPreviewRequestSchema),
+        responseValidator({
+            200: classPresetPreviewResponseSchema,
+        }),
+        async (c) => {
+            const { activityId, classPresets } = c.req.valid("json")
+            const changes = await computeClassPresetChanges(activityId, classPresets as ClassPresets)
+            return c.render({ changes }, 200)
         }
     )
 
