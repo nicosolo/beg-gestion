@@ -1,4 +1,4 @@
-import ExcelJS from "exceljs"
+import { buildXlsx, type XlsxSheetData, type XlsxCellValue } from "./xlsx-writer"
 import type { InvoiceResponse } from "@beg/validations"
 
 interface InvoiceExportOptions {
@@ -19,103 +19,158 @@ const TYPE_LABELS: Record<string, string> = {
     deposit: "Acompte",
 }
 
+interface ColumnDef {
+    header: string
+    key: string
+    width: number
+    numFmt?: string
+    getValue: (invoice: InvoiceResponse) => string | number | Date | null
+}
+
 function getColumnLetter(index: number): string {
     let letter = ""
     let num = index + 1
-
     while (num > 0) {
         const remainder = (num - 1) % 26
         letter = String.fromCharCode(65 + remainder) + letter
         num = Math.floor((num - 1) / 26)
     }
-
     return letter
 }
 
-function getColumnLetterByKey(columns: Partial<ExcelJS.Column>[], key: string): string | undefined {
-    const index = columns.findIndex((col) => col.key === key)
-    return index >= 0 ? getColumnLetter(index) : undefined
+function getColumns(): ColumnDef[] {
+    return [
+        {
+            header: "N° Facture",
+            key: "invoiceNumber",
+            width: 18,
+            getValue: (i) => i.invoiceNumber || i.reference || "",
+        },
+        {
+            header: "Client",
+            key: "client",
+            width: 25,
+            getValue: (i) => i.project?.client?.name ?? "",
+        },
+        {
+            header: "N° Mandat",
+            key: "projectNumber",
+            width: 12,
+            getValue: (i) => i.project?.projectNumber ?? "",
+        },
+        {
+            header: "Mandat",
+            key: "projectName",
+            width: 30,
+            getValue: (i) => i.project?.name ?? "",
+        },
+        { header: "Objet", key: "reference", width: 35, getValue: (i) => i.reference ?? "" },
+        {
+            header: "Type",
+            key: "type",
+            width: 14,
+            getValue: (i) => TYPE_LABELS[i.type] ?? i.type,
+        },
+        {
+            header: "Date",
+            key: "issueDate",
+            width: 12,
+            numFmt: "dd.mm.yyyy",
+            getValue: (i) => (i.issueDate ? new Date(i.issueDate) : ""),
+        },
+        {
+            header: "Total HT",
+            key: "totalHT",
+            width: 14,
+            numFmt: "#,##0.00",
+            getValue: (i) => i.totalHT ?? 0,
+        },
+        {
+            header: "TVA",
+            key: "vatAmount",
+            width: 12,
+            numFmt: "#,##0.00",
+            getValue: (i) => i.vatAmount ?? 0,
+        },
+        {
+            header: "Total TTC",
+            key: "totalTTC",
+            width: 14,
+            numFmt: "#,##0.00",
+            getValue: (i) => i.totalTTC ?? 0,
+        },
+        {
+            header: "Statut",
+            key: "status",
+            width: 12,
+            getValue: (i) => STATUS_LABELS[i.status] ?? i.status,
+        },
+        {
+            header: "Responsable",
+            key: "inChargeUser",
+            width: 12,
+            getValue: (i) => i.inChargeUser?.initials ?? "",
+        },
+    ]
 }
 
-function createWorksheet(
-    workbook: ExcelJS.Workbook,
-    sheetName: string,
-    invoices: InvoiceResponse[]
-) {
-    const worksheet = workbook.addWorksheet(sheetName)
+function buildSheetData(sheetName: string, invoices: InvoiceResponse[]): XlsxSheetData {
+    const columns = getColumns()
+    const rows: XlsxCellValue[][] = []
 
-    const columns: Partial<ExcelJS.Column>[] = [
-        { header: "N° Facture", key: "invoiceNumber", width: 18 },
-        { header: "Client", key: "client", width: 25 },
-        { header: "N° Mandat", key: "projectNumber", width: 12 },
-        { header: "Mandat", key: "projectName", width: 30 },
-        { header: "Objet", key: "reference", width: 35 },
-        { header: "Type", key: "type", width: 14 },
-        { header: "Date", key: "issueDate", width: 12, style: { numFmt: "dd.mm.yyyy" } },
-        { header: "Total HT", key: "totalHT", width: 14, style: { numFmt: "#,##0.00" } },
-        { header: "TVA", key: "vatAmount", width: 12, style: { numFmt: "#,##0.00" } },
-        { header: "Total TTC", key: "totalTTC", width: 14, style: { numFmt: "#,##0.00" } },
-        { header: "Statut", key: "status", width: 12 },
-        { header: "Responsable", key: "inChargeUser", width: 12 },
-    ]
+    // Header row
+    rows.push(
+        columns.map((col) => ({
+            value: col.header,
+            bold: true,
+            verticalAlignment: "center" as const,
+        }))
+    )
 
-    worksheet.columns = columns
-
+    // Data rows
     for (const invoice of invoices) {
-        worksheet.addRow({
-            invoiceNumber: invoice.invoiceNumber || invoice.reference || "",
-            client: invoice.project?.client?.name ?? "",
-            projectNumber: invoice.project?.projectNumber ?? "",
-            projectName: invoice.project?.name ?? "",
-            reference: invoice.reference ?? "",
-            type: TYPE_LABELS[invoice.type] ?? invoice.type,
-            issueDate: invoice.issueDate ? new Date(invoice.issueDate) : undefined,
-            totalHT: invoice.totalHT ?? 0,
-            vatAmount: invoice.vatAmount ?? 0,
-            totalTTC: invoice.totalTTC ?? 0,
-            status: STATUS_LABELS[invoice.status] ?? invoice.status,
-            inChargeUser: invoice.inChargeUser?.initials ?? "",
-        })
+        rows.push(columns.map((col) => ({ value: col.getValue(invoice) })))
     }
 
-    const headerRow = worksheet.getRow(1)
-    headerRow.font = { bold: true }
-    headerRow.alignment = { vertical: "middle" }
-    worksheet.views = [{ state: "frozen", ySplit: 1 }]
-
+    // Totals row
     const hasData = invoices.length > 0
     const firstDataRow = 2
     const lastDataRow = hasData ? firstDataRow + invoices.length - 1 : firstDataRow - 1
+    const sumKeys = ["totalHT", "vatAmount", "totalTTC"]
 
-    const totalHTCol = getColumnLetterByKey(columns, "totalHT")
-    const vatAmountCol = getColumnLetterByKey(columns, "vatAmount")
-    const totalTTCCol = getColumnLetterByKey(columns, "totalTTC")
+    rows.push(
+        columns.map((col, c) => {
+            if (c === 0) {
+                return { value: "Total", bold: true, horizontalAlignment: "right" as const }
+            }
+            if (sumKeys.includes(col.key)) {
+                const colLetter = getColumnLetter(c)
+                if (hasData) {
+                    return {
+                        value: null,
+                        formula: `SUM(${colLetter}${firstDataRow}:${colLetter}${lastDataRow})`,
+                        bold: true,
+                    }
+                }
+                return { value: 0, bold: true }
+            }
+            return { value: "" }
+        })
+    )
 
-    const totalsRow = worksheet.addRow({
-        invoiceNumber: "Total",
-        totalHT:
-            hasData && totalHTCol
-                ? { formula: `SUM(${totalHTCol}${firstDataRow}:${totalHTCol}${lastDataRow})` }
-                : 0,
-        vatAmount:
-            hasData && vatAmountCol
-                ? { formula: `SUM(${vatAmountCol}${firstDataRow}:${vatAmountCol}${lastDataRow})` }
-                : 0,
-        totalTTC:
-            hasData && totalTTCCol
-                ? { formula: `SUM(${totalTTCCol}${firstDataRow}:${totalTTCCol}${lastDataRow})` }
-                : 0,
-    })
-
-    totalsRow.font = { bold: true }
-    totalsRow.getCell("A").alignment = { horizontal: "right" }
+    return {
+        name: sheetName,
+        columns: columns.map((col) => ({ width: col.width, numFmt: col.numFmt })),
+        rows,
+        freezeRow: 1,
+    }
 }
 
 export async function buildInvoicesWorkbook(
     invoices: InvoiceResponse[],
     options: InvoiceExportOptions = {}
 ) {
-    const workbook = new ExcelJS.Workbook()
+    const sheets: XlsxSheetData[] = []
 
     if (options.perUser) {
         const invoicesByUser = invoices.reduce(
@@ -140,16 +195,15 @@ export async function buildInvoicesWorkbook(
         for (const [, { userName, invoices: userInvoices }] of Object.entries(invoicesByUser)) {
             const sheetName =
                 userName.replace(/[\\/*?[\]:]/g, "").substring(0, 31) || "Sans nom"
-            createWorksheet(workbook, sheetName, userInvoices)
+            sheets.push(buildSheetData(sheetName, userInvoices))
         }
 
-        if (workbook.worksheets.length === 0) {
-            createWorksheet(workbook, "Factures", [])
+        if (sheets.length === 0) {
+            sheets.push(buildSheetData("Factures", []))
         }
     } else {
-        createWorksheet(workbook, "Factures", invoices)
+        sheets.push(buildSheetData("Factures", invoices))
     }
 
-    const buffer = await workbook.xlsx.writeBuffer()
-    return Buffer.from(buffer)
+    return buildXlsx(sheets)
 }
