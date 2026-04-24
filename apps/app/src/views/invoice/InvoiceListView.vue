@@ -39,6 +39,19 @@
                     >
                         {{ $t("invoice.export.perUser") }}
                     </button>
+                    <button
+                        @click="
+                            () => {
+                                triggerExport(true, { fromDate: '2025-01-01' })
+                                close()
+                            }
+                        "
+                        class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 cursor-pointer transition-colors"
+                        role="menuitem"
+                        type="button"
+                    >
+                        {{ $t("invoice.export.perUserFrom2025") }}
+                    </button>
                 </template>
             </DropdownMenu>
         </div>
@@ -59,8 +72,13 @@ const managerRef = ref<InstanceType<typeof InvoiceListManager> | null>(null)
 
 const exportLoading = computed(() => managerRef.value?.exportLoading ?? false)
 
-const triggerExport = (perUser: boolean) => {
-    managerRef.value?.handleExport(perUser)
+interface ExportOverrides {
+    fromDate?: string
+    toDate?: string
+}
+
+const triggerExport = (perUser: boolean, overrides: ExportOverrides = {}) => {
+    managerRef.value?.handleExport(perUser, overrides)
 }
 
 onMounted(() => {

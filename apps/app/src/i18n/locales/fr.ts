@@ -515,6 +515,7 @@ export default {
             exporting: "Export en cours...",
             all: "Tout",
             perUser: "Par responsable",
+            perUserFrom2025: "Par collaborateur (dès 2025)",
         },
         invoiceNumber: "Numéro",
         issueDate: "Date",

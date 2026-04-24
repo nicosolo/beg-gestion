@@ -47,6 +47,19 @@
                             >
                                 {{ $t("invoice.export.perUser") }}
                             </button>
+                            <button
+                                @click="
+                                    () => {
+                                        handleExport(true, { fromDate: '2025-01-01' })
+                                        close()
+                                    }
+                                "
+                                class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 cursor-pointer transition-colors"
+                                role="menuitem"
+                                type="button"
+                            >
+                                {{ $t("invoice.export.perUserFrom2025") }}
+                            </button>
                         </template>
                     </DropdownMenu>
                     <Button
@@ -391,7 +404,12 @@ const loadInvoices = async (page?: number) => {
     }
 }
 
-const handleExport = async (perUser: boolean = false) => {
+interface ExportOverrides {
+    fromDate?: string
+    toDate?: string
+}
+
+const handleExport = async (perUser: boolean = false, overrides: ExportOverrides = {}) => {
     const query: Record<string, unknown> = {
         sortBy: filters.sortBy,
         sortOrder: filters.sortOrder,
@@ -403,6 +421,8 @@ const handleExport = async (perUser: boolean = false) => {
     if (filters.inChargeUserId) query.inChargeUserId = filters.inChargeUserId
     if (filters.fromDate) query.fromDate = filters.fromDate
     if (filters.toDate) query.toDate = filters.toDate
+    if (overrides.fromDate) query.fromDate = overrides.fromDate
+    if (overrides.toDate) query.toDate = overrides.toDate
 
     const arrayBuffer = await exportInvoices({ query })
 

@@ -223,3 +223,32 @@ describe("invoice locking", () => {
 		expect(res.status).toBe(400)
 	})
 })
+
+describe("invoice export", () => {
+	const XLSX_CT = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+	test("GET /invoice/export returns xlsx buffer", async () => {
+		const res = await app.request("/invoice/export", {
+			headers: { Authorization: `Bearer ${adminToken}` },
+		})
+		expect(res.status).toBe(200)
+		expect(res.headers.get("content-type")).toBe(XLSX_CT)
+		const buf = await res.arrayBuffer()
+		expect(buf.byteLength).toBeGreaterThan(0)
+	})
+
+	test("GET /invoice/export?perUser=true&fromDate=2025-01-01 honors filters", async () => {
+		const res = await app.request(
+			"/invoice/export?perUser=true&fromDate=2025-01-01",
+			{ headers: { Authorization: `Bearer ${adminToken}` } }
+		)
+		expect(res.status).toBe(200)
+		expect(res.headers.get("content-type")).toBe(XLSX_CT)
+		expect(res.headers.get("content-disposition")).toContain("factures-")
+	})
+
+	test("GET /invoice/export requires auth", async () => {
+		const res = await app.request("/invoice/export")
+		expect(res.status).toBe(401)
+	})
+})
