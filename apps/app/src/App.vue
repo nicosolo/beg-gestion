@@ -9,15 +9,14 @@ import {
     ChevronRightIcon,
     ArrowLeftIcon,
     ArrowDownTrayIcon,
-    FolderOpenIcon,
 } from "@heroicons/vue/24/outline"
 import { useAuthStore } from "./stores/auth"
-import { useAppSettingsStore } from "./stores/appSettings"
 import { useAlert } from "./composables/utils/useAlert"
 import { useAppUpdate } from "./composables/utils/useAppUpdate"
 import { useTauri } from "./composables/useTauri"
 import Snackbar from "./components/atoms/Snackbar.vue"
 import Button from "./components/atoms/Button.vue"
+import ProjectSelect from "./components/organisms/project/ProjectSelect.vue"
 import desktopVersionConfig from "./config/desktop-version.json"
 
 const { t } = useI18n()
@@ -25,17 +24,11 @@ const isSidebarOpen = ref(false)
 const isSettingsOpen = ref(false)
 const { alerts, removeAlert } = useAlert()
 const { updateAvailable: webUpdateAvailable, reload: reloadApp } = useAppUpdate()
-const { isTauri, appVersion, fetchAppVersion, setupDeepLinkListener, openFolder } = useTauri()
+const { isTauri, appVersion, fetchAppVersion, setupDeepLinkListener } = useTauri()
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
-const appSettingsStore = useAppSettingsStore()
 const hasAdminAccess = computed(() => authStore.isRole("admin"))
-
-const openShortcut = async (path: string) => {
-    if (!isTauri.value) return
-    await openFolder(path)
-}
 
 // Generate unique keys for components that need per-instance caching
 const componentKey = computed(() => {
@@ -70,6 +63,24 @@ const isUpdateAvailable = computed(() => {
 
 const goBack = () => {
     router.back()
+}
+
+// Header mandat search
+const headerSearchProjectId = ref<number | undefined>(undefined)
+const headerSearchKey = ref(0)
+const handleHeaderProjectSelect = async (projectId?: number) => {
+    if (!projectId) {
+        headerSearchProjectId.value = undefined
+        return
+    }
+    try {
+        await router.push({ name: "project-view", params: { id: projectId } })
+    } catch {
+        // Ignore navigation duplication or aborted navigations
+    } finally {
+        headerSearchProjectId.value = undefined
+        headerSearchKey.value++
+    }
 }
 
 const toggleSidebar = () => {
@@ -221,11 +232,13 @@ watch(
     }
 )
 
-// Close dropdowns on outside click
+// Close settings dropdown on outside click
 const onClickOutside = (e: MouseEvent) => {
-    const target = e.target as HTMLElement
-    if (isSettingsOpen.value && !target.closest("[data-dropdown='settings']")) {
-        isSettingsOpen.value = false
+    if (isSettingsOpen.value) {
+        const target = e.target as HTMLElement
+        if (!target.closest(".relative")) {
+            isSettingsOpen.value = false
+        }
     }
 }
 
@@ -260,12 +273,12 @@ html {
             class="fixed top-0 left-0 right-0 flex items-center p-2 border-b border-gray-200 bg-white z-10 print:hidden"
         >
             <div class="flex justify-between items-center w-full gap-2">
-                <div class="flex items-center">
+                <div class="flex items-center gap-4">
                     <!-- Back button - only in Tauri when not on home -->
                     <button
                         v-if="canGoBack"
                         @click="goBack"
-                        class="inline-flex items-center justify-center p-2 mr-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none"
+                        class="inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none"
                     >
                         <ArrowLeftIcon class="h-5 w-5" />
                     </button>
@@ -276,97 +289,113 @@ html {
                             <h2 class="text-xl font-bold text-gray-700 pt-2">Gestion</h2>
                         </div>
                     </a>
+
+                    <!-- Global mandat search -->
+                    <div class="hidden md:block w-64">
+                        <ProjectSelect
+                            :key="headerSearchKey"
+                            id="header-project-search"
+                            :model-value="headerSearchProjectId"
+                            class-name="w-full"
+                            :placeholder="t('header.projectSearchPlaceholder')"
+                            :include-archived="true"
+                            :include-ended="true"
+                            @update:model-value="handleHeaderProjectSelect"
+                        />
+                    </div>
                 </div>
 
-                <!-- Main navigation links -->
-                <nav class="hidden md:flex items-center gap-1 ml-auto">
-                    <RouterLink
-                        :to="{ name: 'time-list' }"
-                        :class="[
-                            route.name === 'time-list'
-                                ? 'bg-gray-900 text-white'
-                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
-                            'px-3 py-1.5 text-sm font-medium rounded-md',
-                        ]"
-                    >
-                        {{ t("navigation.time") }}
-                    </RouterLink>
-                    <RouterLink
-                        :to="{ name: 'project-list' }"
-                        :class="[
-                            route.name === 'project-list'
-                                ? 'bg-gray-900 text-white'
-                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
-                            'px-3 py-1.5 text-sm font-medium rounded-md',
-                        ]"
-                    >
-                        {{ t("navigation.projects") }}
-                    </RouterLink>
-                    <RouterLink
-                        :to="{ name: 'project-map' }"
-                        :class="[
-                            route.name === 'project-map'
-                                ? 'bg-gray-900 text-white'
-                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
-                            'px-3 py-1.5 text-sm font-medium rounded-md',
-                        ]"
-                    >
-                        {{ t("projects.map.title") }}
-                    </RouterLink>
-                    <RouterLink
-                        :to="{ name: 'invoice-list' }"
-                        :class="[
-                            route.name === 'invoice-list'
-                                ? 'bg-gray-900 text-white'
-                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
-                            'px-3 py-1.5 text-sm font-medium rounded-md',
-                        ]"
-                    >
-                        {{ t("navigation.invoices") }}
-                    </RouterLink>
-                    <!-- Settings dropdown -->
-                    <div v-if="settingsNav" class="relative" data-dropdown="settings">
-                        <button
+                <div class="flex items-center gap-3">
+                    <!-- Main navigation links -->
+                    <nav class="hidden md:flex items-center gap-1">
+                        <RouterLink
+                            :to="{ name: 'time-list' }"
                             :class="[
-                                settingsNav.current
+                                route.name === 'time-list'
                                     ? 'bg-gray-900 text-white'
                                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
-                                'px-3 py-1.5 text-sm font-medium rounded-md inline-flex items-center gap-1',
+                                'px-3 py-1.5 text-sm font-medium rounded-md',
                             ]"
-                            @click="isSettingsOpen = !isSettingsOpen"
                         >
-                            {{ settingsNav.name }}
-                            <ChevronDownIcon class="h-3.5 w-3.5" />
-                        </button>
-                        <div
-                            v-if="isSettingsOpen"
-                            class="absolute right-0 mt-1 w-48 rounded-md bg-white shadow-lg ring-1 ring-black/5 py-1 z-50"
+                            {{ t("navigation.time") }}
+                        </RouterLink>
+                        <RouterLink
+                            :to="{ name: 'project-list' }"
+                            :class="[
+                                route.name === 'project-list'
+                                    ? 'bg-gray-900 text-white'
+                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+                                'px-3 py-1.5 text-sm font-medium rounded-md',
+                            ]"
                         >
-                            <RouterLink
-                                v-for="child in settingsNav.children"
-                                :key="child.name"
-                                :to="child.to"
+                            {{ t("navigation.projects") }}
+                        </RouterLink>
+                        <RouterLink
+                            :to="{ name: 'project-map' }"
+                            :class="[
+                                route.name === 'project-map'
+                                    ? 'bg-gray-900 text-white'
+                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+                                'px-3 py-1.5 text-sm font-medium rounded-md',
+                            ]"
+                        >
+                            {{ t("projects.map.title") }}
+                        </RouterLink>
+                        <RouterLink
+                            :to="{ name: 'invoice-list' }"
+                            :class="[
+                                route.name === 'invoice-list'
+                                    ? 'bg-gray-900 text-white'
+                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+                                'px-3 py-1.5 text-sm font-medium rounded-md',
+                            ]"
+                        >
+                            {{ t("navigation.invoices") }}
+                        </RouterLink>
+                        <!-- Settings dropdown -->
+                        <div v-if="settingsNav" class="relative">
+                            <button
                                 :class="[
-                                    child.current
-                                        ? 'bg-gray-100 text-gray-900'
-                                        : 'text-gray-700 hover:bg-gray-50',
-                                    'block px-4 py-2 text-sm',
+                                    settingsNav.current
+                                        ? 'bg-gray-900 text-white'
+                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+                                    'px-3 py-1.5 text-sm font-medium rounded-md inline-flex items-center gap-1',
                                 ]"
-                                @click="isSettingsOpen = false"
+                                @click="isSettingsOpen = !isSettingsOpen"
                             >
-                                {{ child.name }}
-                            </RouterLink>
+                                {{ settingsNav.name }}
+                                <ChevronDownIcon class="h-3.5 w-3.5" />
+                            </button>
+                            <div
+                                v-if="isSettingsOpen"
+                                class="absolute right-0 mt-1 w-48 rounded-md bg-white shadow-lg ring-1 ring-black/5 py-1 z-50"
+                            >
+                                <RouterLink
+                                    v-for="child in settingsNav.children"
+                                    :key="child.name"
+                                    :to="child.to"
+                                    :class="[
+                                        child.current
+                                            ? 'bg-gray-100 text-gray-900'
+                                            : 'text-gray-700 hover:bg-gray-50',
+                                        'block px-4 py-2 text-sm',
+                                    ]"
+                                    @click="isSettingsOpen = false"
+                                >
+                                    {{ child.name }}
+                                </RouterLink>
+                            </div>
                         </div>
-                    </div>
-                </nav>
+                    </nav>
 
-                <button
-                    class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none"
-                    @click="toggleSidebar"
-                >
-                    <span class="sr-only">Toggle sidebar</span>
-                    <span class="text-3xl"><Bars3Icon class="h-6 w-6" /></span>
-                </button>
+                    <button
+                        class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none"
+                        @click="toggleSidebar"
+                    >
+                        <span class="sr-only">Toggle sidebar</span>
+                        <span class="text-3xl"><Bars3Icon class="h-6 w-6" /></span>
+                    </button>
+                </div>
             </div>
         </header>
 
@@ -466,25 +495,6 @@ html {
                                 </RouterLink>
                             </template>
                         </nav>
-                    </div>
-                    <!-- Folder shortcuts - only visible in Tauri -->
-                    <div
-                        v-if="isTauri"
-                        class="flex-shrink-0 border-t border-gray-200 px-2 py-2"
-                    >
-                        <p class="px-2 py-1 text-xs font-semibold uppercase tracking-wider text-gray-400">
-                            {{ t("navigation.openFolder") }}
-                        </p>
-                        <button
-                            v-for="shortcut in appSettingsStore.folderShortcuts"
-                            :key="shortcut.key"
-                            type="button"
-                            class="group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                            @click="openShortcut(shortcut.path); toggleSidebar()"
-                        >
-                            <FolderOpenIcon class="h-4 w-4 mr-2 text-gray-400" />
-                            {{ t(`folderShortcuts.${shortcut.key}`) }}
-                        </button>
                     </div>
                     <!-- Update available notice - only visible in Tauri when update available -->
                     <div

@@ -60,6 +60,9 @@ export default {
         view: "Voir",
         change: "Changer",
     },
+    header: {
+        projectSearchPlaceholder: "Rechercher un mandat...",
+    },
     navigation: {
         home: "Accueil",
         about: "À propos",
@@ -167,6 +170,7 @@ export default {
         mapLink: "Carte",
         openGeoAdminMap: "Geo admin",
         openGoogleMaps: "Google Maps",
+        openFolder: "Ouvrir dossier",
         showLocation: "Afficher sur la carte",
         mapPickerTitle: "Localisation du mandat",
         mapNotAvailable: "Aucune carte disponible pour ces coordonnées",
