@@ -279,6 +279,7 @@
                 type="submit"
                 form="projectForm"
                 :loading="isSubmitting || loadingData"
+                :disabled="isSubmitting || loadingData"
             >
                 {{ $t("common.save") }}
             </Button>
@@ -584,6 +585,9 @@ const validateForm = (): boolean => {
 
 // Save project function
 const saveProject = async () => {
+    // Guard against re-entrant submission (rapid double-clicks, Enter key spam)
+    if (isSubmitting.value) return
+
     // Validate form
     if (!validateForm()) {
         errorMessage.value = t("validation.pleaseFillRequired")
