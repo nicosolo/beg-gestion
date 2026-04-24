@@ -152,6 +152,10 @@
                 </TruncateWithTooltip>
             </template>
 
+            <template #cell:subProjectName="{ item }">
+                {{ item.project?.subProjectName || "" }}
+            </template>
+
             <template #cell:activityType="{ item }">
                 {{ item.activityType?.code || "-" }}
             </template>
@@ -328,6 +332,7 @@ const defaultColumns: Column[] = [
     { key: "user", label: t("time.columns.user"), sortKey: "userId", width: "3rem" },
     { key: "rateClass", label: t("time.columns.rateClass"), width: "3rem" },
     { key: "project", label: t("time.columns.project"), sortKey: "projectId", width: "11rem" },
+    { key: "subProjectName", label: t("time.columns.subProjectName"), width: "6rem" },
     { key: "activityType", label: t("time.columns.activityType"), width: "4rem" },
     { key: "duration", label: t("time.columns.duration"), sortKey: "duration", width: "4rem" },
     {
