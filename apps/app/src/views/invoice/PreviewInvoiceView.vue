@@ -131,9 +131,9 @@ const canVisa = computed(() => {
     if (!notVisaYet) return false
     // admin & super_admin can visa any invoice
     if (authStore.isRole("admin")) return true
-    // user_visa can visa only their own invoices (where they are in charge)
-    if (authStore.user?.role === "user_visa") {
-        return invoice.value?.inChargeUserId === authStore.user.id
+    // user_eac can visa any invoice on an EAC sous-mandat project
+    if (authStore.user?.role === "user_eac") {
+        return invoice.value?.project?.subProjectName === "EAC"
     }
     return false
 })

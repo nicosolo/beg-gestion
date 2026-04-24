@@ -227,8 +227,7 @@ export const invoiceRoutes = new Hono<{ Variables: Variables }>()
             const filename = `factures-${today}.xlsx`
 
             const headers = new Headers({
-                "Content-Type":
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 "Content-Disposition": `attachment; filename="${filename}"`,
                 "Content-Length": buffer.byteLength.toString(),
             })
@@ -405,23 +404,23 @@ export const invoiceRoutes = new Hono<{ Variables: Variables }>()
 
             // Permission check:
             // - super_admin and admin can visa any invoice
-            // - user_visa can visa ONLY their own invoices (where they are in charge)
+            // - user_eac can visa any invoice on an EAC sous-mandat project
             // - user cannot visa
             const isAdminOrAbove = hasRole(user.role, "admin")
-            const isUserVisa = user.role === "user_visa"
+            const isUserEac = user.role === "user_eac"
 
-            if (!isAdminOrAbove && !isUserVisa) {
+            if (!isAdminOrAbove && !isUserEac) {
                 return c.json({ error: "Forbidden - Insufficient role to visa invoices" }, 403)
             }
 
-            if (isUserVisa && !isAdminOrAbove) {
+            if (isUserEac && !isAdminOrAbove) {
                 const existing = await invoiceRepository.findById(id, user)
                 if (!existing) {
                     throwNotFound("Invoice")
                 }
-                if (existing.inChargeUserId !== user.id) {
+                if (existing.project?.subProjectName !== "EAC") {
                     return c.json(
-                        { error: "Forbidden - user_visa can only visa their own invoices" },
+                        { error: "Forbidden - user_eac can only visa invoices on EAC projects" },
                         403
                     )
                 }

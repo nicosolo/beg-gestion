@@ -4,7 +4,7 @@ import type { UserRole } from "@beg/validations"
 const rolePriority: Record<UserRole, number> = {
     super_admin: 3,
     admin: 2,
-    user_visa: 1.5,
+    user_eac: 1.5,
     user: 1,
 }
 

@@ -456,8 +456,17 @@ const canEditProject = computed(() => {
     }
 
     // Check if user is a project manager of this project
-    if (projectData.value?.projectManagers && authStore.user) {
-        return projectData.value.projectManagers.some((pm) => pm.id === authStore.user?.id)
+    if (
+        projectData.value?.projectManagers &&
+        authStore.user &&
+        projectData.value.projectManagers.some((pm) => pm.id === authStore.user?.id)
+    ) {
+        return true
+    }
+
+    // user_eac can edit any EAC sous-mandat project
+    if (authStore.user?.role === "user_eac" && projectData.value?.subProjectName === "EAC") {
+        return true
     }
 
     return false

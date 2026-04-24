@@ -207,9 +207,11 @@ export const projectRoutes = new Hono<{ Variables: Variables }>()
             // Authorization checks
             const isAdmin = hasRole(user.role, "admin")
             const isManager = await projectRepository.isProjectManager(id, user.id)
+            const isEacEditor =
+                user.role === "user_eac" && (await projectRepository.isEacProject(id))
 
-            // If user is not admin and not a project manager, deny all updates
-            if (!isAdmin && !isManager) {
+            // If user is not admin, not a project manager, and not user_eac on an EAC project, deny
+            if (!isAdmin && !isManager && !isEacEditor) {
                 throw throwForbidden("You do not have permission to update this project")
             }
 
