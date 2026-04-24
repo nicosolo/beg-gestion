@@ -287,3 +287,67 @@ describe("POST /invoice/:id/visa permissions", () => {
 		expect(res.status).toBe(403)
 	})
 })
+
+describe("user_eac write access to EAC invoices", () => {
+	test("user_eac can create invoice on EAC project (not 403/500)", async () => {
+		const res = await app.request("/invoice", {
+			method: "POST",
+			headers: jsonHeaders(userEacToken),
+			body: JSON.stringify(makeInvoice({ projectId: eacProjectId })),
+		})
+		expect(res.status).not.toBe(403)
+		expect(res.status).not.toBe(500)
+	})
+
+	test("user_eac cannot create invoice on non-EAC project (500)", async () => {
+		const res = await app.request("/invoice", {
+			method: "POST",
+			headers: jsonHeaders(userEacToken),
+			body: JSON.stringify(makeInvoice({ projectId })),
+		})
+		expect(res.status).toBe(500)
+	})
+
+	test("user_eac can update invoice on EAC project (not 403)", async () => {
+		const id = await createInvoiceInDb("draft", null, null, eacProjectId)
+
+		const res = await app.request(`/invoice/${id}`, {
+			method: "PUT",
+			headers: jsonHeaders(userEacToken),
+			body: JSON.stringify({ description: "updated by eac" }),
+		})
+		expect(res.status).not.toBe(403)
+		expect(res.status).not.toBe(500)
+	})
+
+	test("user_eac cannot update invoice on non-EAC project (404)", async () => {
+		const id = await createInvoiceInDb("draft", null, null, projectId)
+
+		const res = await app.request(`/invoice/${id}`, {
+			method: "PUT",
+			headers: jsonHeaders(userEacToken),
+			body: JSON.stringify({ description: "should fail" }),
+		})
+		expect(res.status).toBe(404)
+	})
+
+	test("user_eac can delete draft invoice on EAC project", async () => {
+		const id = await createInvoiceInDb("draft", null, null, eacProjectId)
+
+		const res = await app.request(`/invoice/${id}`, {
+			method: "DELETE",
+			headers: { Authorization: `Bearer ${userEacToken}` },
+		})
+		expect(res.status).toBe(200)
+	})
+
+	test("user_eac cannot delete invoice on non-EAC project (404)", async () => {
+		const id = await createInvoiceInDb("draft", null, null, projectId)
+
+		const res = await app.request(`/invoice/${id}`, {
+			method: "DELETE",
+			headers: { Authorization: `Bearer ${userEacToken}` },
+		})
+		expect(res.status).toBe(404)
+	})
+})

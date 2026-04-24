@@ -45,19 +45,19 @@
             <div class="flex flex-wrap gap-6 text-sm">
                 <div v-if="totals.duration !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                    >{{ $t("time.columns.duration") }}:</span
+                        >{{ $t("time.columns.duration") }}:</span
                     >
                     <span class="text-gray-900">{{ formatDuration(totals.duration || 0) }}</span>
                 </div>
                 <div v-if="totals.kilometers !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                    >{{ $t("time.columns.kilometers") }}:</span
+                        >{{ $t("time.columns.kilometers") }}:</span
                     >
                     <span class="text-gray-900">{{ formatNumber(totals.kilometers || 0) }} km</span>
                 </div>
                 <div v-if="totals.expenses !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                    >{{ $t("time.columns.expenses") }}:</span
+                        >{{ $t("time.columns.expenses") }}:</span
                     >
                     <span class="text-gray-900">{{ formatCurrency(totals.expenses || 0) }}</span>
                 </div>
@@ -84,11 +84,7 @@
                     class="border-b-2 border-indigo-200 bg-indigo-50/50"
                 >
                     <!-- Desktop: grid row matching table columns -->
-                    <div
-                        v-if="isDesktop"
-                        class="grid"
-                        :style="{ gridTemplateColumns: gtc }"
-                    >
+                    <div v-if="isDesktop" class="grid" :style="{ gridTemplateColumns: gtc }">
                         <div
                             v-for="col in columns"
                             :key="'qa-' + col.key"
@@ -146,10 +142,11 @@
                     :disabled="!item.project?.name || item.project.name.length < 20"
                 >
                     <span class="font-medium mr-2"
-                    >{{ item.project?.projectNumber
-                    }}{{
-                        item.project?.subProjectName ? ` ${item.project.subProjectName}` : ""
-                    }}</span>
+                        >{{ item.project?.projectNumber
+                        }}{{
+                            item.project?.subProjectName ? ` ${item.project.subProjectName}` : ""
+                        }}</span
+                    >
                     <span class="text-sm text-gray-600">{{
                         truncateText(item.project?.name, 20)
                     }}</span>
@@ -218,19 +215,19 @@
             <div class="flex flex-wrap gap-6 text-sm">
                 <div v-if="totals.duration !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                    >{{ $t("time.columns.duration") }}:</span
+                        >{{ $t("time.columns.duration") }}:</span
                     >
                     <span class="text-gray-900">{{ formatDuration(totals.duration || 0) }}</span>
                 </div>
                 <div v-if="totals.kilometers !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                    >{{ $t("time.columns.kilometers") }}:</span
+                        >{{ $t("time.columns.kilometers") }}:</span
                     >
                     <span class="text-gray-900">{{ formatNumber(totals.kilometers || 0) }} km</span>
                 </div>
                 <div v-if="totals.expenses !== undefined" class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700"
-                    >{{ $t("time.columns.expenses") }}:</span
+                        >{{ $t("time.columns.expenses") }}:</span
                     >
                     <span class="text-gray-900">{{ formatCurrency(totals.expenses || 0) }}</span>
                 </div>
@@ -296,7 +293,16 @@ const emit = defineEmits<{
 const isDesktop = useMediaQuery("(min-width: 768px)")
 
 // Quick-add field keys (columns that have inputs)
-const qaFields = ["date", "project", "activityType", "duration", "kilometers", "expenses", "description", "actions"]
+const qaFields = [
+    "date",
+    "project",
+    "activityType",
+    "duration",
+    "kilometers",
+    "expenses",
+    "description",
+    "actions",
+]
 
 // Filtered columns for mobile quick-add (only fields with inputs)
 const qaColumns = computed(() => columns.value.filter((col) => qaFields.includes(col.key)))
@@ -352,7 +358,13 @@ const defaultColumns: Column[] = [
               },
           ]
         : []),
-    { key: "actions", label: t("common.actions"), actions: true, size: "xs" as const },
+    {
+        key: "actions",
+        label: t("common.actions"),
+        actions: true,
+        minWidth: "60px",
+        maxWidth: "90px" as const,
+    },
 ]
 
 const columns = computed(() => {

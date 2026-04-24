@@ -494,10 +494,12 @@ export const invoiceRepository = {
   },
 
   async create(data: InvoiceCreateInput, user: Variables["user"]) {
-    // Check project access: admin or project manager only
+    // Check project access: admin+ / project manager / (user_eac on EAC project)
     if (!hasRole(user.role, "admin")) {
       const isManager = await isProjectManager(data.projectId, user.id)
-      if (!isManager) {
+      const isEacAccess =
+        user.role === "user_eac" && (await projectRepository.isEacProject(data.projectId))
+      if (!isManager && !isEacAccess) {
         throw new Error("Access denied: must be admin or project manager")
       }
     }
@@ -680,10 +682,12 @@ export const invoiceRepository = {
       return null
     }
 
-    // Write access: admin+ or project manager only (user_eac cannot update invoices)
+    // Write access: admin+ / project manager / (user_eac on EAC project)
     if (!hasRole(user.role, "admin")) {
       const isManager = await isProjectManager(existing.projectId, user.id)
-      if (!isManager) {
+      const isEacAccess =
+        user.role === "user_eac" && existing.project?.subProjectName === EAC_SUB_PROJECT_NAME
+      if (!isManager && !isEacAccess) {
         throw new Error("Access denied: must be admin or project manager")
       }
     }
@@ -889,10 +893,12 @@ export const invoiceRepository = {
       return false
     }
 
-    // Write access: admin+ or project manager only (user_eac cannot delete invoices)
+    // Write access: admin+ / project manager / (user_eac on EAC project)
     if (!hasRole(user.role, "admin")) {
       const isManager = await isProjectManager(existing.projectId, user.id)
-      if (!isManager) {
+      const isEacAccess =
+        user.role === "user_eac" && existing.project?.subProjectName === EAC_SUB_PROJECT_NAME
+      if (!isManager && !isEacAccess) {
         throw new Error("Access denied: must be admin or project manager")
       }
     }
