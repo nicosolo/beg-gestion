@@ -76,6 +76,12 @@ export default {
         logout: "Déconnexion",
         engineers: "Ingénieurs",
         companies: "Entreprises",
+        openFolder: "Ouvrir un dossier",
+    },
+    folderShortcuts: {
+        mandats: "Mandats",
+        photographie: "Photographie",
+        sigMandats: "SIG Mandats",
     },
     home: {
         title: "Recherche de mandats",

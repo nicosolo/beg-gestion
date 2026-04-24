@@ -5,6 +5,15 @@ import { useTauri } from "@/composables/useTauri"
 const STORAGE_KEY = "app-settings"
 const DEFAULT_BASE_PATH = "N:\\Mandats"
 
+// Fixed folder shortcuts (siblings under the base path's parent, default N:\)
+export const FOLDER_SHORTCUT_KEYS = ["mandats", "photographie", "sigMandats"] as const
+export type FolderShortcutKey = (typeof FOLDER_SHORTCUT_KEYS)[number]
+const FOLDER_SHORTCUT_DIRS: Record<FolderShortcutKey, string> = {
+    mandats: "Mandats",
+    photographie: "Photographie",
+    sigMandats: "SIG Mandats",
+}
+
 export const useAppSettingsStore = defineStore("appSettings", () => {
     const { isTauri } = useTauri()
 
@@ -70,6 +79,23 @@ export const useAppSettingsStore = defineStore("appSettings", () => {
         return `${cleanBase}${separator}${cleanRelative}`
     }
 
+    // Parent directory of basePath (e.g. "N:\\" for "N:\\Mandats")
+    const rootPath = computed(() => {
+        const path = basePath.value.replace(/[\/\\]+$/, "")
+        const separator = path.includes("\\") ? "\\" : "/"
+        const lastSep = Math.max(path.lastIndexOf("\\"), path.lastIndexOf("/"))
+        if (lastSep < 0) return path + separator
+        return path.substring(0, lastSep + 1)
+    })
+
+    // Folder shortcuts mapped from fixed directory names under the root path
+    const folderShortcuts = computed(() =>
+        FOLDER_SHORTCUT_KEYS.map((key) => ({
+            key,
+            path: `${rootPath.value}${FOLDER_SHORTCUT_DIRS[key]}`,
+        }))
+    )
+
     // Initialize on store creation
     loadSettings()
 
@@ -77,6 +103,8 @@ export const useAppSettingsStore = defineStore("appSettings", () => {
         // State
         basePath: computed(() => basePath.value),
         defaultBasePath: DEFAULT_BASE_PATH,
+        rootPath,
+        folderShortcuts,
 
         // Actions
         setBasePath,

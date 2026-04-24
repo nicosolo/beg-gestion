@@ -116,6 +116,46 @@ describe("useAppSettingsStore", () => {
         })
     })
 
+    describe("rootPath", () => {
+        it("derives N:\\ from default basePath", async () => {
+            const store = await getStore()
+            expect(store.rootPath).toBe("N:\\")
+        })
+
+        it("derives parent with forward slash separator", async () => {
+            const store = await getStore()
+            store.setBasePath("/data/projects")
+            expect(store.rootPath).toBe("/data/")
+        })
+
+        it("ignores trailing separator on basePath", async () => {
+            const store = await getStore()
+            store.setBasePath("N:\\Mandats\\")
+            expect(store.rootPath).toBe("N:\\")
+        })
+    })
+
+    describe("folderShortcuts", () => {
+        it("returns three shortcuts under the root path", async () => {
+            const store = await getStore()
+            expect(store.folderShortcuts).toEqual([
+                { key: "mandats", path: "N:\\Mandats" },
+                { key: "photographie", path: "N:\\Photographie" },
+                { key: "sigMandats", path: "N:\\SIG Mandats" },
+            ])
+        })
+
+        it("reflects a custom basePath", async () => {
+            const store = await getStore()
+            store.setBasePath("/data/projects")
+            expect(store.folderShortcuts).toEqual([
+                { key: "mandats", path: "/data/Mandats" },
+                { key: "photographie", path: "/data/Photographie" },
+                { key: "sigMandats", path: "/data/SIG Mandats" },
+            ])
+        })
+    })
+
     describe("hydration from localStorage", () => {
         it("loads basePath from localStorage on init", async () => {
             storage.set(
