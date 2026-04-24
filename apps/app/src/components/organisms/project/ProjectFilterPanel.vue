@@ -3,9 +3,13 @@
         <div class="flex flex-col lg:flex-row gap-4">
             <!-- Left section: Filters -->
             <div class="flex-1">
-                <!-- Row 1: Name, User, Type -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FormField v-if="showNameInput" :label="$t('projects.name')">
+                <!-- Row 1: Name, User, Type, Sous-mandat -->
+                <div class="grid grid-cols-1 md:grid-cols-7 gap-4">
+                    <FormField
+                        v-if="showNameInput"
+                        class="md:col-span-2"
+                        :label="$t('projects.name')"
+                    >
                         <template #input>
                             <Input
                                 v-model="filterData.text"
@@ -14,7 +18,7 @@
                             />
                         </template>
                     </FormField>
-                    <div class="form-group">
+                    <div class="form-group md:col-span-2">
                         <Label>{{ $t("projects.filters.referentUser") }}</Label>
                         <UserSelect
                             v-model="filterData.referentUserId"
@@ -22,7 +26,7 @@
                             @update:model-value="emitChange"
                         />
                     </div>
-                    <div class="form-group">
+                    <div class="form-group md:col-span-2">
                         <Label>{{ $t("projects.type") }}</Label>
                         <MultiProjectTypeSelect
                             v-model="filterData.projectTypeIds!"
@@ -30,11 +34,18 @@
                             @update:model-value="emitChange"
                         />
                     </div>
+                    <div class="form-group">
+                        <Label>{{ $t("projects.filters.subProjectName") }}</Label>
+                        <SubProjectNameSelect
+                            v-model="filterData.subProjectName"
+                            @update:model-value="emitChange"
+                        />
+                    </div>
                 </div>
 
                 <!-- Row 2: DateRange, Sort -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                    <div class="md:col-span-2">
+                <div class="grid grid-cols-1 md:grid-cols-7 gap-4 mt-4">
+                    <div class="md:col-span-5">
                         <DateRange
                             :from-date="filterData.fromDate"
                             :to-date="filterData.toDate"
@@ -54,39 +65,49 @@
                             "
                         />
                     </div>
-                    <div v-if="showSort" class="form-group">
+                    <div v-if="showSort" class="form-group md:col-span-2">
                         <Label>{{ $t("projects.filters.sortBy") }}</Label>
                         <div class="flex gap-2">
-                            <Select
-                                v-model="filterData.sortBy"
-                                @update:model-value="emitChange"
-                                :options="[
-                                    {
-                                        label: $t('projects.unBilledDuration'),
-                                        value: 'unBilledDuration',
-                                    },
-                                    { label: $t('projects.totalDuration'), value: 'totalDuration' },
-                                    {
-                                        label: $t('projects.firstActivity'),
-                                        value: 'firstActivityDate',
-                                    },
-                                    {
-                                        label: $t('projects.lastActivity'),
-                                        value: 'lastActivityDate',
-                                    },
-                                    { label: $t('projects.createdAt'), value: 'createdAt' },
-                                    { label: $t('projects.projectNumber'), value: 'projectNumber' },
-                                    { label: $t('projects.name'), value: 'name' },
-                                ]"
-                            ></Select>
-                            <Select
-                                v-model="filterData.sortOrder"
-                                @update:model-value="emitChange"
-                                :options="[
-                                    { label: $t('projects.filters.ascending'), value: 'asc' },
-                                    { label: $t('projects.filters.descending'), value: 'desc' },
-                                ]"
-                            ></Select>
+                            <div class="flex-[3] min-w-0">
+                                <Select
+                                    v-model="filterData.sortBy"
+                                    @update:model-value="emitChange"
+                                    :options="[
+                                        {
+                                            label: $t('projects.unBilledDuration'),
+                                            value: 'unBilledDuration',
+                                        },
+                                        {
+                                            label: $t('projects.totalDuration'),
+                                            value: 'totalDuration',
+                                        },
+                                        {
+                                            label: $t('projects.firstActivity'),
+                                            value: 'firstActivityDate',
+                                        },
+                                        {
+                                            label: $t('projects.lastActivity'),
+                                            value: 'lastActivityDate',
+                                        },
+                                        { label: $t('projects.createdAt'), value: 'createdAt' },
+                                        {
+                                            label: $t('projects.projectNumber'),
+                                            value: 'projectNumber',
+                                        },
+                                        { label: $t('projects.name'), value: 'name' },
+                                    ]"
+                                ></Select>
+                            </div>
+                            <div class="flex-[2] min-w-0">
+                                <Select
+                                    v-model="filterData.sortOrder"
+                                    @update:model-value="emitChange"
+                                    :options="[
+                                        { label: $t('projects.filters.ascending'), value: 'asc' },
+                                        { label: $t('projects.filters.descending'), value: 'desc' },
+                                    ]"
+                                ></Select>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -140,6 +161,7 @@ export type ProjectFilterModel = Omit<ProjectFilter, "page" | "limit" | "account
 export const getDefaultProjectFilter = (): ProjectFilterModel => {
     return {
         text: "",
+        subProjectName: undefined,
         includeArchived: false,
         status: "active",
         sortBy: "name",
@@ -167,6 +189,7 @@ import UserSelect from "../../organisms/user/UserSelect.vue"
 import MultiProjectTypeSelect from "../../organisms/projectType/MultiProjectTypeSelect.vue"
 import Checkbox from "@/components/atoms/Checkbox.vue"
 import Input from "@/components/atoms/Input.vue"
+import SubProjectNameSelect from "@/components/organisms/project/SubProjectNameSelect.vue"
 import { debounce } from "@/utils/debounce"
 interface ProjectFilterProps {
     filter: ProjectFilterModel
@@ -192,6 +215,7 @@ const emit = defineEmits<{
 // Create reactive copy of the filter
 const filterData = reactive<ProjectFilterProps["filter"]>({
     text: filter.text,
+    subProjectName: filter.subProjectName,
     includeArchived: filter.includeArchived,
     status: filter.status,
     sortBy: filter.sortBy,
@@ -213,6 +237,7 @@ watch(
     () => filter,
     (newFilter) => {
         filterData.text = newFilter.text
+        filterData.subProjectName = newFilter.subProjectName
         filterData.includeArchived = newFilter.includeArchived
         filterData.status = newFilter.status
         filterData.sortBy = newFilter.sortBy
@@ -252,6 +277,7 @@ const emitInputChange = () => {
 const resetFilters = () => {
     const defaultFilter = getDefaultProjectFilter()
     filterData.text = defaultFilter.text
+    filterData.subProjectName = defaultFilter.subProjectName
     filterData.includeArchived = defaultFilter.includeArchived
     filterData.status = defaultFilter.status
     filterData.sortBy = defaultFilter.sortBy

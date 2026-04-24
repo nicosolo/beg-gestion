@@ -123,6 +123,7 @@ const buildFilterComponents = (filter: ActivityFilter, user?: Variables["user"])
         includeNotDisbursed = false,
         activityTypeId,
         invoiceId,
+        subProjectName,
     } = filter
 
     const whereConditions: (SQL | undefined)[] = []
@@ -131,6 +132,9 @@ const buildFilterComponents = (filter: ActivityFilter, user?: Variables["user"])
     if (fromDate) whereConditions.push(gte(activities.date, fromDate))
     if (toDate) whereConditions.push(lte(activities.date, toDate))
     if (activityTypeId) whereConditions.push(eq(activities.activityTypeId, activityTypeId))
+    if (subProjectName && subProjectName.trim()) {
+        whereConditions.push(eq(projects.subProjectName, subProjectName.trim()))
+    }
     // Non-admin users cannot see activities with adminOnly activity types
 
     const billingConditions = []

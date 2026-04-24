@@ -37,33 +37,43 @@
                     <div class="form-group">
                         <Label>{{ $t("projects.filters.sortBy") }}</Label>
                         <div class="flex gap-2">
-                            <Select
-                                v-model="localFilter.sortBy"
-                                :options="[
-                                    { label: $t('time.columns.date'), value: 'date' },
-                                    { label: $t('time.columns.user'), value: 'userId' },
-                                    { label: $t('time.columns.project'), value: 'projectId' },
-                                    { label: $t('time.columns.durationLong'), value: 'duration' },
-                                    { label: $t('time.columns.kilometers'), value: 'kilometers' },
-                                    { label: $t('time.columns.expenses'), value: 'expenses' },
-                                ]"
-                                @update:modelValue="handleFilterChange"
-                            ></Select>
-                            <Select
-                                v-model="localFilter.sortOrder"
-                                :options="[
-                                    { label: $t('projects.filters.ascending'), value: 'asc' },
-                                    { label: $t('projects.filters.descending'), value: 'desc' },
-                                ]"
-                                @update:modelValue="handleFilterChange"
-                            ></Select>
+                            <div class="flex-[3] min-w-0">
+                                <Select
+                                    v-model="localFilter.sortBy"
+                                    :options="[
+                                        { label: $t('time.columns.date'), value: 'date' },
+                                        { label: $t('time.columns.user'), value: 'userId' },
+                                        { label: $t('time.columns.project'), value: 'projectId' },
+                                        {
+                                            label: $t('time.columns.durationLong'),
+                                            value: 'duration',
+                                        },
+                                        {
+                                            label: $t('time.columns.kilometers'),
+                                            value: 'kilometers',
+                                        },
+                                        { label: $t('time.columns.expenses'), value: 'expenses' },
+                                    ]"
+                                    @update:modelValue="handleFilterChange"
+                                ></Select>
+                            </div>
+                            <div class="flex-[2] min-w-0">
+                                <Select
+                                    v-model="localFilter.sortOrder"
+                                    :options="[
+                                        { label: $t('projects.filters.ascending'), value: 'asc' },
+                                        { label: $t('projects.filters.descending'), value: 'desc' },
+                                    ]"
+                                    @update:modelValue="handleFilterChange"
+                                ></Select>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Row 2: DateRange, Activity Type -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                    <div class="md:col-span-2">
+                <!-- Row 2: DateRange, Activity Type, Sous-mandat -->
+                <div class="grid grid-cols-1 md:grid-cols-7 gap-4 mt-4">
+                    <div class="md:col-span-4">
                         <DateRange
                             :from-date="localFilter.fromDate"
                             :to-date="localFilter.toDate"
@@ -85,11 +95,20 @@
                     </div>
 
                     <!-- Activity Type Filter -->
-                    <div class="form-group">
+                    <div class="form-group md:col-span-2">
                         <Label>{{ $t("time.filters.activityType") }}</Label>
                         <ActivityTypeSelect
                             v-model="localFilter.activityTypeId"
                             :show-all-option="true"
+                            @update:modelValue="handleFilterChange"
+                        />
+                    </div>
+
+                    <!-- Sous-mandat Filter -->
+                    <div class="form-group">
+                        <Label>{{ $t("time.filters.subProjectName") }}</Label>
+                        <SubProjectNameSelect
+                            v-model="localFilter.subProjectName"
                             @update:modelValue="handleFilterChange"
                         />
                     </div>
@@ -168,6 +187,7 @@ import ActivityTypeSelect from "@/components/organisms/activityType/ActivityType
 import Checkbox from "@/components/atoms/Checkbox.vue"
 import DateRange from "@/components/molecules/DateRange.vue"
 import ProjectSelect from "@/components/organisms/project/ProjectSelect.vue"
+import SubProjectNameSelect from "@/components/organisms/project/SubProjectNameSelect.vue"
 import { useFetchUsers } from "@/composables/api/useUser"
 import type { ActivityFilter } from "@beg/validations"
 import UserSelect from "@/components/organisms/user/UserSelect.vue"
@@ -236,6 +256,7 @@ const resetFilters = () => {
         userId: undefined,
         projectId: undefined,
         activityTypeId: undefined,
+        subProjectName: undefined,
         fromDate: from,
         toDate: to,
         includeBilled: false,

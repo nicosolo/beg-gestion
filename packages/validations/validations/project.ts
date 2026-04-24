@@ -5,9 +5,49 @@ import { booleanSchema, dateSchema, nullableTimestampsSchema, timestampsSchema }
 export const projectStatusEnum = ["offer", "draft", "active"] as const
 export type ProjectStatus = (typeof projectStatusEnum)[number]
 
+// Canonical list of BEG sous-mandats (alphabetical).
+// Legacy projects may hold values outside this list — callers that edit
+// existing projects should handle that case explicitly.
+export const SUB_PROJECT_NAMES = [
+    "AMI",
+    "ASS",
+    "CAM",
+    "CDN",
+    "CFF",
+    "DN",
+    "EAC",
+    "EBR",
+    "EIE",
+    "ENV",
+    "GEOL",
+    "GEOPHY",
+    "GEOTH",
+    "GT",
+    "HYD",
+    "INF",
+    "MAE",
+    "MAJ",
+    "MAT",
+    "ME",
+    "MEP",
+    "NIE",
+    "OFEV",
+    "PAC",
+    "POL",
+    "REG",
+    "RIE",
+    "RPT",
+    "SGV",
+    "SURV",
+    "ZP",
+] as const
+
+export type SubProjectName = (typeof SUB_PROJECT_NAMES)[number]
+
 // Base project filter schema without pagination
 const projectBaseFilterSchema = z.object({
     text: z.string().optional(),
+    subProjectName: z.string().optional(),
     referentUserId: z.coerce.number().optional(),
     projectTypeIds: z
         .union([
