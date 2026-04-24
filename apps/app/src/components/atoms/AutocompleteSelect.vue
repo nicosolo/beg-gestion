@@ -39,7 +39,11 @@
         <!-- Dropdown -->
         <div
             v-if="showDropdown"
-            class="absolute z-20 w-full md:min-w-96 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-h-30 max-h-60 overflow-auto"
+            ref="dropdownRef"
+            :class="[
+                'absolute z-20 w-full md:min-w-96 bg-white border border-gray-200 rounded-md shadow-lg min-h-30 max-h-60 overflow-auto',
+                openAbove ? 'bottom-full mb-1' : 'top-full mt-1',
+            ]"
         >
             <!-- Min search length hint (async mode only) -->
             <div
@@ -93,7 +97,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, nextTick } from "vue"
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from "vue"
 import { useI18n } from "vue-i18n"
 import LoadingSpinner from "@/components/atoms/LoadingSpinner.vue"
 
@@ -141,9 +145,24 @@ const showDropdown = ref(false)
 const selectedItemDisplay = ref("")
 const focusedIndex = ref(0)
 const inputRef = ref<HTMLInputElement>()
+const dropdownRef = ref<HTMLElement>()
+const openAbove = ref(false)
 const debouncedSearchTerm = ref("")
 const isPendingSearch = ref(false)
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
+
+// Estimated dropdown max height (matches max-h-60 = 15rem = 240px)
+const DROPDOWN_MAX_HEIGHT = 240
+
+// Decide whether the dropdown should open above the input based on viewport space
+const updateOpenDirection = () => {
+    if (!inputRef.value) return
+    const rect = inputRef.value.getBoundingClientRect()
+    const spaceBelow = window.innerHeight - rect.bottom
+    const spaceAbove = rect.top
+    // Flip up only if there's not enough space below AND there's more room above
+    openAbove.value = spaceBelow < DROPDOWN_MAX_HEIGHT && spaceAbove > spaceBelow
+}
 
 // Get item value
 const getItemValue = (item: any): number | string => {
@@ -203,6 +222,7 @@ const handleInput = async (e: Event) => {
     selectedItemDisplay.value = ""
     focusedIndex.value = 0
     showDropdown.value = true
+    updateOpenDirection()
 
     // Clear the modelValue when user starts typing
     if (props.modelValue) {
@@ -249,6 +269,7 @@ const handleInput = async (e: Event) => {
 // Handle focus
 const handleFocus = () => {
     showDropdown.value = true
+    updateOpenDirection()
 
     // For async mode, fetch initial data if empty
     if (
@@ -267,6 +288,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
             event.preventDefault()
             if (!showDropdown.value) {
                 showDropdown.value = true
+                updateOpenDirection()
             } else if (filteredItems.value.length > 0) {
                 focusedIndex.value = Math.min(
                     focusedIndex.value + 1,
@@ -383,12 +405,22 @@ watch(filteredItems, (items) => {
 
 defineExpose({ loadInitialItem })
 
-// Cleanup on unmount
-onMounted(() => {
-    return () => {
-        if (debounceTimer) {
-            clearTimeout(debounceTimer)
-        }
+const handleReposition = () => {
+    if (showDropdown.value) {
+        updateOpenDirection()
     }
+}
+
+onMounted(() => {
+    window.addEventListener("scroll", handleReposition, true)
+    window.addEventListener("resize", handleReposition)
+})
+
+onBeforeUnmount(() => {
+    if (debounceTimer) {
+        clearTimeout(debounceTimer)
+    }
+    window.removeEventListener("scroll", handleReposition, true)
+    window.removeEventListener("resize", handleReposition)
 })
 </script>
