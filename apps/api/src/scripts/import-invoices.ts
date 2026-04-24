@@ -48,6 +48,35 @@ interface AttachedFile {
     filePath: string | null
 }
 
+// Normalize a legacyInvoicePath for comparison.
+// Stored paths are relative to /mandats/ (see storage below), but older imports
+// may have stored absolute paths. Normalize both sides to the relative form.
+export function normalizeLegacyPath(p: string | null | undefined): string | null {
+    if (!p) return null
+    return p.replace(/^\/mandats\//, "").replace(/\\/g, "/").trim() || null
+}
+
+// Decide whether to replace an existing invoice when re-importing.
+// - If no existing invoice: insert (caller handles).
+// - If existing has no legacyInvoicePath: it was created manually in the app —
+//   never overwrite it (protects BEG user data).
+// - If existing legacyInvoicePath matches the incoming file: replace (idempotent
+//   re-run of the same source).
+// - Otherwise (different source file reached the same invoiceNumber): skip to
+//   avoid clobbering an already-imported invoice from a different tree (e.g.
+//   BEG vs EAC collision).
+export function shouldReplaceInvoice(
+    existingLegacyPath: string | null | undefined,
+    incomingFabPath: string
+): "insert" | "replace" | "skip" {
+    const incoming = normalizeLegacyPath(incomingFabPath)
+    const existing = normalizeLegacyPath(existingLegacyPath)
+
+    if (!existing) return "skip"
+    if (existing === incoming) return "replace"
+    return "skip"
+}
+
 // Parse .fab file content (INI-like format)
 function parseFabFile(content: string): FabData {
     const result: FabData = {
@@ -92,7 +121,7 @@ function parseFabFile(content: string): FabData {
 }
 
 // Parse date in DD.MM.YYYY, DD/MM/YYYY, or DD.MM.YY format
-function parseFabDate(dateStr: string): Date | null {
+export function parseFabDate(dateStr: string): Date | null {
     if (!dateStr || dateStr.trim() === "") return null
 
     const parts = dateStr.split(/[./]/)
@@ -113,7 +142,7 @@ function parseFabDate(dateStr: string): Date | null {
 }
 
 // Parse Swiss number format: 3'493.75 or 4'590.00 → 3493.75 or 4590.00
-function parseSwissNumber(str: string): number {
+export function parseSwissNumber(str: string): number {
     if (!str || str.trim() === "") return 0
     // Remove apostrophes and special chars, keep decimal point
     const cleaned = str
@@ -302,7 +331,7 @@ async function getUserIdByInitials(initials: string): Promise<number | null> {
 }
 
 // Parse date from filename (e.g. "8132 INF F 2024-03-08.fab" → 2024-03-08)
-function parseDateFromFilename(filename: string): Date | null {
+export function parseDateFromFilename(filename: string): Date | null {
     const match = filename.match(/(\d{4})-(\d{2})-(\d{2})/)
     if (!match) return null
     const date = new Date(`${match[1]}-${match[2]}-${match[3]}T00:00:00Z`)
@@ -310,7 +339,7 @@ function parseDateFromFilename(filename: string): Date | null {
 }
 
 // Generate invoice number from filename
-function generateInvoiceNumber(filename: string): string {
+export function generateInvoiceNumber(filename: string): string {
     // Remove .fab extension and replace spaces with -
     return path.basename(filename, ".fab")
 }
@@ -318,7 +347,10 @@ function generateInvoiceNumber(filename: string): string {
 // Parse pnlCode to extract projectNumber and optional subProjectName
 // e.g., "7011 INF" -> { projectNumber: "7011", subProjectName: "INF" }
 // e.g., "7000" -> { projectNumber: "7000", subProjectName: null }
-function parseProjectCode(code: string): { projectNumber: string; subProjectName: string | null } {
+export function parseProjectCode(code: string): {
+    projectNumber: string
+    subProjectName: string | null
+} {
     const trimmed = code.trim()
     const spaceIndex = trimmed.indexOf(" ")
 
@@ -390,9 +422,9 @@ async function importInvoiceFromFab(fabPath: string): Promise<boolean> {
 
         const invoiceNumber = generateInvoiceNumber(path.basename(fabPath))
 
-        // Check for existing invoice and delete if found (replace mode)
+        // Check for existing invoice; decide insert/replace/skip based on source
         const existingInvoice = await db
-            .select({ id: invoices.id })
+            .select({ id: invoices.id, legacyInvoicePath: invoices.legacyInvoicePath })
             .from(invoices)
             .where(
                 and(eq(invoices.projectId, projectId), eq(invoices.invoiceNumber, invoiceNumber))
@@ -400,9 +432,15 @@ async function importInvoiceFromFab(fabPath: string): Promise<boolean> {
             .limit(1)
 
         if (existingInvoice.length > 0) {
-            console.log(
-                `Replacing existing invoice -------------------------------- ${invoiceNumber} for project ${projectId}`
-            )
+            const decision = shouldReplaceInvoice(existingInvoice[0].legacyInvoicePath, fabPath)
+            if (decision === "skip") {
+                console.warn(
+                    `Skipping ${fabPath}: invoice ${invoiceNumber} already exists for project ${projectId} (source: ${existingInvoice[0].legacyInvoicePath ?? "manual"})`
+                )
+                return false
+            }
+
+            console.log(`Replacing existing invoice ${invoiceNumber} for project ${projectId}`)
             const existingId = existingInvoice[0].id
 
             // Delete stored files before cascade-deleting DB records
@@ -430,16 +468,11 @@ async function importInvoiceFromFab(fabPath: string): Promise<boolean> {
                     .from(table)
                     .where(eq(col, existingId))
                 if (rows.length > 0) {
-                    console.log(
-                        `Deleting files for ${existingId} OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO`
-                    )
                     await Promise.all(rows.filter((r) => r.file).map((r) => deleteFile(r.file)))
                 }
             }
 
             await db.delete(invoices).where(eq(invoices.id, existingId))
-        } else {
-            console.log(`NEW INVOICE -----------------------`)
         }
 
         // Parse dates
@@ -711,9 +744,6 @@ async function findFabFiles(dir: string): Promise<string[]> {
 
 // Main import function
 export async function importInvoices(mandatsDir: string = MANDATS_BASE_PATH): Promise<void> {
-    // console.log("Import is disabled")
-    // return
-
     console.log(`Searching for .fab files in ${mandatsDir}...`)
 
     const fabFiles = await findFabFiles(mandatsDir)
@@ -735,9 +765,17 @@ export async function importInvoices(mandatsDir: string = MANDATS_BASE_PATH): Pr
 }
 
 // Standalone script entry point
+//
+// Usage (run inside the api container):
+//   docker compose exec api bun run src/scripts/import-invoices.ts [mandatsDir]
+//
+// Dedup behavior: existing invoices are matched by (projectId, invoiceNumber).
+//   - New invoice number -> inserted.
+//   - Existing with same legacyInvoicePath -> replaced (idempotent re-run).
+//   - Existing with a different (or null) legacyInvoicePath -> skipped with a
+//     warning. This protects already-imported BEG invoices when importing a
+//     second tree (e.g. EAC .fab folders).
 async function main() {
-    // console.log("Import is disabled")
-    // return
     const mandatsDir = process.argv[2] || MANDATS_BASE_PATH
     await importInvoices(mandatsDir)
 }
