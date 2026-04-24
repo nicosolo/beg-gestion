@@ -367,7 +367,6 @@ export default {
             date: "Date",
             user: "Collaborateur",
             project: "Mandat",
-            subProjectName: "Sous-mandat",
             activityType: "Activité",
             duration: "H",
             durationLong: "Heures",
