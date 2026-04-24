@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, lte, sql, inArray, aliasedTable } from "drizzle-orm"
+import { and, desc, eq, gte, lte, sql, inArray, aliasedTable, or } from "drizzle-orm"
 import { db } from "../index"
 import {
   invoices,
@@ -14,7 +14,7 @@ import {
   users,
 } from "../schema"
 import type { InvoiceCreateInput, InvoiceUpdateInput, InvoiceFilter } from "@beg/validations"
-import { projectRepository } from "./project.repository"
+import { projectRepository, EAC_SUB_PROJECT_NAME } from "./project.repository"
 import type { Variables } from "@src/types/global"
 import { hasRole } from "@src/tools/role-middleware"
 import { rebuildProjectSearchIndex } from "../fts"
@@ -49,10 +49,25 @@ export const invoiceRepository = {
   async findAll(user: Variables["user"], filter: InvoiceFilter) {
     const where = []
 
-    // Access control: admin sees all, others see only invoices for projects they manage
+    // Access control:
+    // - admin+ sees all
+    // - user_eac sees invoices for managed projects OR any EAC project
+    // - other users see only invoices for projects they manage
     if (!hasRole(user.role, "admin")) {
       const managerProjectIds = await getManagerProjectIds(user.id)
-      if (managerProjectIds.length === 0) {
+      const managerClause =
+        managerProjectIds.length > 0 ? inArray(invoices.projectId, managerProjectIds) : undefined
+      const eacClause =
+        user.role === "user_eac"
+          ? sql`EXISTS (SELECT 1 FROM ${projects} WHERE ${projects.id} = ${invoices.projectId} AND ${projects.subProjectName} = ${EAC_SUB_PROJECT_NAME})`
+          : undefined
+
+      const accessClauses = [managerClause, eacClause].filter((c) => c !== undefined) as Exclude<
+        typeof managerClause | typeof eacClause,
+        undefined
+      >[]
+
+      if (accessClauses.length === 0) {
         return {
           data: [],
           total: 0,
@@ -60,7 +75,8 @@ export const invoiceRepository = {
           limit: filter.limit || 20,
         }
       }
-      where.push(inArray(invoices.projectId, managerProjectIds))
+
+      where.push(accessClauses.length === 1 ? accessClauses[0] : or(...accessClauses))
     }
 
     // Apply filters
@@ -333,10 +349,12 @@ export const invoiceRepository = {
 
     const row = result[0]
 
-    // Check access: admin or project manager only
+    // Check access: admin+ / project manager / (user_eac on EAC project)
     if (!hasRole(user.role, "admin")) {
       const isManager = await isProjectManager(row.invoice.projectId, user.id)
-      if (!isManager) {
+      const isEacAccess =
+        user.role === "user_eac" && row.project?.subProjectName === EAC_SUB_PROJECT_NAME
+      if (!isManager && !isEacAccess) {
         return null
       }
     }
@@ -662,6 +680,14 @@ export const invoiceRepository = {
       return null
     }
 
+    // Write access: admin+ or project manager only (user_eac cannot update invoices)
+    if (!hasRole(user.role, "admin")) {
+      const isManager = await isProjectManager(existing.projectId, user.id)
+      if (!isManager) {
+        throw new Error("Access denied: must be admin or project manager")
+      }
+    }
+
     // Start transaction
     const result = await db.transaction(async (tx) => {
       const updateData: Partial<typeof invoices.$inferInsert> = {
@@ -861,6 +887,14 @@ export const invoiceRepository = {
     const existing = await this.findById(id, user)
     if (!existing) {
       return false
+    }
+
+    // Write access: admin+ or project manager only (user_eac cannot delete invoices)
+    if (!hasRole(user.role, "admin")) {
+      const isManager = await isProjectManager(existing.projectId, user.id)
+      if (!isManager) {
+        throw new Error("Access denied: must be admin or project manager")
+      }
     }
 
     // Prevent deletion of locked invoices

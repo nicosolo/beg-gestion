@@ -23,7 +23,7 @@ import {
     parseZodError,
 } from "@src/tools/error-handler"
 import type { Variables } from "@src/types/global"
-import { roleMiddleware, hasRole } from "@src/tools/role-middleware"
+import { hasRole } from "@src/tools/role-middleware"
 import { z, ZodError } from "zod"
 import { normalizeStoredPath, fileBaseName, matchesStoredPath } from "@src/tools/file-utils"
 import { storeFile, serveFile } from "@src/services/file-storage.service"
@@ -227,8 +227,7 @@ export const invoiceRoutes = new Hono<{ Variables: Variables }>()
             const filename = `factures-${today}.xlsx`
 
             const headers = new Headers({
-                "Content-Type":
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 "Content-Disposition": `attachment; filename="${filename}"`,
                 "Content-Length": buffer.byteLength.toString(),
             })
@@ -395,7 +394,6 @@ export const invoiceRoutes = new Hono<{ Variables: Variables }>()
     )
     .post(
         "/:id/visa",
-        roleMiddleware("super_admin"),
         zValidator("param", idParamSchema),
         responseValidator({
             200: invoiceResponseSchema,
@@ -403,6 +401,31 @@ export const invoiceRoutes = new Hono<{ Variables: Variables }>()
         async (c) => {
             const { id } = c.req.valid("param")
             const user = c.get("user")
+
+            // Permission check:
+            // - super_admin and admin can visa any invoice
+            // - user_eac can visa any invoice on an EAC sous-mandat project
+            // - user cannot visa
+            const isAdminOrAbove = hasRole(user.role, "admin")
+            const isUserEac = user.role === "user_eac"
+
+            if (!isAdminOrAbove && !isUserEac) {
+                return c.json({ error: "Forbidden - Insufficient role to visa invoices" }, 403)
+            }
+
+            if (isUserEac && !isAdminOrAbove) {
+                const existing = await invoiceRepository.findById(id, user)
+                if (!existing) {
+                    throwNotFound("Invoice")
+                }
+                if (existing.project?.subProjectName !== "EAC") {
+                    return c.json(
+                        { error: "Forbidden - user_eac can only visa invoices on EAC projects" },
+                        403
+                    )
+                }
+            }
+
             const updatedInvoice = await invoiceRepository.setVisa(id, user)
             if (!updatedInvoice) {
                 throwNotFound("Invoice")

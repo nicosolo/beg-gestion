@@ -4,6 +4,7 @@ import { activities, activityTypes, projects, users } from "../schema"
 import type { ActivityFilter } from "@beg/validations"
 import type { Variables } from "@src/types/global"
 import { hasRole } from "@src/tools/role-middleware"
+import { EAC_SUB_PROJECT_NAME } from "./project.repository"
 import { rebuildProjectSearchIndex } from "../fts"
 
 // Helper function to update project dates and duration
@@ -101,6 +102,10 @@ const createBaseQuery = (user: Variables["user"]) => {
 
 const accessControlCondition = (user: Variables["user"]) => {
     if (hasRole(user.role, "admin")) return undefined
+    // user_eac can additionally see activities on any EAC sous-mandat project
+    if (user.role === "user_eac") {
+        return sql`(EXISTS (SELECT 1 FROM project_users WHERE projectId = ${activities.projectId} AND userId = ${user.id}) OR ${activities.userId} = ${user.id} OR EXISTS (SELECT 1 FROM projects WHERE projects.id = ${activities.projectId} AND projects.subProjectName = ${EAC_SUB_PROJECT_NAME}))`
+    }
     return sql`(EXISTS (SELECT 1 FROM project_users WHERE projectId = ${activities.projectId} AND userId = ${user.id}) OR ${activities.userId} = ${user.id})`
 }
 

@@ -27,7 +27,7 @@
                         <UserSelect
                             id="visaByUserIdFilter"
                             v-model="filterData.visaByUserId"
-                            :roles="['super_admin']"
+                            :roles="['super_admin', 'admin', 'user_eac']"
                             :placeholder="$t('common.all')"
                             @update:model-value="emitChange"
                         />

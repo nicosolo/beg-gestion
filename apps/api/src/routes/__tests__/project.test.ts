@@ -220,6 +220,54 @@ describe("PUT /project/:id", () => {
         })
         expect(res.status).toBe(401)
     })
+
+    test("user_eac updates EAC project (not manager, not admin)", async () => {
+        const seed = await seedUsers(db).catch(() => null)
+        // seedUsers was already run in outer beforeAll; fetch userEac token via DB lookup
+        const userEac = await db
+            .select()
+            .from(schema.users)
+            .where(eq(schema.users.email, "usereac@test.com"))
+            .then((rows) => rows[0])
+        const { generateToken } = await import("../../tools/auth")
+        const userEacToken = generateToken(userEac)
+
+        const [eacProject] = await db
+            .insert(schema.projects)
+            .values({
+                name: "EAC Project Edit",
+                subProjectName: "EAC",
+                startDate: new Date("2024-05-01"),
+            })
+            .returning()
+
+        const res = await app.request(`/project/${eacProject.id}`, {
+            method: "PUT",
+            headers: jsonHeaders(userEacToken),
+            body: JSON.stringify({ name: "Updated By user_eac" }),
+        })
+        expect(res.status).toBe(200)
+        const body = await res.json()
+        expect(body.name).toBe("Updated By user_eac")
+        void seed
+    })
+
+    test("user_eac returns 403 on non-EAC project", async () => {
+        const userEac = await db
+            .select()
+            .from(schema.users)
+            .where(eq(schema.users.email, "usereac@test.com"))
+            .then((rows) => rows[0])
+        const { generateToken } = await import("../../tools/auth")
+        const userEacToken = generateToken(userEac)
+
+        const res = await app.request(`/project/${projectId}`, {
+            method: "PUT",
+            headers: jsonHeaders(userEacToken),
+            body: JSON.stringify({ name: "Should Fail" }),
+        })
+        expect(res.status).toBe(403)
+    })
 })
 
 describe("GET /project (FTS search)", () => {

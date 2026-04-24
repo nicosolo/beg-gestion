@@ -20,6 +20,8 @@ import {
 } from "@beg/validations"
 import { rebuildProjectSearchIndex } from "../fts"
 
+export const EAC_SUB_PROJECT_NAME = "EAC"
+
 export const projectRepository = {
     // Check if a user is a manager of a specific project
     isProjectManager: async (projectId: number, userId: number): Promise<boolean> => {
@@ -36,6 +38,17 @@ export const projectRepository = {
             .execute()
 
         return result.length > 0
+    },
+
+    isEacProject: async (projectId: number): Promise<boolean> => {
+        const result = await db
+            .select({ subProjectName: projects.subProjectName })
+            .from(projects)
+            .where(eq(projects.id, projectId))
+            .limit(1)
+            .execute()
+
+        return result[0]?.subProjectName === EAC_SUB_PROJECT_NAME
     },
 
     findAll: async (filters?: ProjectFilter): Promise<ProjectListResponse> => {

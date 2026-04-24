@@ -26,6 +26,26 @@ describe("hasRole", () => {
 	test("admin does not have super_admin role", () => {
 		expect(hasRole("admin", "super_admin")).toBe(false)
 	})
+
+	test("user_eac is above user", () => {
+		expect(hasRole("user_eac", "user")).toBe(true)
+	})
+
+	test("user_eac is below admin", () => {
+		expect(hasRole("user_eac", "admin")).toBe(false)
+	})
+
+	test("user_eac is below super_admin", () => {
+		expect(hasRole("user_eac", "super_admin")).toBe(false)
+	})
+
+	test("admin has user_eac role", () => {
+		expect(hasRole("admin", "user_eac")).toBe(true)
+	})
+
+	test("user does not have user_eac role", () => {
+		expect(hasRole("user", "user_eac")).toBe(false)
+	})
 })
 
 describe("roleMiddleware", () => {
