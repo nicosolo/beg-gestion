@@ -33,8 +33,8 @@
                 </div>
 
                 <!-- Row 2: DateRange, Sort, Sous-mandat -->
-                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mt-4">
-                    <div class="md:col-span-2">
+                <div class="grid grid-cols-1 md:grid-cols-6 gap-4 mt-4">
+                    <div class="md:col-span-3">
                         <DateRange
                             :from-date="filterData.fromDate"
                             :to-date="filterData.toDate"
