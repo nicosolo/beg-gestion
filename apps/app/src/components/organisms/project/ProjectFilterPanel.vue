@@ -32,19 +32,8 @@
                     </div>
                 </div>
 
-                <!-- Row 1b: Sous-mandat -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                    <div class="form-group">
-                        <Label>{{ $t("projects.filters.subProjectName") }}</Label>
-                        <SubProjectNameSelect
-                            v-model="filterData.subProjectName"
-                            @update:model-value="emitChange"
-                        />
-                    </div>
-                </div>
-
-                <!-- Row 2: DateRange, Sort -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <!-- Row 2: DateRange, Sort, Sous-mandat -->
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mt-4">
                     <div class="md:col-span-2">
                         <DateRange
                             :from-date="filterData.fromDate"
@@ -65,7 +54,7 @@
                             "
                         />
                     </div>
-                    <div v-if="showSort" class="form-group">
+                    <div v-if="showSort" class="form-group md:col-span-2">
                         <Label>{{ $t("projects.filters.sortBy") }}</Label>
                         <div class="flex gap-2">
                             <Select
@@ -99,6 +88,13 @@
                                 ]"
                             ></Select>
                         </div>
+                    </div>
+                    <div class="form-group">
+                        <Label>{{ $t("projects.filters.subProjectName") }}</Label>
+                        <SubProjectNameSelect
+                            v-model="filterData.subProjectName"
+                            @update:model-value="emitChange"
+                        />
                     </div>
                 </div>
 
