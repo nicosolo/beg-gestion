@@ -6,11 +6,12 @@ const STORAGE_KEY = "app-settings"
 const DEFAULT_BASE_PATH = "N:\\Mandats"
 
 // Fixed folder shortcuts (siblings under the base path's parent, default N:\)
-export const FOLDER_SHORTCUT_KEYS = ["mandats", "photographie", "sigMandats"] as const
+// Keys MUST match apps/api/src/config.ts PROJECT_ROOTS.
+export const FOLDER_SHORTCUT_KEYS = ["mandats", "photographies", "sigMandats"] as const
 export type FolderShortcutKey = (typeof FOLDER_SHORTCUT_KEYS)[number]
 const FOLDER_SHORTCUT_DIRS: Record<FolderShortcutKey, string> = {
     mandats: "Mandats",
-    photographie: "Photographie",
+    photographies: "Photographies",
     sigMandats: "SIG Mandats",
 }
 
@@ -96,6 +97,19 @@ export const useAppSettingsStore = defineStore("appSettings", () => {
         }))
     )
 
+    // Build an absolute path for a relative path that is scoped to a specific
+    // folder shortcut root (e.g. "sigMandats" + "/2000-2200/2100 foo" →
+    // "N:\SIG Mandats\2000-2200\2100 foo"). Input separators are normalised to
+    // match the basePath style.
+    const getShortcutAbsolutePath = (key: FolderShortcutKey, relativePath: string) => {
+        const separator = rootPath.value.includes("\\") ? "\\" : "/"
+        const cleanRelative = relativePath
+            .replace(/^[\/\\]+/, "")
+            .replace(/[\/\\]+/g, separator)
+        const cleanRoot = rootPath.value.replace(/[\/\\]+$/, "")
+        return `${cleanRoot}${separator}${FOLDER_SHORTCUT_DIRS[key]}${separator}${cleanRelative}`
+    }
+
     // Initialize on store creation
     loadSettings()
 
@@ -110,5 +124,6 @@ export const useAppSettingsStore = defineStore("appSettings", () => {
         setBasePath,
         resetToDefault,
         getAbsolutePath,
+        getShortcutAbsolutePath,
     }
 })

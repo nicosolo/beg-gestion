@@ -80,7 +80,7 @@ export default {
     },
     folderShortcuts: {
         mandats: "Mandats",
-        photographie: "Photographie",
+        photographies: "Photographies",
         sigMandats: "SIG Mandats",
     },
     home: {
@@ -130,6 +130,7 @@ export default {
         new: "Nouveau mandat",
         edit: "Modifier le mandat",
         details: "Détails du mandat",
+        openFolder: "Ouvrir dossier",
         export: {
             button: "Exporter vers Excel",
             exporting: "Export en cours...",

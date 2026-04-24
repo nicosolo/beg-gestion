@@ -1,13 +1,18 @@
 import { readdir } from "fs/promises"
 import path from "path"
 import { existsSync } from "fs"
-import { PROJECT_BASE_DIR } from "@src/config"
+import { PROJECT_BASE_DIR, PROJECT_ROOTS, type ProjectRootKey } from "@src/config"
 
 export interface ProjectFolderResult {
     projectNumber: string
     fullPath: string
     folderName: string
     parentFolder: string
+}
+
+export interface ProjectFolderMatch extends ProjectFolderResult {
+    source: ProjectRootKey
+    sourceLabel: string
 }
 
 /**
@@ -83,8 +88,7 @@ export async function findProjectFolder(
 }
 
 /**
- * Find a single project folder by project number (returns first match)
- * @param baseDir Base directory to search in
+ * Find a single project folder by project number (returns first match from /mandats)
  * @param projectNumber Project number to search for
  * @returns First matching project folder or null
  */
@@ -93,6 +97,32 @@ export async function findProjectFolderSingle(
 ): Promise<ProjectFolderResult | null> {
     const results = await findProjectFolder(PROJECT_BASE_DIR, projectNumber)
     return results.length > 0 ? results[0] : null
+}
+
+/**
+ * Search for a project folder across all configured PROJECT_ROOTS
+ * (Mandats, Photographies, SIG Mandats). Roots that don't exist are skipped.
+ */
+export async function findProjectFoldersAcrossRoots(
+    projectNumber: string | number
+): Promise<ProjectFolderMatch[]> {
+    const matches: ProjectFolderMatch[] = []
+
+    for (const root of PROJECT_ROOTS) {
+        if (!existsSync(root.path)) continue
+
+        const results = await findProjectFolder(root.path, projectNumber)
+        for (const result of results) {
+            matches.push({
+                ...result,
+                fullPath: result.fullPath.replace(root.path, ""),
+                source: root.key,
+                sourceLabel: root.label,
+            })
+        }
+    }
+
+    return matches
 }
 
 export interface ProjectInvoiceFolderResult {

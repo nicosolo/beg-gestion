@@ -64,18 +64,22 @@ export function useUpdateProject() {
     })
 }
 
+export interface ProjectFolderMatch {
+    projectNumber: string
+    fullPath: string
+    folderName: string
+    parentFolder: string
+    source: "mandats" | "photographies" | "sigMandats"
+    sourceLabel: string
+}
+
 export function useProjectFolder(options?: { silent?: boolean }) {
     return useGet<
         {
             projectId: number
             projectNumber: string
             found: boolean
-            folder: {
-                projectNumber: string
-                fullPath: string
-                folderName: string
-                parentFolder: string
-            } | null
+            matches: ProjectFolderMatch[]
         },
         {
             params: typeof idParamSchema

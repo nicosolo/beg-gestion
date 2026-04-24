@@ -140,7 +140,7 @@ describe("useAppSettingsStore", () => {
             const store = await getStore()
             expect(store.folderShortcuts).toEqual([
                 { key: "mandats", path: "N:\\Mandats" },
-                { key: "photographie", path: "N:\\Photographie" },
+                { key: "photographies", path: "N:\\Photographies" },
                 { key: "sigMandats", path: "N:\\SIG Mandats" },
             ])
         })
@@ -150,9 +150,26 @@ describe("useAppSettingsStore", () => {
             store.setBasePath("/data/projects")
             expect(store.folderShortcuts).toEqual([
                 { key: "mandats", path: "/data/Mandats" },
-                { key: "photographie", path: "/data/Photographie" },
+                { key: "photographies", path: "/data/Photographies" },
                 { key: "sigMandats", path: "/data/SIG Mandats" },
             ])
+        })
+    })
+
+    describe("getShortcutAbsolutePath", () => {
+        it("builds Windows path under the matching shortcut dir", async () => {
+            const store = await getStore()
+            expect(
+                store.getShortcutAbsolutePath("sigMandats", "/2000 - 2200/2100 foo")
+            ).toBe("N:\\SIG Mandats\\2000 - 2200\\2100 foo")
+        })
+
+        it("uses forward slashes when basePath does", async () => {
+            const store = await getStore()
+            store.setBasePath("/data/projects")
+            expect(
+                store.getShortcutAbsolutePath("photographies", "2000 - 2200/2100 foo")
+            ).toBe("/data/Photographies/2000 - 2200/2100 foo")
         })
     })
 

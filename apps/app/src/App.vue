@@ -31,10 +31,8 @@ const router = useRouter()
 const authStore = useAuthStore()
 const appSettingsStore = useAppSettingsStore()
 const hasAdminAccess = computed(() => authStore.isRole("admin"))
-const isFoldersOpen = ref(false)
 
 const openShortcut = async (path: string) => {
-    isFoldersOpen.value = false
     if (!isTauri.value) return
     await openFolder(path)
 }
@@ -220,7 +218,6 @@ watch(
     () => {
         initializeExpandedItems()
         isSettingsOpen.value = false
-        isFoldersOpen.value = false
     }
 )
 
@@ -229,9 +226,6 @@ const onClickOutside = (e: MouseEvent) => {
     const target = e.target as HTMLElement
     if (isSettingsOpen.value && !target.closest("[data-dropdown='settings']")) {
         isSettingsOpen.value = false
-    }
-    if (isFoldersOpen.value && !target.closest("[data-dropdown='folders']")) {
-        isFoldersOpen.value = false
     }
 }
 
@@ -330,34 +324,6 @@ html {
                     >
                         {{ t("navigation.invoices") }}
                     </RouterLink>
-                    <!-- Open folder dropdown (Tauri only) -->
-                    <div v-if="isTauri" class="relative" data-dropdown="folders">
-                        <button
-                            :class="[
-                                'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
-                                'px-3 py-1.5 text-sm font-medium rounded-md inline-flex items-center gap-1',
-                            ]"
-                            :title="t('navigation.openFolder')"
-                            @click="isFoldersOpen = !isFoldersOpen"
-                        >
-                            <FolderOpenIcon class="h-4 w-4" />
-                            <ChevronDownIcon class="h-3.5 w-3.5" />
-                        </button>
-                        <div
-                            v-if="isFoldersOpen"
-                            class="absolute right-0 mt-1 w-56 rounded-md bg-white shadow-lg ring-1 ring-black/5 py-1 z-50"
-                        >
-                            <button
-                                v-for="shortcut in appSettingsStore.folderShortcuts"
-                                :key="shortcut.key"
-                                type="button"
-                                class="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                @click="openShortcut(shortcut.path)"
-                            >
-                                {{ t(`folderShortcuts.${shortcut.key}`) }}
-                            </button>
-                        </div>
-                    </div>
                     <!-- Settings dropdown -->
                     <div v-if="settingsNav" class="relative" data-dropdown="settings">
                         <button

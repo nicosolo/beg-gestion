@@ -9,11 +9,15 @@ services:
             - NODE_ENV=production
             - DB_FILE_PATH=/app/data/db.sqlite
             - MANDATS_PATH=${MANDATS_PATH-./data/mandats}
+            - SIG_MANDATS_PATH=${SIG_MANDATS_PATH-./data/sig-mandats}
+            - PHOTOGRAPHIES_PATH=${PHOTOGRAPHIES_PATH-./data/photographies}
             - JWT_SECRET=${JWT_SECRET-please_change_me}
             - MS_ACCESS_DB_PATH=${MS_ACCESS_DB_PATH-./data/BEGdatas.mdb}
         volumes:
             - ./data:/app/data
-            - $MANDATS_PATH:/mandats
+            - ${MANDATS_PATH-./data/mandats}:/mandats
+            - ${SIG_MANDATS_PATH-./data/SIG Mandats}:/sig-mandats
+            - ${PHOTOGRAPHIES_PATH-./data/Photographies}:/photographies
             - $MS_ACCESS_DB_PATH:/export-mdb/beg.mdb:ro
             - $FILE_STORAGE:/app/files
         working_dir: /app/apps/api
