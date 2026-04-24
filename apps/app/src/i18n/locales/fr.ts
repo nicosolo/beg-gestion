@@ -239,6 +239,7 @@ export default {
             searchByNameAndNumber: "Rechercher par numéro ou nom",
             referentUser: "Responsable",
             selectType: "Filtrer par type...",
+            subProjectName: "Sous-mandat",
         },
         options: "Options",
         status: {
@@ -381,6 +382,7 @@ export default {
         filters: {
             user: "Collaborateur",
             project: "Mandat",
+            subProjectName: "Sous-mandat",
             activityType: "Activité",
             fromDate: "Date de début",
             toDate: "Date de fin",

@@ -870,6 +870,67 @@ describe("DELETE /activity/:id - billed restriction", () => {
 	})
 })
 
+describe("GET /activity?subProjectName=", () => {
+	let subProjectId: number
+	let subActivityId: number
+
+	beforeAll(async () => {
+		const [subProject] = await db
+			.insert(schema.projects)
+			.values({
+				name: "Sous-mandat Filter Project",
+				subProjectName: "EAC-FILTER",
+				startDate: new Date(),
+				status: "active",
+			})
+			.returning()
+		subProjectId = subProject.id
+
+		await db.insert(schema.projectUsers).values([
+			{ projectId: subProjectId, userId: adminId, role: "manager" },
+		])
+
+		const res = await app.request("/activity", {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+			body: JSON.stringify({
+				projectId: subProjectId,
+				activityTypeId,
+				date: new Date().toISOString(),
+				duration: 1,
+				kilometers: 0,
+				expenses: 0,
+				description: "Sous-mandat test activity",
+				billed: false,
+			}),
+		})
+		const body = await res.json()
+		subActivityId = body.id
+	})
+
+	test("returns only activities on matching sous-mandat", async () => {
+		const res = await app.request("/activity?subProjectName=EAC-FILTER", {
+			headers: { Authorization: `Bearer ${adminToken}` },
+		})
+		expect(res.status).toBe(200)
+		const body = await res.json()
+		const ids = body.data.map((a: { id: number }) => a.id)
+		expect(ids).toContain(subActivityId)
+		expect(body.data.every((a: { project: { subProjectName: string | null } }) =>
+			a.project?.subProjectName?.includes("EAC-FILTER")
+		)).toBe(true)
+	})
+
+	test("empty string filter is a no-op", async () => {
+		const res = await app.request("/activity?subProjectName=", {
+			headers: { Authorization: `Bearer ${adminToken}` },
+		})
+		expect(res.status).toBe(200)
+		const body = await res.json()
+		expect(body.data.length).toBeGreaterThan(0)
+	})
+})
+
 describe("DELETE /activity/:id - 60-day lock", () => {
 	test("non-admin cannot delete old activity", async () => {
 		const oldDate = new Date()

@@ -1,4 +1,4 @@
-import { eq, sql, and, gte, lte, asc, desc, inArray, gt, isNotNull } from "drizzle-orm"
+import { eq, sql, and, gte, lte, asc, desc, inArray, gt, isNotNull, like } from "drizzle-orm"
 import { db, sqlite } from "../index"
 import {
     projects,
@@ -56,6 +56,7 @@ export const projectRepository = {
             page = 1,
             limit = 10,
             text,
+            subProjectName,
             includeArchived = false,
             referentUserId,
             projectTypeIds,
@@ -78,6 +79,11 @@ export const projectRepository = {
         // Status filter
         if (status) {
             whereConditions.push(eq(projects.status, status))
+        }
+
+        // Sous-mandat filter (partial match)
+        if (subProjectName && subProjectName.trim()) {
+            whereConditions.push(like(projects.subProjectName, `%${subProjectName.trim()}%`))
         }
 
         // FTS5 full-text search — single query for both filtering and ranking

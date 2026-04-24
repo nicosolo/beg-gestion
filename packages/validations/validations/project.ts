@@ -8,6 +8,7 @@ export type ProjectStatus = (typeof projectStatusEnum)[number]
 // Base project filter schema without pagination
 const projectBaseFilterSchema = z.object({
     text: z.string().optional(),
+    subProjectName: z.string().optional(),
     referentUserId: z.coerce.number().optional(),
     projectTypeIds: z
         .union([

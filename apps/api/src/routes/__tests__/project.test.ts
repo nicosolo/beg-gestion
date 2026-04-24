@@ -740,3 +740,63 @@ describe("PUT /project/:id (edge cases)", () => {
         expect(body.error).toBe("Invalid ID")
     })
 })
+
+describe("GET /project?subProjectName=", () => {
+    let acousticId: number
+    let thermalId: number
+
+    beforeAll(async () => {
+        const [acoustic] = await db
+            .insert(schema.projects)
+            .values({
+                name: "Filter Project Acoustic",
+                subProjectName: "EAC-ACOUSTIC",
+                startDate: new Date("2024-01-01"),
+                status: "active",
+            })
+            .returning()
+        acousticId = acoustic.id
+
+        const [thermal] = await db
+            .insert(schema.projects)
+            .values({
+                name: "Filter Project Thermal",
+                subProjectName: "EAC-THERMAL",
+                startDate: new Date("2024-01-01"),
+                status: "active",
+            })
+            .returning()
+        thermalId = thermal.id
+    })
+
+    test("partial match returns projects with matching sous-mandat", async () => {
+        const res = await app.request("/project?subProjectName=ACOUSTIC", {
+            headers: { Authorization: `Bearer ${adminToken}` },
+        })
+        expect(res.status).toBe(200)
+        const body = await res.json()
+        const ids = body.data.map((p: { id: number }) => p.id)
+        expect(ids).toContain(acousticId)
+        expect(ids).not.toContain(thermalId)
+    })
+
+    test("prefix match returns all with common prefix", async () => {
+        const res = await app.request("/project?subProjectName=EAC-", {
+            headers: { Authorization: `Bearer ${adminToken}` },
+        })
+        expect(res.status).toBe(200)
+        const body = await res.json()
+        const ids = body.data.map((p: { id: number }) => p.id)
+        expect(ids).toContain(acousticId)
+        expect(ids).toContain(thermalId)
+    })
+
+    test("empty string filter is a no-op", async () => {
+        const res = await app.request("/project?subProjectName=", {
+            headers: { Authorization: `Bearer ${adminToken}` },
+        })
+        expect(res.status).toBe(200)
+        const body = await res.json()
+        expect(body.data.length).toBeGreaterThan(0)
+    })
+})

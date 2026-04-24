@@ -61,8 +61,8 @@
                     </div>
                 </div>
 
-                <!-- Row 2: DateRange, Activity Type -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <!-- Row 2: DateRange, Activity Type, Sous-mandat -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
                     <div class="md:col-span-2">
                         <DateRange
                             :from-date="localFilter.fromDate"
@@ -91,6 +91,16 @@
                             v-model="localFilter.activityTypeId"
                             :show-all-option="true"
                             @update:modelValue="handleFilterChange"
+                        />
+                    </div>
+
+                    <!-- Sous-mandat Filter -->
+                    <div class="form-group">
+                        <Label>{{ $t("time.filters.subProjectName") }}</Label>
+                        <Input
+                            v-model="localFilter.subProjectName"
+                            :placeholder="$t('time.filters.subProjectName')"
+                            @update:modelValue="debouncedFilterChange"
                         />
                     </div>
                 </div>
@@ -164,6 +174,7 @@ import { ref, watch, onMounted } from "vue"
 import Label from "@/components/atoms/Label.vue"
 import Select from "@/components/atoms/Select.vue"
 import Button from "@/components/atoms/Button.vue"
+import Input from "@/components/atoms/Input.vue"
 import ActivityTypeSelect from "@/components/organisms/activityType/ActivityTypeSelect.vue"
 import Checkbox from "@/components/atoms/Checkbox.vue"
 import DateRange from "@/components/molecules/DateRange.vue"
@@ -173,6 +184,7 @@ import type { ActivityFilter } from "@beg/validations"
 import UserSelect from "@/components/organisms/user/UserSelect.vue"
 import { useAuthStore } from "@/stores/auth"
 import { getTodayRange } from "@/composables/utils/useDateRangePresets"
+import { debounce } from "@/utils/debounce"
 
 // For backwards compatibility, keep the old interface name as an alias
 export type TimeFilters = ActivityFilter
@@ -229,6 +241,9 @@ const handleFilterChange = () => {
     emit("update:filter", { ...localFilter.value })
 }
 
+// Debounced variant for text inputs (sous-mandat)
+const debouncedFilterChange = debounce(handleFilterChange, 300)
+
 // Reset filters
 const resetFilters = () => {
     const { from, to } = getTodayRange()
@@ -236,6 +251,7 @@ const resetFilters = () => {
         userId: undefined,
         projectId: undefined,
         activityTypeId: undefined,
+        subProjectName: undefined,
         fromDate: from,
         toDate: to,
         includeBilled: false,

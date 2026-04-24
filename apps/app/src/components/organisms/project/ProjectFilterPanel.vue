@@ -32,6 +32,19 @@
                     </div>
                 </div>
 
+                <!-- Row 1b: Sous-mandat -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                    <FormField :label="$t('projects.filters.subProjectName')">
+                        <template #input>
+                            <Input
+                                v-model="filterData.subProjectName"
+                                :placeholder="$t('projects.filters.subProjectName')"
+                                @update:model-value="emitInputChange"
+                            />
+                        </template>
+                    </FormField>
+                </div>
+
                 <!-- Row 2: DateRange, Sort -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                     <div class="md:col-span-2">
@@ -140,6 +153,7 @@ export type ProjectFilterModel = Omit<ProjectFilter, "page" | "limit" | "account
 export const getDefaultProjectFilter = (): ProjectFilterModel => {
     return {
         text: "",
+        subProjectName: "",
         includeArchived: false,
         status: "active",
         sortBy: "name",
@@ -192,6 +206,7 @@ const emit = defineEmits<{
 // Create reactive copy of the filter
 const filterData = reactive<ProjectFilterProps["filter"]>({
     text: filter.text,
+    subProjectName: filter.subProjectName || "",
     includeArchived: filter.includeArchived,
     status: filter.status,
     sortBy: filter.sortBy,
@@ -213,6 +228,7 @@ watch(
     () => filter,
     (newFilter) => {
         filterData.text = newFilter.text
+        filterData.subProjectName = newFilter.subProjectName || ""
         filterData.includeArchived = newFilter.includeArchived
         filterData.status = newFilter.status
         filterData.sortBy = newFilter.sortBy
@@ -252,6 +268,7 @@ const emitInputChange = () => {
 const resetFilters = () => {
     const defaultFilter = getDefaultProjectFilter()
     filterData.text = defaultFilter.text
+    filterData.subProjectName = defaultFilter.subProjectName
     filterData.includeArchived = defaultFilter.includeArchived
     filterData.status = defaultFilter.status
     filterData.sortBy = defaultFilter.sortBy
