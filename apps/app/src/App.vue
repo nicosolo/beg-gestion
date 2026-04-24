@@ -67,6 +67,7 @@ const goBack = () => {
 
 // Header mandat search
 const headerSearchProjectId = ref<number | undefined>(undefined)
+const headerSearchKey = ref(0)
 const handleHeaderProjectSelect = async (projectId?: number) => {
     if (!projectId) {
         headerSearchProjectId.value = undefined
@@ -78,6 +79,7 @@ const handleHeaderProjectSelect = async (projectId?: number) => {
         // Ignore navigation duplication or aborted navigations
     } finally {
         headerSearchProjectId.value = undefined
+        headerSearchKey.value++
     }
 }
 
@@ -271,12 +273,12 @@ html {
             class="fixed top-0 left-0 right-0 flex items-center p-2 border-b border-gray-200 bg-white z-10 print:hidden"
         >
             <div class="flex justify-between items-center w-full gap-2">
-                <div class="flex items-center">
+                <div class="flex items-center gap-4">
                     <!-- Back button - only in Tauri when not on home -->
                     <button
                         v-if="canGoBack"
                         @click="goBack"
-                        class="inline-flex items-center justify-center p-2 mr-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none"
+                        class="inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none"
                     >
                         <ArrowLeftIcon class="h-5 w-5" />
                     </button>
@@ -287,110 +289,113 @@ html {
                             <h2 class="text-xl font-bold text-gray-700 pt-2">Gestion</h2>
                         </div>
                     </a>
+
+                    <!-- Global mandat search -->
+                    <div class="hidden md:block w-64">
+                        <ProjectSelect
+                            :key="headerSearchKey"
+                            id="header-project-search"
+                            :model-value="headerSearchProjectId"
+                            class-name="w-full"
+                            :placeholder="t('header.projectSearchPlaceholder')"
+                            :include-archived="true"
+                            :include-ended="true"
+                            @update:model-value="handleHeaderProjectSelect"
+                        />
+                    </div>
                 </div>
 
-                <!-- Global mandat search -->
-                <div class="hidden md:block flex-1 max-w-sm mx-4">
-                    <ProjectSelect
-                        id="header-project-search"
-                        :model-value="headerSearchProjectId"
-                        class-name="w-full"
-                        :placeholder="t('header.projectSearchPlaceholder')"
-                        :include-archived="true"
-                        :include-ended="true"
-                        @update:model-value="handleHeaderProjectSelect"
-                    />
-                </div>
-
-                <!-- Main navigation links -->
-                <nav class="hidden md:flex items-center gap-1">
-                    <RouterLink
-                        :to="{ name: 'time-list' }"
-                        :class="[
-                            route.name === 'time-list'
-                                ? 'bg-gray-900 text-white'
-                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
-                            'px-3 py-1.5 text-sm font-medium rounded-md',
-                        ]"
-                    >
-                        {{ t("navigation.time") }}
-                    </RouterLink>
-                    <RouterLink
-                        :to="{ name: 'project-list' }"
-                        :class="[
-                            route.name === 'project-list'
-                                ? 'bg-gray-900 text-white'
-                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
-                            'px-3 py-1.5 text-sm font-medium rounded-md',
-                        ]"
-                    >
-                        {{ t("navigation.projects") }}
-                    </RouterLink>
-                    <RouterLink
-                        :to="{ name: 'project-map' }"
-                        :class="[
-                            route.name === 'project-map'
-                                ? 'bg-gray-900 text-white'
-                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
-                            'px-3 py-1.5 text-sm font-medium rounded-md',
-                        ]"
-                    >
-                        {{ t("projects.map.title") }}
-                    </RouterLink>
-                    <RouterLink
-                        :to="{ name: 'invoice-list' }"
-                        :class="[
-                            route.name === 'invoice-list'
-                                ? 'bg-gray-900 text-white'
-                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
-                            'px-3 py-1.5 text-sm font-medium rounded-md',
-                        ]"
-                    >
-                        {{ t("navigation.invoices") }}
-                    </RouterLink>
-                    <!-- Settings dropdown -->
-                    <div v-if="settingsNav" class="relative">
-                        <button
+                <div class="flex items-center gap-3">
+                    <!-- Main navigation links -->
+                    <nav class="hidden md:flex items-center gap-1">
+                        <RouterLink
+                            :to="{ name: 'time-list' }"
                             :class="[
-                                settingsNav.current
+                                route.name === 'time-list'
                                     ? 'bg-gray-900 text-white'
                                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
-                                'px-3 py-1.5 text-sm font-medium rounded-md inline-flex items-center gap-1',
+                                'px-3 py-1.5 text-sm font-medium rounded-md',
                             ]"
-                            @click="isSettingsOpen = !isSettingsOpen"
                         >
-                            {{ settingsNav.name }}
-                            <ChevronDownIcon class="h-3.5 w-3.5" />
-                        </button>
-                        <div
-                            v-if="isSettingsOpen"
-                            class="absolute right-0 mt-1 w-48 rounded-md bg-white shadow-lg ring-1 ring-black/5 py-1 z-50"
+                            {{ t("navigation.time") }}
+                        </RouterLink>
+                        <RouterLink
+                            :to="{ name: 'project-list' }"
+                            :class="[
+                                route.name === 'project-list'
+                                    ? 'bg-gray-900 text-white'
+                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+                                'px-3 py-1.5 text-sm font-medium rounded-md',
+                            ]"
                         >
-                            <RouterLink
-                                v-for="child in settingsNav.children"
-                                :key="child.name"
-                                :to="child.to"
+                            {{ t("navigation.projects") }}
+                        </RouterLink>
+                        <RouterLink
+                            :to="{ name: 'project-map' }"
+                            :class="[
+                                route.name === 'project-map'
+                                    ? 'bg-gray-900 text-white'
+                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+                                'px-3 py-1.5 text-sm font-medium rounded-md',
+                            ]"
+                        >
+                            {{ t("projects.map.title") }}
+                        </RouterLink>
+                        <RouterLink
+                            :to="{ name: 'invoice-list' }"
+                            :class="[
+                                route.name === 'invoice-list'
+                                    ? 'bg-gray-900 text-white'
+                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+                                'px-3 py-1.5 text-sm font-medium rounded-md',
+                            ]"
+                        >
+                            {{ t("navigation.invoices") }}
+                        </RouterLink>
+                        <!-- Settings dropdown -->
+                        <div v-if="settingsNav" class="relative">
+                            <button
                                 :class="[
-                                    child.current
-                                        ? 'bg-gray-100 text-gray-900'
-                                        : 'text-gray-700 hover:bg-gray-50',
-                                    'block px-4 py-2 text-sm',
+                                    settingsNav.current
+                                        ? 'bg-gray-900 text-white'
+                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+                                    'px-3 py-1.5 text-sm font-medium rounded-md inline-flex items-center gap-1',
                                 ]"
-                                @click="isSettingsOpen = false"
+                                @click="isSettingsOpen = !isSettingsOpen"
                             >
-                                {{ child.name }}
-                            </RouterLink>
+                                {{ settingsNav.name }}
+                                <ChevronDownIcon class="h-3.5 w-3.5" />
+                            </button>
+                            <div
+                                v-if="isSettingsOpen"
+                                class="absolute right-0 mt-1 w-48 rounded-md bg-white shadow-lg ring-1 ring-black/5 py-1 z-50"
+                            >
+                                <RouterLink
+                                    v-for="child in settingsNav.children"
+                                    :key="child.name"
+                                    :to="child.to"
+                                    :class="[
+                                        child.current
+                                            ? 'bg-gray-100 text-gray-900'
+                                            : 'text-gray-700 hover:bg-gray-50',
+                                        'block px-4 py-2 text-sm',
+                                    ]"
+                                    @click="isSettingsOpen = false"
+                                >
+                                    {{ child.name }}
+                                </RouterLink>
+                            </div>
                         </div>
-                    </div>
-                </nav>
+                    </nav>
 
-                <button
-                    class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none"
-                    @click="toggleSidebar"
-                >
-                    <span class="sr-only">Toggle sidebar</span>
-                    <span class="text-3xl"><Bars3Icon class="h-6 w-6" /></span>
-                </button>
+                    <button
+                        class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none"
+                        @click="toggleSidebar"
+                    >
+                        <span class="sr-only">Toggle sidebar</span>
+                        <span class="text-3xl"><Bars3Icon class="h-6 w-6" /></span>
+                    </button>
+                </div>
             </div>
         </header>
 
