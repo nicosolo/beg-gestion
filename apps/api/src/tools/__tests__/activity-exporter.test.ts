@@ -19,7 +19,7 @@ describe("buildActivitiesWorkbook", () => {
 			createdAt: "2024-06-15T00:00:00Z",
 			updatedAt: "2024-06-15T00:00:00Z",
 			user: { id: 1, firstName: "John", lastName: "Doe", initials: "JD" },
-			project: { id: 1, name: "Test Project", projectNumber: "2024-001" },
+			project: { id: 1, name: "Test Project", projectNumber: "2024-001", subProjectName: "INF" },
 			activityType: { id: 1, code: "H", name: "Hours" },
 		},
 		{
@@ -36,7 +36,7 @@ describe("buildActivitiesWorkbook", () => {
 			createdAt: "2024-06-16T00:00:00Z",
 			updatedAt: "2024-06-16T00:00:00Z",
 			user: { id: 2, firstName: "Jane", lastName: "Smith", initials: "JS" },
-			project: { id: 1, name: "Test Project", projectNumber: "2024-001" },
+			project: { id: 1, name: "Test Project", projectNumber: "2024-001", subProjectName: "INF" },
 			activityType: { id: 1, code: "H", name: "Hours" },
 		},
 	]
@@ -52,6 +52,20 @@ describe("buildActivitiesWorkbook", () => {
 		expect(workbook.worksheets[0].name).toBe("Heures")
 		// Header + 2 data rows + totals row
 		expect(workbook.worksheets[0].rowCount).toBe(4)
+	})
+
+	test("includes sous-mandat column with project subProjectName", async () => {
+		const buffer = await buildActivitiesWorkbook(mockActivities as unknown as ActivityResponse[])
+		const workbook = new ExcelJS.Workbook()
+		await workbook.xlsx.load(buffer)
+		const sheet = workbook.worksheets[0]
+		const headers = sheet.getRow(1).values as string[]
+		expect(headers).toContain("Sous-mandat")
+		const mandatIdx = headers.indexOf("Mandat")
+		const subMandatIdx = headers.indexOf("Sous-mandat")
+		expect(subMandatIdx).toBe(mandatIdx + 1)
+		const firstRow = sheet.getRow(2).values as unknown[]
+		expect(firstRow[subMandatIdx]).toBe("INF")
 	})
 
 	test("includes disbursement column when option set", async () => {

@@ -48,6 +48,7 @@ function createWorksheet(
         { header: "Tarif", key: "rate", width: 6, style: { numFmt: "#,##0.00" } },
         { header: "No Mandat", key: "projectNumber", width: 8 },
         { header: "Mandat", key: "projectName", width: 24 },
+        { header: "Sous-mandat", key: "subProjectName", width: 16 },
         { header: "Activité", key: "activityCode", width: 18 },
         { header: "Heures", key: "duration", width: 14, style: { numFmt: "0.00" } },
         { header: "Kilomètres", key: "kilometers", width: 14, style: { numFmt: "0" } },
@@ -69,6 +70,7 @@ function createWorksheet(
             rate: activity.rate ?? 0,
             projectNumber: activity.project?.projectNumber ?? "",
             projectName: activity.project?.name ?? "",
+            subProjectName: activity.project?.subProjectName ?? "",
             activityCode: activity.activityType?.code ?? "",
             duration: activity.duration ?? 0,
 
