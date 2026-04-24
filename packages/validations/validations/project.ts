@@ -6,8 +6,8 @@ export const projectStatusEnum = ["offer", "draft", "active"] as const
 export type ProjectStatus = (typeof projectStatusEnum)[number]
 
 // Canonical list of BEG sous-mandats (alphabetical).
-// Legacy projects may hold values outside this list (e.g. "EAC") — callers
-// that edit existing projects should handle that case explicitly.
+// Legacy projects may hold values outside this list — callers that edit
+// existing projects should handle that case explicitly.
 export const SUB_PROJECT_NAMES = [
     "AMI",
     "ASS",
@@ -15,6 +15,7 @@ export const SUB_PROJECT_NAMES = [
     "CDN",
     "CFF",
     "DN",
+    "EAC",
     "EBR",
     "EIE",
     "ENV",
