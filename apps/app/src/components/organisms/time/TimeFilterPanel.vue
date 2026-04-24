@@ -62,7 +62,7 @@
                 </div>
 
                 <!-- Row 2: DateRange, Activity Type, Sous-mandat -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mt-4">
                     <div class="md:col-span-2">
                         <DateRange
                             :from-date="localFilter.fromDate"
@@ -85,7 +85,7 @@
                     </div>
 
                     <!-- Activity Type Filter -->
-                    <div class="form-group">
+                    <div class="form-group md:col-span-2">
                         <Label>{{ $t("time.filters.activityType") }}</Label>
                         <ActivityTypeSelect
                             v-model="localFilter.activityTypeId"
