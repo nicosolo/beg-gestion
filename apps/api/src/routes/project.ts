@@ -20,8 +20,7 @@ import { responseValidator } from "@src/tools/response-validator"
 import type { Variables } from "@src/types/global"
 import { throwNotFound, throwForbidden, throwInternalError } from "@src/tools/error-handler"
 import { hasRole } from "@src/tools/role-middleware"
-import { findProjectFolderSingle } from "@src/tools/project-folder-finder"
-import { PROJECT_BASE_DIR } from "@src/config"
+import { findProjectFoldersAcrossRoots } from "@src/tools/project-folder-finder"
 import { buildProjectsWorkbook } from "@src/tools/project-exporter"
 import { audit } from "@src/tools/audit"
 
@@ -131,17 +130,14 @@ export const projectRoutes = new Hono<{ Variables: Variables }>()
         }
 
         try {
-            // Search for folder using the project number
-            const result = await findProjectFolderSingle(project.projectNumber)
+            // Search for folder across all configured roots
+            const matches = await findProjectFoldersAcrossRoots(project.projectNumber)
 
             return c.json({
                 projectId: id,
                 projectNumber: project.projectNumber,
-                found: !!result,
-                folder: {
-                    ...result,
-                    fullPath: result?.fullPath.replace(PROJECT_BASE_DIR, ""),
-                },
+                found: matches.length > 0,
+                matches,
             })
         } catch (error) {
             console.error("Project folder search error:", error)

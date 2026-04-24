@@ -79,6 +79,12 @@ export default {
         logout: "Déconnexion",
         engineers: "Ingénieurs",
         companies: "Entreprises",
+        openFolder: "Ouvrir un dossier",
+    },
+    folderShortcuts: {
+        mandats: "Mandats",
+        photographies: "Photographies",
+        sigMandats: "SIG Mandats",
     },
     home: {
         title: "Recherche de mandats",
@@ -127,6 +133,7 @@ export default {
         new: "Nouveau mandat",
         edit: "Modifier le mandat",
         details: "Détails du mandat",
+        openFolder: "Ouvrir dossier",
         export: {
             button: "Exporter vers Excel",
             exporting: "Export en cours...",

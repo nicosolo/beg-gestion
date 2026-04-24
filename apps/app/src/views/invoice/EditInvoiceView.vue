@@ -8,14 +8,11 @@
             :has-unsaved-changes="hasUnsavedChanges"
         >
             <template #header-actions>
-                <Button
+                <OpenFolderButton
                     v-if="canOpenFolder"
-                    type="button"
-                    @click="openProjectFolder"
-                    class="text-sm px-3 py-1.5 rounded-md font-medium focus:outline-none focus:ring-2 cursor-pointer leading-none block text-center hover:bg-indigo-200 text-indigo-700"
-                >
-                    Ouvrir dossier
-                </Button>
+                    :entries="folderEntries"
+                    @open="openEntry"
+                />
             </template>
             <!-- Tabs Navigation -->
             <TabNav
@@ -157,6 +154,7 @@ import { createEmptyInvoice, type Invoice, type InvoiceResponse } from "@beg/val
 import { useFetchInvoice, useDeleteInvoice } from "@/composables/api/useInvoice"
 import { useFetchProject } from "@/composables/api/useProject"
 import { useOpenProjectFolder } from "@/composables/useOpenProjectFolder"
+import OpenFolderButton from "@/components/molecules/OpenFolderButton.vue"
 import { useFetchUnbilledActivities } from "@/composables/api/useUnbilled"
 import { useFormat } from "@/composables/utils/useFormat"
 import { useI18n } from "vue-i18n"
@@ -188,8 +186,9 @@ const { get: fetchUnbilledActivities, loading: fetchUnbilledLoading } = useFetch
 const {
     fetchProjectFolder,
     canOpen: canOpenFolder,
-    absolutePath: projectFolderPath,
-    openProjectFolder,
+    entries: folderEntries,
+    primaryPath: projectFolderPath,
+    openEntry,
 } = useOpenProjectFolder()
 const authStore = useAuthStore()
 const { isRole } = authStore

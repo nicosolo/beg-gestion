@@ -61,14 +61,11 @@
                     >
                         {{ $t("time.new") }}
                     </Button>
-                    <Button
-                        @click="openProjectFolder"
+                    <OpenFolderButton
                         v-if="canOpenFolder"
-                        type="button"
-                        class="text-sm px-3 py-1.5 rounded-md font-medium focus:outline-none focus:ring-2 cursor-pointer leading-none block text-center hover:bg-indigo-200 text-indigo-700 w-full sm:w-auto"
-                    >
-                        Ouvrir dossier
-                    </Button>
+                        :entries="folderEntries"
+                        @open="openEntry"
+                    />
                 </div>
             </div>
         </div>
@@ -378,6 +375,7 @@ import InvoiceListManager from "@/components/organisms/invoice/InvoiceListManage
 import TimeEntryModal from "@/components/organisms/time/TimeEntryModal.vue"
 import { useFetchProject } from "@/composables/api/useProject"
 import { useOpenProjectFolder } from "@/composables/useOpenProjectFolder"
+import OpenFolderButton from "@/components/molecules/OpenFolderButton.vue"
 import LoadingOverlay from "@/components/atoms/LoadingOverlay.vue"
 import TabNav from "@/components/molecules/TabNav.vue"
 import MapDisplay from "@/components/molecules/MapDisplay.vue"
@@ -405,7 +403,12 @@ const showTimeEntryModal = ref(false)
 
 // API client
 const { get: fetchProject, loading, data: projectData } = useFetchProject()
-const { fetchProjectFolder, canOpen: canOpenFolder, openProjectFolder } = useOpenProjectFolder()
+const {
+    fetchProjectFolder,
+    canOpen: canOpenFolder,
+    entries: folderEntries,
+    openEntry,
+} = useOpenProjectFolder()
 const { formatNumber, formatDate } = useFormat()
 const { isTauri } = useTauri()
 const mapLink = computed(() =>

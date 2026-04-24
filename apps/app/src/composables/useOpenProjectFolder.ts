@@ -1,20 +1,40 @@
 import { computed } from "vue"
-import { useProjectFolder } from "@/composables/api/useProject"
+import { useProjectFolder, type ProjectFolderMatch } from "@/composables/api/useProject"
 import { useTauri } from "@/composables/useTauri"
-import { useAppSettingsStore } from "@/stores/appSettings"
+import { useAppSettingsStore, type FolderShortcutKey } from "@/stores/appSettings"
+
+export interface OpenFolderEntry {
+    source: FolderShortcutKey
+    sourceLabel: string
+    folderName: string
+    absolutePath: string
+}
 
 export function useOpenProjectFolder() {
     const { get: fetchProjectFolder, data: projectFolder } = useProjectFolder({ silent: true })
     const { isTauri, openFolder } = useTauri()
     const appSettingsStore = useAppSettingsStore()
 
-    const canOpen = computed(() => isTauri.value && projectFolder.value?.found)
+    const entries = computed<OpenFolderEntry[]>(() => {
+        const matches = projectFolder.value?.matches ?? []
+        return matches.map((m: ProjectFolderMatch) => ({
+            source: m.source as FolderShortcutKey,
+            sourceLabel: m.sourceLabel,
+            folderName: m.folderName,
+            absolutePath: appSettingsStore.getShortcutAbsolutePath(
+                m.source as FolderShortcutKey,
+                m.fullPath
+            ),
+        }))
+    })
 
-    const absolutePath = computed(() =>
-        projectFolder.value?.folder?.fullPath
-            ? appSettingsStore.getAbsolutePath(projectFolder.value.folder.fullPath)
-            : undefined
-    )
+    const canOpen = computed(() => isTauri.value && entries.value.length > 0)
+
+    // Primary path for document upload defaults: prefer the Mandats match.
+    const primaryPath = computed(() => {
+        const mandats = entries.value.find((e) => e.source === "mandats")
+        return (mandats ?? entries.value[0])?.absolutePath
+    })
 
     const safeFetchProjectFolder = async (...args: Parameters<typeof fetchProjectFolder>) => {
         try {
@@ -24,17 +44,18 @@ export function useOpenProjectFolder() {
         }
     }
 
-    const open = async (e?: Event) => {
-        if (!projectFolder.value?.folder?.fullPath || !isTauri.value) return
+    const openEntry = async (entry: OpenFolderEntry, e?: Event) => {
+        if (!isTauri.value) return
         e?.preventDefault()
-        await openFolder(appSettingsStore.getAbsolutePath(projectFolder.value.folder.fullPath))
+        await openFolder(entry.absolutePath)
     }
 
     return {
         fetchProjectFolder: safeFetchProjectFolder,
         projectFolder,
+        entries,
         canOpen,
-        absolutePath,
-        openProjectFolder: open,
+        primaryPath,
+        openEntry,
     }
 }

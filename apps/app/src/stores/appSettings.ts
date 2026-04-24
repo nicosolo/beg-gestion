@@ -5,6 +5,16 @@ import { useTauri } from "@/composables/useTauri"
 const STORAGE_KEY = "app-settings"
 const DEFAULT_BASE_PATH = "N:\\Mandats"
 
+// Fixed folder shortcuts (siblings under the base path's parent, default N:\)
+// Keys MUST match apps/api/src/config.ts PROJECT_ROOTS.
+export const FOLDER_SHORTCUT_KEYS = ["mandats", "photographies", "sigMandats"] as const
+export type FolderShortcutKey = (typeof FOLDER_SHORTCUT_KEYS)[number]
+const FOLDER_SHORTCUT_DIRS: Record<FolderShortcutKey, string> = {
+    mandats: "Mandats",
+    photographies: "Photographies",
+    sigMandats: "SIG Mandats",
+}
+
 export const useAppSettingsStore = defineStore("appSettings", () => {
     const { isTauri } = useTauri()
 
@@ -70,6 +80,36 @@ export const useAppSettingsStore = defineStore("appSettings", () => {
         return `${cleanBase}${separator}${cleanRelative}`
     }
 
+    // Parent directory of basePath (e.g. "N:\\" for "N:\\Mandats")
+    const rootPath = computed(() => {
+        const path = basePath.value.replace(/[\/\\]+$/, "")
+        const separator = path.includes("\\") ? "\\" : "/"
+        const lastSep = Math.max(path.lastIndexOf("\\"), path.lastIndexOf("/"))
+        if (lastSep < 0) return path + separator
+        return path.substring(0, lastSep + 1)
+    })
+
+    // Folder shortcuts mapped from fixed directory names under the root path
+    const folderShortcuts = computed(() =>
+        FOLDER_SHORTCUT_KEYS.map((key) => ({
+            key,
+            path: `${rootPath.value}${FOLDER_SHORTCUT_DIRS[key]}`,
+        }))
+    )
+
+    // Build an absolute path for a relative path that is scoped to a specific
+    // folder shortcut root (e.g. "sigMandats" + "/2000-2200/2100 foo" →
+    // "N:\SIG Mandats\2000-2200\2100 foo"). Input separators are normalised to
+    // match the basePath style.
+    const getShortcutAbsolutePath = (key: FolderShortcutKey, relativePath: string) => {
+        const separator = rootPath.value.includes("\\") ? "\\" : "/"
+        const cleanRelative = relativePath
+            .replace(/^[\/\\]+/, "")
+            .replace(/[\/\\]+/g, separator)
+        const cleanRoot = rootPath.value.replace(/[\/\\]+$/, "")
+        return `${cleanRoot}${separator}${FOLDER_SHORTCUT_DIRS[key]}${separator}${cleanRelative}`
+    }
+
     // Initialize on store creation
     loadSettings()
 
@@ -77,10 +117,13 @@ export const useAppSettingsStore = defineStore("appSettings", () => {
         // State
         basePath: computed(() => basePath.value),
         defaultBasePath: DEFAULT_BASE_PATH,
+        rootPath,
+        folderShortcuts,
 
         // Actions
         setBasePath,
         resetToDefault,
         getAbsolutePath,
+        getShortcutAbsolutePath,
     }
 })

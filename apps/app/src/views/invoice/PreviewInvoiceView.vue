@@ -31,15 +31,11 @@
                         Retour à la vue projet
                     </Button>
 
-                    <Button
+                    <OpenFolderButton
                         v-if="canOpenFolder"
-                        @click="openProjectFolder"
-                        size="lg"
-                        variant="secondary"
-                        class="w-full sm:w-auto"
-                    >
-                        {{ $t("projects.openFolder") }}
-                    </Button>
+                        :entries="folderEntries"
+                        @open="openEntry"
+                    />
 
                     <Button
                         @click="printInvoice"
@@ -120,6 +116,7 @@ import { useAuthStore } from "@/stores/auth"
 import ConfirmDialog from "@/components/molecules/ConfirmDialog.vue"
 import { useAlert } from "@/composables/utils/useAlert"
 import { useI18n } from "vue-i18n"
+import OpenFolderButton from "@/components/molecules/OpenFolderButton.vue"
 import { useOpenProjectFolder } from "@/composables/useOpenProjectFolder"
 import { useTauri } from "@/composables/useTauri"
 
@@ -130,7 +127,12 @@ const authStore = useAuthStore()
 const { successAlert } = useAlert()
 const { t } = useI18n()
 const { isTauri } = useTauri()
-const { fetchProjectFolder, canOpen: canOpenFolder, openProjectFolder } = useOpenProjectFolder()
+const {
+    fetchProjectFolder,
+    canOpen: canOpenFolder,
+    entries: folderEntries,
+    openEntry,
+} = useOpenProjectFolder()
 
 // API composable
 const { get: fetchInvoice, loading, error } = useFetchInvoice()
