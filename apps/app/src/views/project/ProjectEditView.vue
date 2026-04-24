@@ -310,6 +310,7 @@ import ProjectStatusSelect from "@/components/organisms/project/ProjectStatusSel
 
 // API Composables
 import { useFetchProject, useCreateProject, useUpdateProject } from "@/composables/api/useProject"
+import { SUB_PROJECT_NAMES } from "@beg/validations"
 import type { ProjectCreateInput, ProjectUpdateInput } from "@beg/validations"
 import Textarea from "@/components/atoms/Textarea.vue"
 
@@ -342,39 +343,6 @@ const projectModeTabs = computed(() => [
     { value: "standard", label: t("projects.mode.standard") },
     { value: "sub", label: t("projects.mode.sub") },
 ])
-
-const SUB_PROJECT_NAMES = [
-    "AMI",
-    "ASS",
-    "CAM",
-    "CDN",
-    "CFF",
-    "DN",
-    "EBR",
-    "EIE",
-    "ENV",
-    "GEOL",
-    "GEOPHY",
-    "GEOTH",
-    "GT",
-    "HYD",
-    "INF",
-    "MAE",
-    "MAJ",
-    "MAT",
-    "ME",
-    "MEP",
-    "NIE",
-    "OFEV",
-    "PAC",
-    "POL",
-    "REG",
-    "RIE",
-    "RPT",
-    "SGV",
-    "SURV",
-    "ZP",
-].sort()
 
 const route = useRoute()
 const router = useRouter()
@@ -447,9 +415,12 @@ const form = ref<ProjectFormState>({
 
 // Handle date formatting
 const subProjectNameOptions = computed(() => {
-    const options = SUB_PROJECT_NAMES.map((name) => ({ label: name, value: name }))
+    const options: { label: string; value: string }[] = SUB_PROJECT_NAMES.map((name) => ({
+        label: name,
+        value: name,
+    }))
     const current = form.value.subProjectName?.trim()
-    if (current && !SUB_PROJECT_NAMES.includes(current)) {
+    if (current && !(SUB_PROJECT_NAMES as readonly string[]).includes(current)) {
         options.unshift({ label: current, value: current })
     }
     options.unshift({ label: "-", value: "" })

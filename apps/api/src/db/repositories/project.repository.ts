@@ -56,6 +56,7 @@ export const projectRepository = {
             page = 1,
             limit = 10,
             text,
+            subProjectName,
             includeArchived = false,
             referentUserId,
             projectTypeIds,
@@ -78,6 +79,11 @@ export const projectRepository = {
         // Status filter
         if (status) {
             whereConditions.push(eq(projects.status, status))
+        }
+
+        // Sous-mandat filter (exact match; dropdown emits one of the distinct names)
+        if (subProjectName && subProjectName.trim()) {
+            whereConditions.push(eq(projects.subProjectName, subProjectName.trim()))
         }
 
         // FTS5 full-text search — single query for both filtering and ranking

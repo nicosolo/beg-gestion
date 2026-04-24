@@ -20,6 +20,7 @@ const activityBaseFilterSchema = z.object({
     includeNotDisbursed: booleanSchema.default(false).optional(),
     activityTypeId: z.coerce.number().optional(),
     invoiceId: z.coerce.number().optional(),
+    subProjectName: z.string().optional(),
 })
 
 // Activity filter schema for listing (includes pagination)
