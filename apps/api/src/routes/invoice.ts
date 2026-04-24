@@ -23,7 +23,7 @@ import {
     parseZodError,
 } from "@src/tools/error-handler"
 import type { Variables } from "@src/types/global"
-import { roleMiddleware, hasRole } from "@src/tools/role-middleware"
+import { hasRole } from "@src/tools/role-middleware"
 import { z, ZodError } from "zod"
 import { normalizeStoredPath, fileBaseName, matchesStoredPath } from "@src/tools/file-utils"
 import { storeFile, serveFile } from "@src/services/file-storage.service"
@@ -395,7 +395,6 @@ export const invoiceRoutes = new Hono<{ Variables: Variables }>()
     )
     .post(
         "/:id/visa",
-        roleMiddleware("super_admin"),
         zValidator("param", idParamSchema),
         responseValidator({
             200: invoiceResponseSchema,
@@ -403,6 +402,31 @@ export const invoiceRoutes = new Hono<{ Variables: Variables }>()
         async (c) => {
             const { id } = c.req.valid("param")
             const user = c.get("user")
+
+            // Permission check:
+            // - super_admin and admin can visa any invoice
+            // - user_visa can visa ONLY their own invoices (where they are in charge)
+            // - user cannot visa
+            const isAdminOrAbove = hasRole(user.role, "admin")
+            const isUserVisa = user.role === "user_visa"
+
+            if (!isAdminOrAbove && !isUserVisa) {
+                return c.json({ error: "Forbidden - Insufficient role to visa invoices" }, 403)
+            }
+
+            if (isUserVisa && !isAdminOrAbove) {
+                const existing = await invoiceRepository.findById(id, user)
+                if (!existing) {
+                    throwNotFound("Invoice")
+                }
+                if (existing.inChargeUserId !== user.id) {
+                    return c.json(
+                        { error: "Forbidden - user_visa can only visa their own invoices" },
+                        403
+                    )
+                }
+            }
+
             const updatedInvoice = await invoiceRepository.setVisa(id, user)
             if (!updatedInvoice) {
                 throwNotFound("Invoice")

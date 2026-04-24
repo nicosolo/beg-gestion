@@ -75,6 +75,7 @@
                         :disabled="collaborator.role === 'super_admin' && !canAssignSuperAdmin"
                     >
                         <option value="user">Utilisateur</option>
+                        <option value="user_visa">Utilisateur (visa propre)</option>
                         <option value="admin">Administrateur</option>
                         <option value="super_admin" :disabled="!canAssignSuperAdmin">
                             Administrateur (visa)

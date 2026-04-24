@@ -126,7 +126,7 @@
                         <UserSelect
                             id="visaByUserId"
                             v-model="invoice.visaByUserId"
-                            :roles="['super_admin']"
+                            :roles="['super_admin', 'admin', 'user_visa']"
                             :placeholder="$t('invoice.selectVisaUser')"
                             :required="['controle', 'vise', 'sent'].includes(invoice.status)"
                             :disabled="['vise', 'sent'].includes(invoice.status)"

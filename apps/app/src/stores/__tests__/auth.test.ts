@@ -199,7 +199,33 @@ describe("useAuthStore", () => {
 
             expect(store.isRole("super_admin")).toBe(true)
             expect(store.isRole("admin")).toBe(true)
+            expect(store.isRole("user_visa")).toBe(true)
             expect(store.isRole("user")).toBe(true)
+        })
+
+        it("user_visa passes user check but fails admin", async () => {
+            storage.set(
+                "auth_user",
+                JSON.stringify({ ...mockUser, role: "user_visa" }),
+            )
+
+            const store = await getStore()
+
+            expect(store.isRole("user")).toBe(true)
+            expect(store.isRole("user_visa")).toBe(true)
+            expect(store.isRole("admin")).toBe(false)
+            expect(store.isRole("super_admin")).toBe(false)
+        })
+
+        it("user role fails user_visa check", async () => {
+            storage.set(
+                "auth_user",
+                JSON.stringify({ ...mockUser, role: "user" }),
+            )
+
+            const store = await getStore()
+
+            expect(store.isRole("user_visa")).toBe(false)
         })
 
         it("returns false when no user", async () => {

@@ -26,6 +26,26 @@ describe("hasRole", () => {
 	test("admin does not have super_admin role", () => {
 		expect(hasRole("admin", "super_admin")).toBe(false)
 	})
+
+	test("user_visa is above user", () => {
+		expect(hasRole("user_visa", "user")).toBe(true)
+	})
+
+	test("user_visa is below admin", () => {
+		expect(hasRole("user_visa", "admin")).toBe(false)
+	})
+
+	test("user_visa is below super_admin", () => {
+		expect(hasRole("user_visa", "super_admin")).toBe(false)
+	})
+
+	test("admin has user_visa role", () => {
+		expect(hasRole("admin", "user_visa")).toBe(true)
+	})
+
+	test("user does not have user_visa role", () => {
+		expect(hasRole("user", "user_visa")).toBe(false)
+	})
 })
 
 describe("roleMiddleware", () => {

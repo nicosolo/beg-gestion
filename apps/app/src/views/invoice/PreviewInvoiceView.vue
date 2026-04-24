@@ -127,9 +127,15 @@ const { put: updateInvoice, loading: markingSent } = useUpdateInvoice()
 const invoice = ref<InvoiceResponse | null>(null)
 
 const canVisa = computed(() => {
-    const isSuperAdmin = authStore.isRole("super_admin")
     const notVisaYet = invoice.value?.visaDate === null || invoice.value?.visaDate === undefined
-    return isSuperAdmin && notVisaYet
+    if (!notVisaYet) return false
+    // admin & super_admin can visa any invoice
+    if (authStore.isRole("admin")) return true
+    // user_visa can visa only their own invoices (where they are in charge)
+    if (authStore.user?.role === "user_visa") {
+        return invoice.value?.inChargeUserId === authStore.user.id
+    }
+    return false
 })
 const showVisaConfirm = ref(false)
 const showSentConfirm = ref(false)

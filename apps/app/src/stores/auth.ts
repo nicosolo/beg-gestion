@@ -6,6 +6,7 @@ import { useLogin } from "@/composables/api/useLogin"
 const rolePriority: Record<UserRole, number> = {
     super_admin: 3,
     admin: 2,
+    user_visa: 1.5,
     user: 1,
 }
 

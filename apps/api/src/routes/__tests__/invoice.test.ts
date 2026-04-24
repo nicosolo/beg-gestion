@@ -12,7 +12,10 @@ const app = new Hono().onError(errorHandler).route("/invoice", invoiceRoutes)
 
 let adminToken: string
 let userToken: string
+let userVisaToken: string
 let superAdminId: number
+let userVisaId: number
+let userId: number
 let projectId: number
 
 const jsonHeaders = (token: string) => ({
@@ -33,7 +36,10 @@ beforeAll(async () => {
 	const seed = await seedUsers(db)
 	adminToken = seed.adminToken
 	userToken = seed.userToken
+	userVisaToken = seed.userVisaToken
 	superAdminId = seed.superAdmin.id
+	userVisaId = seed.userVisa.id
+	userId = seed.user.id
 
 	const [project] = await db
 		.insert(schema.projects)
@@ -47,6 +53,13 @@ beforeAll(async () => {
 		userId: seed.user.id,
 		role: "manager",
 	})
+
+	// Make user_visa a project manager so they can access invoices
+	await db.insert(schema.projectUsers).values({
+		projectId,
+		userId: seed.userVisa.id,
+		role: "manager",
+	})
 })
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -54,7 +67,11 @@ const isVisaValidationError = (body: any) =>
 	body.code === "VALIDATION_ERROR" &&
 	body.details?.some((d: { field: string }) => d.field === "visaByUserId")
 
-const createInvoiceInDb = async (status = "draft", visaByUserId: number | null = null) => {
+const createInvoiceInDb = async (
+	status: "draft" | "controle" | "vise" | "sent" = "draft",
+	visaByUserId: number | null = null,
+	inChargeUserId: number | null = null
+) => {
 	const [inv] = await db
 		.insert(schema.invoices)
 		.values({
@@ -68,6 +85,7 @@ const createInvoiceInDb = async (status = "draft", visaByUserId: number | null =
 			periodStart: new Date("2026-01-01"),
 			periodEnd: new Date("2026-01-31"),
 			visaByUserId,
+			inChargeUserId,
 		})
 		.returning()
 	return inv.id
@@ -221,5 +239,59 @@ describe("invoice locking", () => {
 			headers: { Authorization: `Bearer ${userToken}` },
 		})
 		expect(res.status).toBe(400)
+	})
+})
+
+describe("POST /invoice/:id/visa permissions", () => {
+	test("admin permission passes (not 403)", async () => {
+		const id = await createInvoiceInDb("controle", superAdminId, userId)
+
+		const res = await app.request(`/invoice/${id}/visa`, {
+			method: "POST",
+			headers: jsonHeaders(adminToken),
+		})
+		// Permission check allows admin; response may fail schema validation
+		// due to minimal test fixtures, but it should never be 403.
+		expect(res.status).not.toBe(403)
+	})
+
+	test("user_visa permission passes on their OWN invoice (not 403)", async () => {
+		const id = await createInvoiceInDb("controle", userVisaId, userVisaId)
+
+		const res = await app.request(`/invoice/${id}/visa`, {
+			method: "POST",
+			headers: jsonHeaders(userVisaToken),
+		})
+		expect(res.status).not.toBe(403)
+	})
+
+	test("user_visa cannot visa someone else's invoice (403)", async () => {
+		const id = await createInvoiceInDb("controle", superAdminId, userId)
+
+		const res = await app.request(`/invoice/${id}/visa`, {
+			method: "POST",
+			headers: jsonHeaders(userVisaToken),
+		})
+		expect(res.status).toBe(403)
+	})
+
+	test("user_visa cannot visa invoice with null inChargeUserId (403)", async () => {
+		const id = await createInvoiceInDb("controle", superAdminId, null)
+
+		const res = await app.request(`/invoice/${id}/visa`, {
+			method: "POST",
+			headers: jsonHeaders(userVisaToken),
+		})
+		expect(res.status).toBe(403)
+	})
+
+	test("regular user cannot visa any invoice (403)", async () => {
+		const id = await createInvoiceInDb("controle", superAdminId, userId)
+
+		const res = await app.request(`/invoice/${id}/visa`, {
+			method: "POST",
+			headers: jsonHeaders(userToken),
+		})
+		expect(res.status).toBe(403)
 	})
 })

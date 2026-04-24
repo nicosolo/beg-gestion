@@ -7,7 +7,7 @@ export const userFilterSchema = z.object({
     active: booleanSchema.optional(),
 })
 
-export const userRoleSchema = z.enum(["super_admin", "admin", "user"])
+export const userRoleSchema = z.enum(["super_admin", "admin", "user_visa", "user"])
 
 // Login schema for authentication
 export const loginSchema = z.object({
@@ -22,7 +22,7 @@ export const userCreateSchema = z.object({
     lastName: z.string().min(1),
     initials: z.string().min(1),
     password: z.string().min(6),
-    role: z.enum(["super_admin", "admin", "user"]).default("user"),
+    role: z.enum(["super_admin", "admin", "user_visa", "user"]).default("user"),
     archived: z.boolean().default(false),
     activityRates: z.array(activityRateUserSchema).optional(),
     collaboratorType: collaboratorTypeSchema.optional().nullable(),
@@ -35,7 +35,7 @@ export const userUpdateSchema = z.object({
     lastName: z.string().min(1).optional(),
     initials: z.string().min(1).optional(),
     password: z.string().min(6).optional().nullable(),
-    role: z.enum(["super_admin", "admin", "user"]).optional(),
+    role: z.enum(["super_admin", "admin", "user_visa", "user"]).optional(),
     archived: z.boolean().optional(),
     activityRates: z.array(activityRateUserSchema).optional(),
     collaboratorType: collaboratorTypeSchema.optional().nullable(),
@@ -60,7 +60,7 @@ export const userResponseSchema = z
         firstName: z.string(),
         lastName: z.string(),
         initials: z.string(),
-        role: z.enum(["super_admin", "admin", "user"]),
+        role: z.enum(["super_admin", "admin", "user_visa", "user"]),
         archived: z.boolean(),
     })
     .merge(nullableTimestampsSchema)
@@ -78,7 +78,7 @@ export const userDetailResponseSchema = z
         firstName: z.string(),
         lastName: z.string(),
         initials: z.string(),
-        role: z.enum(["super_admin", "admin", "user"]),
+        role: z.enum(["super_admin", "admin", "user_visa", "user"]),
         archived: z.boolean(),
         activityRates: z.array(activityRateUserSchema).nullable(),
         collaboratorType: collaboratorTypeSchema.nullable(),
