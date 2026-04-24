@@ -60,6 +60,9 @@ export default {
         view: "Voir",
         change: "Changer",
     },
+    header: {
+        projectSearchPlaceholder: "Rechercher un mandat...",
+    },
     navigation: {
         home: "Accueil",
         about: "À propos",
