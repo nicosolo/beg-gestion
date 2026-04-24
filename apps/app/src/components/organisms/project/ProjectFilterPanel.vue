@@ -3,9 +3,13 @@
         <div class="flex flex-col lg:flex-row gap-4">
             <!-- Left section: Filters -->
             <div class="flex-1">
-                <!-- Row 1: Name, User, Type -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FormField v-if="showNameInput" :label="$t('projects.name')">
+                <!-- Row 1: Name, User, Type, Sous-mandat -->
+                <div class="grid grid-cols-1 md:grid-cols-7 gap-4">
+                    <FormField
+                        v-if="showNameInput"
+                        class="md:col-span-2"
+                        :label="$t('projects.name')"
+                    >
                         <template #input>
                             <Input
                                 v-model="filterData.text"
@@ -14,7 +18,7 @@
                             />
                         </template>
                     </FormField>
-                    <div class="form-group">
+                    <div class="form-group md:col-span-2">
                         <Label>{{ $t("projects.filters.referentUser") }}</Label>
                         <UserSelect
                             v-model="filterData.referentUserId"
@@ -22,7 +26,7 @@
                             @update:model-value="emitChange"
                         />
                     </div>
-                    <div class="form-group">
+                    <div class="form-group md:col-span-2">
                         <Label>{{ $t("projects.type") }}</Label>
                         <MultiProjectTypeSelect
                             v-model="filterData.projectTypeIds!"
@@ -30,9 +34,16 @@
                             @update:model-value="emitChange"
                         />
                     </div>
+                    <div class="form-group">
+                        <Label>{{ $t("projects.filters.subProjectName") }}</Label>
+                        <SubProjectNameSelect
+                            v-model="filterData.subProjectName"
+                            @update:model-value="emitChange"
+                        />
+                    </div>
                 </div>
 
-                <!-- Row 2: DateRange, Sort, Sous-mandat -->
+                <!-- Row 2: DateRange, Sort -->
                 <div class="grid grid-cols-1 md:grid-cols-6 gap-4 mt-4">
                     <div class="md:col-span-3">
                         <DateRange
@@ -88,13 +99,6 @@
                                 ]"
                             ></Select>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <Label>{{ $t("projects.filters.subProjectName") }}</Label>
-                        <SubProjectNameSelect
-                            v-model="filterData.subProjectName"
-                            @update:model-value="emitChange"
-                        />
                     </div>
                 </div>
 
