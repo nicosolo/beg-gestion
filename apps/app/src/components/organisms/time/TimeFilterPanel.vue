@@ -37,26 +37,36 @@
                     <div class="form-group">
                         <Label>{{ $t("projects.filters.sortBy") }}</Label>
                         <div class="flex gap-2">
-                            <Select
-                                v-model="localFilter.sortBy"
-                                :options="[
-                                    { label: $t('time.columns.date'), value: 'date' },
-                                    { label: $t('time.columns.user'), value: 'userId' },
-                                    { label: $t('time.columns.project'), value: 'projectId' },
-                                    { label: $t('time.columns.durationLong'), value: 'duration' },
-                                    { label: $t('time.columns.kilometers'), value: 'kilometers' },
-                                    { label: $t('time.columns.expenses'), value: 'expenses' },
-                                ]"
-                                @update:modelValue="handleFilterChange"
-                            ></Select>
-                            <Select
-                                v-model="localFilter.sortOrder"
-                                :options="[
-                                    { label: $t('projects.filters.ascending'), value: 'asc' },
-                                    { label: $t('projects.filters.descending'), value: 'desc' },
-                                ]"
-                                @update:modelValue="handleFilterChange"
-                            ></Select>
+                            <div class="flex-[3] min-w-0">
+                                <Select
+                                    v-model="localFilter.sortBy"
+                                    :options="[
+                                        { label: $t('time.columns.date'), value: 'date' },
+                                        { label: $t('time.columns.user'), value: 'userId' },
+                                        { label: $t('time.columns.project'), value: 'projectId' },
+                                        {
+                                            label: $t('time.columns.durationLong'),
+                                            value: 'duration',
+                                        },
+                                        {
+                                            label: $t('time.columns.kilometers'),
+                                            value: 'kilometers',
+                                        },
+                                        { label: $t('time.columns.expenses'), value: 'expenses' },
+                                    ]"
+                                    @update:modelValue="handleFilterChange"
+                                ></Select>
+                            </div>
+                            <div class="flex-[2] min-w-0">
+                                <Select
+                                    v-model="localFilter.sortOrder"
+                                    :options="[
+                                        { label: $t('projects.filters.ascending'), value: 'asc' },
+                                        { label: $t('projects.filters.descending'), value: 'desc' },
+                                    ]"
+                                    @update:modelValue="handleFilterChange"
+                                ></Select>
+                            </div>
                         </div>
                     </div>
                 </div>

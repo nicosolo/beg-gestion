@@ -68,36 +68,46 @@
                     <div v-if="showSort" class="form-group md:col-span-2">
                         <Label>{{ $t("projects.filters.sortBy") }}</Label>
                         <div class="flex gap-2">
-                            <Select
-                                v-model="filterData.sortBy"
-                                @update:model-value="emitChange"
-                                :options="[
-                                    {
-                                        label: $t('projects.unBilledDuration'),
-                                        value: 'unBilledDuration',
-                                    },
-                                    { label: $t('projects.totalDuration'), value: 'totalDuration' },
-                                    {
-                                        label: $t('projects.firstActivity'),
-                                        value: 'firstActivityDate',
-                                    },
-                                    {
-                                        label: $t('projects.lastActivity'),
-                                        value: 'lastActivityDate',
-                                    },
-                                    { label: $t('projects.createdAt'), value: 'createdAt' },
-                                    { label: $t('projects.projectNumber'), value: 'projectNumber' },
-                                    { label: $t('projects.name'), value: 'name' },
-                                ]"
-                            ></Select>
-                            <Select
-                                v-model="filterData.sortOrder"
-                                @update:model-value="emitChange"
-                                :options="[
-                                    { label: $t('projects.filters.ascending'), value: 'asc' },
-                                    { label: $t('projects.filters.descending'), value: 'desc' },
-                                ]"
-                            ></Select>
+                            <div class="flex-[3] min-w-0">
+                                <Select
+                                    v-model="filterData.sortBy"
+                                    @update:model-value="emitChange"
+                                    :options="[
+                                        {
+                                            label: $t('projects.unBilledDuration'),
+                                            value: 'unBilledDuration',
+                                        },
+                                        {
+                                            label: $t('projects.totalDuration'),
+                                            value: 'totalDuration',
+                                        },
+                                        {
+                                            label: $t('projects.firstActivity'),
+                                            value: 'firstActivityDate',
+                                        },
+                                        {
+                                            label: $t('projects.lastActivity'),
+                                            value: 'lastActivityDate',
+                                        },
+                                        { label: $t('projects.createdAt'), value: 'createdAt' },
+                                        {
+                                            label: $t('projects.projectNumber'),
+                                            value: 'projectNumber',
+                                        },
+                                        { label: $t('projects.name'), value: 'name' },
+                                    ]"
+                                ></Select>
+                            </div>
+                            <div class="flex-[2] min-w-0">
+                                <Select
+                                    v-model="filterData.sortOrder"
+                                    @update:model-value="emitChange"
+                                    :options="[
+                                        { label: $t('projects.filters.ascending'), value: 'asc' },
+                                        { label: $t('projects.filters.descending'), value: 'desc' },
+                                    ]"
+                                ></Select>
+                            </div>
                         </div>
                     </div>
                 </div>
