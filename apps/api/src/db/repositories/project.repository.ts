@@ -51,19 +51,6 @@ export const projectRepository = {
         return result[0]?.subProjectName === EAC_SUB_PROJECT_NAME
     },
 
-    getDistinctSubProjectNames: async (): Promise<string[]> => {
-        const result = await db
-            .selectDistinct({ subProjectName: projects.subProjectName })
-            .from(projects)
-            .where(isNotNull(projects.subProjectName))
-            .orderBy(asc(projects.subProjectName))
-            .execute()
-
-        return result
-            .map((r) => r.subProjectName)
-            .filter((n): n is string => n !== null && n.trim().length > 0)
-    },
-
     findAll: async (filters?: ProjectFilter): Promise<ProjectListResponse> => {
         const {
             page = 1,

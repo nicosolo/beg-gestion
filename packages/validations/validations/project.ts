@@ -5,6 +5,44 @@ import { booleanSchema, dateSchema, nullableTimestampsSchema, timestampsSchema }
 export const projectStatusEnum = ["offer", "draft", "active"] as const
 export type ProjectStatus = (typeof projectStatusEnum)[number]
 
+// Canonical list of BEG sous-mandats (alphabetical).
+// Legacy projects may hold values outside this list (e.g. "EAC") — callers
+// that edit existing projects should handle that case explicitly.
+export const SUB_PROJECT_NAMES = [
+    "AMI",
+    "ASS",
+    "CAM",
+    "CDN",
+    "CFF",
+    "DN",
+    "EBR",
+    "EIE",
+    "ENV",
+    "GEOL",
+    "GEOPHY",
+    "GEOTH",
+    "GT",
+    "HYD",
+    "INF",
+    "MAE",
+    "MAJ",
+    "MAT",
+    "ME",
+    "MEP",
+    "NIE",
+    "OFEV",
+    "PAC",
+    "POL",
+    "REG",
+    "RIE",
+    "RPT",
+    "SGV",
+    "SURV",
+    "ZP",
+] as const
+
+export type SubProjectName = (typeof SUB_PROJECT_NAMES)[number]
+
 // Base project filter schema without pagination
 const projectBaseFilterSchema = z.object({
     text: z.string().optional(),
@@ -148,9 +186,6 @@ export type ProjectResponse = z.infer<typeof projectResponseSchema>
 export const projectListResponse = createPageResponseSchema(projectResponseSchema)
 
 export type ProjectListResponse = z.infer<typeof projectListResponse>
-
-export const subProjectNamesResponseSchema = z.array(z.string())
-export type SubProjectNamesResponse = z.infer<typeof subProjectNamesResponseSchema>
 
 // Project create schema
 export const projectCreateSchema = z.object({

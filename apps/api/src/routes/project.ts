@@ -9,7 +9,6 @@ import {
     projectUpdateSchema,
     projectMapArrayResponseSchema,
     projectMapFilterSchema,
-    subProjectNamesResponseSchema,
     type ProjectListResponse,
     type ProjectResponse,
     type ProjectMapArrayResponse,
@@ -97,16 +96,6 @@ export const projectRoutes = new Hono<{ Variables: Variables }>()
             }))
 
             return c.render(mapData as ProjectMapArrayResponse, 200)
-        }
-    )
-    .get(
-        "/sub-project-names",
-        responseValidator({
-            200: subProjectNamesResponseSchema,
-        }),
-        async (c) => {
-            const names = await projectRepository.getDistinctSubProjectNames()
-            return c.render(names, 200)
         }
     )
     .get(

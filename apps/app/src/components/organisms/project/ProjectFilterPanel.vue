@@ -179,7 +179,7 @@ import UserSelect from "../../organisms/user/UserSelect.vue"
 import MultiProjectTypeSelect from "../../organisms/projectType/MultiProjectTypeSelect.vue"
 import Checkbox from "@/components/atoms/Checkbox.vue"
 import Input from "@/components/atoms/Input.vue"
-import SubProjectNameSelect from "./SubProjectNameSelect.vue"
+import SubProjectNameSelect from "@/components/organisms/project/SubProjectNameSelect.vue"
 import { debounce } from "@/utils/debounce"
 interface ProjectFilterProps {
     filter: ProjectFilterModel

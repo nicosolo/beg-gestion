@@ -801,23 +801,3 @@ describe("GET /project?subProjectName=", () => {
     })
 })
 
-describe("GET /project/sub-project-names", () => {
-    test("returns sorted distinct non-null sous-mandat values", async () => {
-        const res = await app.request("/project/sub-project-names", {
-            headers: { Authorization: `Bearer ${adminToken}` },
-        })
-        expect(res.status).toBe(200)
-        const body = await res.json()
-        expect(Array.isArray(body)).toBe(true)
-        expect(body).toContain("EAC-ACOUSTIC")
-        expect(body).toContain("EAC-THERMAL")
-        const sorted = [...body].sort()
-        expect(body).toEqual(sorted)
-        expect(new Set(body).size).toBe(body.length)
-    })
-
-    test("no auth returns 401", async () => {
-        const res = await app.request("/project/sub-project-names")
-        expect(res.status).toBe(401)
-    })
-})

@@ -12,10 +12,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from "vue"
+import { computed } from "vue"
 import { useI18n } from "vue-i18n"
 import AutocompleteSelect from "@/components/atoms/AutocompleteSelect.vue"
-import { useFetchSubProjectNames } from "@/composables/api/useProject"
+import { SUB_PROJECT_NAMES } from "@beg/validations"
 
 interface Props {
     modelValue: string | undefined
@@ -31,25 +31,18 @@ const emit = defineEmits<{
 }>()
 
 const {} = useI18n()
-const { data, get } = useFetchSubProjectNames()
 
-const options = computed(() =>
-    (data.value ?? []).map((name) => ({ id: name, name }))
-)
+const options = computed(() => {
+    const list = SUB_PROJECT_NAMES.map((name) => ({ id: name, name }))
+    // Preserve legacy/out-of-list value so the current selection is visible.
+    const current = props.modelValue?.trim()
+    if (current && !SUB_PROJECT_NAMES.includes(current as (typeof SUB_PROJECT_NAMES)[number])) {
+        return [{ id: current, name: current }, ...list]
+    }
+    return list
+})
 
 const handleChange = (value: number | string | undefined | null) => {
     emit("update:modelValue", value == null ? undefined : String(value))
 }
-
-onMounted(() => {
-    get()
-})
-
-// Re-fetch on mount also when modelValue arrives pre-populated (e.g. after route reload)
-watch(
-    () => props.modelValue,
-    () => {
-        if (!data.value) get()
-    }
-)
 </script>
