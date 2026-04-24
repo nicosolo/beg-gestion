@@ -7,6 +7,7 @@ import {
     projectUpdateSchema,
     type ProjectListResponse,
     type ProjectResponse,
+    type SubProjectNamesResponse,
 } from "@beg/validations"
 import { useGet, usePost, usePut, useGetBinary } from "./useAPI"
 
@@ -30,6 +31,10 @@ export function useFetchProjectList() {
     >("project", {
         query: projectFilterSchema,
     })
+}
+
+export function useFetchSubProjectNames() {
+    return useGet<SubProjectNamesResponse>("project/sub-project-names")
 }
 
 export function useExportProjects() {

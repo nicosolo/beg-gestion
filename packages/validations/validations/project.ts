@@ -149,6 +149,9 @@ export const projectListResponse = createPageResponseSchema(projectResponseSchem
 
 export type ProjectListResponse = z.infer<typeof projectListResponse>
 
+export const subProjectNamesResponseSchema = z.array(z.string())
+export type SubProjectNamesResponse = z.infer<typeof subProjectNamesResponseSchema>
+
 // Project create schema
 export const projectCreateSchema = z.object({
     projectNumber: z.string().min(1).optional().nullable(),

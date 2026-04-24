@@ -769,8 +769,8 @@ describe("GET /project?subProjectName=", () => {
         thermalId = thermal.id
     })
 
-    test("partial match returns projects with matching sous-mandat", async () => {
-        const res = await app.request("/project?subProjectName=ACOUSTIC", {
+    test("exact match returns only projects with that sous-mandat", async () => {
+        const res = await app.request("/project?subProjectName=EAC-ACOUSTIC", {
             headers: { Authorization: `Bearer ${adminToken}` },
         })
         expect(res.status).toBe(200)
@@ -780,15 +780,15 @@ describe("GET /project?subProjectName=", () => {
         expect(ids).not.toContain(thermalId)
     })
 
-    test("prefix match returns all with common prefix", async () => {
-        const res = await app.request("/project?subProjectName=EAC-", {
+    test("partial value does not match (exact-match semantics)", async () => {
+        const res = await app.request("/project?subProjectName=ACOUSTIC", {
             headers: { Authorization: `Bearer ${adminToken}` },
         })
         expect(res.status).toBe(200)
         const body = await res.json()
         const ids = body.data.map((p: { id: number }) => p.id)
-        expect(ids).toContain(acousticId)
-        expect(ids).toContain(thermalId)
+        expect(ids).not.toContain(acousticId)
+        expect(ids).not.toContain(thermalId)
     })
 
     test("empty string filter is a no-op", async () => {
@@ -798,5 +798,26 @@ describe("GET /project?subProjectName=", () => {
         expect(res.status).toBe(200)
         const body = await res.json()
         expect(body.data.length).toBeGreaterThan(0)
+    })
+})
+
+describe("GET /project/sub-project-names", () => {
+    test("returns sorted distinct non-null sous-mandat values", async () => {
+        const res = await app.request("/project/sub-project-names", {
+            headers: { Authorization: `Bearer ${adminToken}` },
+        })
+        expect(res.status).toBe(200)
+        const body = await res.json()
+        expect(Array.isArray(body)).toBe(true)
+        expect(body).toContain("EAC-ACOUSTIC")
+        expect(body).toContain("EAC-THERMAL")
+        const sorted = [...body].sort()
+        expect(body).toEqual(sorted)
+        expect(new Set(body).size).toBe(body.length)
+    })
+
+    test("no auth returns 401", async () => {
+        const res = await app.request("/project/sub-project-names")
+        expect(res.status).toBe(401)
     })
 })

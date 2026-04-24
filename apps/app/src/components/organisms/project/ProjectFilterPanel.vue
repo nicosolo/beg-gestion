@@ -34,15 +34,13 @@
 
                 <!-- Row 1b: Sous-mandat -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                    <FormField :label="$t('projects.filters.subProjectName')">
-                        <template #input>
-                            <Input
-                                v-model="filterData.subProjectName"
-                                :placeholder="$t('projects.filters.subProjectName')"
-                                @update:model-value="emitInputChange"
-                            />
-                        </template>
-                    </FormField>
+                    <div class="form-group">
+                        <Label>{{ $t("projects.filters.subProjectName") }}</Label>
+                        <SubProjectNameSelect
+                            v-model="filterData.subProjectName"
+                            @update:model-value="emitChange"
+                        />
+                    </div>
                 </div>
 
                 <!-- Row 2: DateRange, Sort -->
@@ -153,7 +151,7 @@ export type ProjectFilterModel = Omit<ProjectFilter, "page" | "limit" | "account
 export const getDefaultProjectFilter = (): ProjectFilterModel => {
     return {
         text: "",
-        subProjectName: "",
+        subProjectName: undefined,
         includeArchived: false,
         status: "active",
         sortBy: "name",
@@ -181,6 +179,7 @@ import UserSelect from "../../organisms/user/UserSelect.vue"
 import MultiProjectTypeSelect from "../../organisms/projectType/MultiProjectTypeSelect.vue"
 import Checkbox from "@/components/atoms/Checkbox.vue"
 import Input from "@/components/atoms/Input.vue"
+import SubProjectNameSelect from "./SubProjectNameSelect.vue"
 import { debounce } from "@/utils/debounce"
 interface ProjectFilterProps {
     filter: ProjectFilterModel
@@ -206,7 +205,7 @@ const emit = defineEmits<{
 // Create reactive copy of the filter
 const filterData = reactive<ProjectFilterProps["filter"]>({
     text: filter.text,
-    subProjectName: filter.subProjectName || "",
+    subProjectName: filter.subProjectName,
     includeArchived: filter.includeArchived,
     status: filter.status,
     sortBy: filter.sortBy,
@@ -228,7 +227,7 @@ watch(
     () => filter,
     (newFilter) => {
         filterData.text = newFilter.text
-        filterData.subProjectName = newFilter.subProjectName || ""
+        filterData.subProjectName = newFilter.subProjectName
         filterData.includeArchived = newFilter.includeArchived
         filterData.status = newFilter.status
         filterData.sortBy = newFilter.sortBy

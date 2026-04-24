@@ -908,7 +908,7 @@ describe("GET /activity?subProjectName=", () => {
 		subActivityId = body.id
 	})
 
-	test("returns only activities on matching sous-mandat", async () => {
+	test("returns only activities on matching sous-mandat (exact)", async () => {
 		const res = await app.request("/activity?subProjectName=EAC-FILTER", {
 			headers: { Authorization: `Bearer ${adminToken}` },
 		})
@@ -917,8 +917,17 @@ describe("GET /activity?subProjectName=", () => {
 		const ids = body.data.map((a: { id: number }) => a.id)
 		expect(ids).toContain(subActivityId)
 		expect(body.data.every((a: { project: { subProjectName: string | null } }) =>
-			a.project?.subProjectName?.includes("EAC-FILTER")
+			a.project?.subProjectName === "EAC-FILTER"
 		)).toBe(true)
+	})
+
+	test("non-matching value returns empty", async () => {
+		const res = await app.request("/activity?subProjectName=NOPE", {
+			headers: { Authorization: `Bearer ${adminToken}` },
+		})
+		expect(res.status).toBe(200)
+		const body = await res.json()
+		expect(body.data.length).toBe(0)
 	})
 
 	test("empty string filter is a no-op", async () => {

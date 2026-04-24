@@ -1,4 +1,4 @@
-import { and, eq, sql, desc, asc, gte, lte, or, like, type SQL } from "drizzle-orm"
+import { and, eq, sql, desc, asc, gte, lte, or, type SQL } from "drizzle-orm"
 import { db } from "../index"
 import { activities, activityTypes, projects, users } from "../schema"
 import type { ActivityFilter } from "@beg/validations"
@@ -133,7 +133,7 @@ const buildFilterComponents = (filter: ActivityFilter, user?: Variables["user"])
     if (toDate) whereConditions.push(lte(activities.date, toDate))
     if (activityTypeId) whereConditions.push(eq(activities.activityTypeId, activityTypeId))
     if (subProjectName && subProjectName.trim()) {
-        whereConditions.push(like(projects.subProjectName, `%${subProjectName.trim()}%`))
+        whereConditions.push(eq(projects.subProjectName, subProjectName.trim()))
     }
     // Non-admin users cannot see activities with adminOnly activity types
 

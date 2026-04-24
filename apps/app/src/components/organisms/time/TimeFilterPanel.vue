@@ -97,10 +97,9 @@
                     <!-- Sous-mandat Filter -->
                     <div class="form-group">
                         <Label>{{ $t("time.filters.subProjectName") }}</Label>
-                        <Input
+                        <SubProjectNameSelect
                             v-model="localFilter.subProjectName"
-                            :placeholder="$t('time.filters.subProjectName')"
-                            @update:modelValue="debouncedFilterChange"
+                            @update:modelValue="handleFilterChange"
                         />
                     </div>
                 </div>
@@ -174,17 +173,16 @@ import { ref, watch, onMounted } from "vue"
 import Label from "@/components/atoms/Label.vue"
 import Select from "@/components/atoms/Select.vue"
 import Button from "@/components/atoms/Button.vue"
-import Input from "@/components/atoms/Input.vue"
 import ActivityTypeSelect from "@/components/organisms/activityType/ActivityTypeSelect.vue"
 import Checkbox from "@/components/atoms/Checkbox.vue"
 import DateRange from "@/components/molecules/DateRange.vue"
 import ProjectSelect from "@/components/organisms/project/ProjectSelect.vue"
+import SubProjectNameSelect from "@/components/organisms/project/SubProjectNameSelect.vue"
 import { useFetchUsers } from "@/composables/api/useUser"
 import type { ActivityFilter } from "@beg/validations"
 import UserSelect from "@/components/organisms/user/UserSelect.vue"
 import { useAuthStore } from "@/stores/auth"
 import { getTodayRange } from "@/composables/utils/useDateRangePresets"
-import { debounce } from "@/utils/debounce"
 
 // For backwards compatibility, keep the old interface name as an alias
 export type TimeFilters = ActivityFilter
@@ -240,9 +238,6 @@ watch(
 const handleFilterChange = () => {
     emit("update:filter", { ...localFilter.value })
 }
-
-// Debounced variant for text inputs (sous-mandat)
-const debouncedFilterChange = debounce(handleFilterChange, 300)
 
 // Reset filters
 const resetFilters = () => {
