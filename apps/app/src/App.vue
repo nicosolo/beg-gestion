@@ -16,6 +16,7 @@ import { useAppUpdate } from "./composables/utils/useAppUpdate"
 import { useTauri } from "./composables/useTauri"
 import Snackbar from "./components/atoms/Snackbar.vue"
 import Button from "./components/atoms/Button.vue"
+import ProjectSelect from "./components/organisms/project/ProjectSelect.vue"
 import desktopVersionConfig from "./config/desktop-version.json"
 
 const { t } = useI18n()
@@ -62,6 +63,22 @@ const isUpdateAvailable = computed(() => {
 
 const goBack = () => {
     router.back()
+}
+
+// Header mandat search
+const headerSearchProjectId = ref<number | undefined>(undefined)
+const handleHeaderProjectSelect = async (projectId?: number) => {
+    if (!projectId) {
+        headerSearchProjectId.value = undefined
+        return
+    }
+    try {
+        await router.push({ name: "project-view", params: { id: projectId } })
+    } catch {
+        // Ignore navigation duplication or aborted navigations
+    } finally {
+        headerSearchProjectId.value = undefined
+    }
 }
 
 const toggleSidebar = () => {
@@ -272,8 +289,21 @@ html {
                     </a>
                 </div>
 
+                <!-- Global mandat search -->
+                <div class="hidden md:block flex-1 max-w-sm mx-4">
+                    <ProjectSelect
+                        id="header-project-search"
+                        :model-value="headerSearchProjectId"
+                        class-name="w-full"
+                        :placeholder="t('header.projectSearchPlaceholder')"
+                        :include-archived="true"
+                        :include-ended="true"
+                        @update:model-value="handleHeaderProjectSelect"
+                    />
+                </div>
+
                 <!-- Main navigation links -->
-                <nav class="hidden md:flex items-center gap-1 ml-auto">
+                <nav class="hidden md:flex items-center gap-1">
                     <RouterLink
                         :to="{ name: 'time-list' }"
                         :class="[
