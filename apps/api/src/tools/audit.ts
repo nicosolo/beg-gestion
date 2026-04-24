@@ -26,6 +26,7 @@ export type AuditEntity =
     | "monthlyHours"
     | "workload"
     | "snapshot"
+    | "collaboratorGroup"
 
 export function audit(
     userId: number | null,

@@ -26,6 +26,7 @@ export const userCreateSchema = z.object({
     archived: z.boolean().default(false),
     activityRates: z.array(activityRateUserSchema).optional(),
     collaboratorType: collaboratorTypeSchema.optional().nullable(),
+    groupId: z.number().int().positive().optional().nullable(),
 })
 
 // User update schema (makes most fields optional except id)
@@ -39,6 +40,7 @@ export const userUpdateSchema = z.object({
     archived: z.boolean().optional(),
     activityRates: z.array(activityRateUserSchema).optional(),
     collaboratorType: collaboratorTypeSchema.optional().nullable(),
+    groupId: z.number().int().positive().optional().nullable(),
 })
 
 export type LoginInput = z.infer<typeof loginSchema>
@@ -82,6 +84,7 @@ export const userDetailResponseSchema = z
         archived: z.boolean(),
         activityRates: z.array(activityRateUserSchema).nullable(),
         collaboratorType: collaboratorTypeSchema.nullable(),
+        groupId: z.number().nullable(),
     })
     .merge(nullableTimestampsSchema)
 

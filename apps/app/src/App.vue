@@ -116,6 +116,12 @@ const navigation = computed(() =>
                     visible: hasAdminAccess.value,
                 },
                 {
+                    name: t("navigation.collaboratorGroups"),
+                    to: { name: "collaborator-group-list" },
+                    current: route.name === "collaborator-group-list",
+                    visible: hasAdminAccess.value,
+                },
+                {
                     name: t("navigation.activities"),
                     to: { name: "activity-type-list" },
                     current: route.name === "activity-type-list",

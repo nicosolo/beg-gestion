@@ -81,6 +81,10 @@ describe("authMiddleware", () => {
 			archived: false,
 			createdAt: new Date(),
 			updatedAt: new Date(),
+			activityRates: [],
+			collaboratorType: null,
+			groupId: null,
+			isSystem: false,
 		})
 		const res = await app.request("/protected", {
 			headers: { Authorization: `Bearer ${fakeToken}` },

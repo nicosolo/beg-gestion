@@ -15,6 +15,17 @@ import type {
     InvoiceType,
     InvoiceStatus,
 } from "@beg/validations"
+// Collaborator groups table (teams/departments)
+export const collaboratorGroups = sqliteTable(
+    "collaborator_groups",
+    {
+        id: integer("id").primaryKey({ autoIncrement: true }),
+        name: text("name").notNull(),
+        ...timestamps,
+    },
+    () => []
+)
+
 // User table
 export const users = sqliteTable(
     "users",
@@ -31,6 +42,9 @@ export const users = sqliteTable(
             .$type<ActivityRateUser[]>()
             .default([]),
         collaboratorType: text("collaboratorType").$type<CollaboratorType>(),
+        groupId: integer("groupId").references(() => collaboratorGroups.id, {
+            onDelete: "set null",
+        }),
         isSystem: integer("isSystem", { mode: "boolean" }).notNull().default(false),
         ...timestamps,
     },
@@ -43,6 +57,8 @@ export const users = sqliteTable(
         index("users_role_idx").on(table.role),
         // Composite index for name searches
         index("users_name_idx").on(table.lastName, table.firstName),
+        // Index for group filtering
+        index("users_group_idx").on(table.groupId),
     ]
 )
 

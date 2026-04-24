@@ -144,6 +144,7 @@ const filter = ref<ProjectFilterModel>({
     fromDate: undefined,
     toDate: undefined,
     referentUserId: authStore.user?.id,
+    groupId: undefined,
     projectTypeIds: [],
     hasUnbilledTime: false,
     status: "active",

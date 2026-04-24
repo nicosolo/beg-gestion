@@ -95,6 +95,17 @@
                     </div>
                 </div>
 
+                <!-- Row 3: Group filter -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                    <div class="form-group">
+                        <Label>{{ $t("collaboratorGroup.filter") }}</Label>
+                        <CollaboratorGroupSelect
+                            v-model="localFilter.groupId"
+                            @update:modelValue="handleFilterChange"
+                        />
+                    </div>
+                </div>
+
                 <div class="mt-4">
                     <Button @click="resetFilters" variant="secondary">
                         {{ $t("common.resetFilters") }}
@@ -168,6 +179,7 @@ import ActivityTypeSelect from "@/components/organisms/activityType/ActivityType
 import Checkbox from "@/components/atoms/Checkbox.vue"
 import DateRange from "@/components/molecules/DateRange.vue"
 import ProjectSelect from "@/components/organisms/project/ProjectSelect.vue"
+import CollaboratorGroupSelect from "@/components/organisms/collaboratorGroup/CollaboratorGroupSelect.vue"
 import { useFetchUsers } from "@/composables/api/useUser"
 import type { ActivityFilter } from "@beg/validations"
 import UserSelect from "@/components/organisms/user/UserSelect.vue"
@@ -235,6 +247,7 @@ const resetFilters = () => {
     localFilter.value = {
         userId: undefined,
         projectId: undefined,
+        groupId: undefined,
         activityTypeId: undefined,
         fromDate: from,
         toDate: to,

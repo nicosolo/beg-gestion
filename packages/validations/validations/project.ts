@@ -9,6 +9,7 @@ export type ProjectStatus = (typeof projectStatusEnum)[number]
 const projectBaseFilterSchema = z.object({
     text: z.string().optional(),
     referentUserId: z.coerce.number().optional(),
+    groupId: z.coerce.number().optional(),
     projectTypeIds: z
         .union([
             z.coerce.string(),

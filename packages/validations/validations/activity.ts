@@ -7,6 +7,7 @@ import { projectUserRoleSchema } from "./projectUsers"
 const activityBaseFilterSchema = z.object({
     projectId: z.coerce.number().optional(),
     userId: z.coerce.number().optional(),
+    groupId: z.coerce.number().optional(),
     fromDate: z.coerce.date().optional(),
     toDate: z.coerce.date().optional(),
     sortBy: z

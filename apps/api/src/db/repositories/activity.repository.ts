@@ -107,6 +107,7 @@ const buildFilterComponents = (filter: ActivityFilter, user?: Variables["user"])
     const {
         userId,
         projectId,
+        groupId,
         fromDate,
         toDate,
         sortBy = "date",
@@ -122,6 +123,7 @@ const buildFilterComponents = (filter: ActivityFilter, user?: Variables["user"])
     const whereConditions: (SQL | undefined)[] = []
     if (userId) whereConditions.push(eq(activities.userId, userId))
     if (projectId) whereConditions.push(eq(activities.projectId, projectId))
+    if (groupId) whereConditions.push(eq(users.groupId, groupId))
     if (fromDate) whereConditions.push(gte(activities.date, fromDate))
     if (toDate) whereConditions.push(lte(activities.date, toDate))
     if (activityTypeId) whereConditions.push(eq(activities.activityTypeId, activityTypeId))
@@ -213,6 +215,7 @@ export const activityRepository = {
         const countQuery = db
             .select({ count: sql<number>`count(*)` })
             .from(activities)
+            .leftJoin(users, eq(activities.userId, users.id))
             .leftJoin(projects, eq(activities.projectId, projects.id))
             .leftJoin(activityTypes, eq(activities.activityTypeId, activityTypes.id))
 
@@ -229,6 +232,7 @@ export const activityRepository = {
                 totalExpenses: sql<number>`COALESCE(SUM(${activities.expenses}), 0)`,
             })
             .from(activities)
+            .leftJoin(users, eq(activities.userId, users.id))
             .leftJoin(projects, eq(activities.projectId, projects.id))
             .leftJoin(activityTypes, eq(activities.activityTypeId, activityTypes.id))
 

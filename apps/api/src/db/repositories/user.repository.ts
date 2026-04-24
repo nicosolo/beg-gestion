@@ -45,6 +45,7 @@ export const userRepository = {
                 updatedAt: users.updatedAt,
                 activityRates: users.activityRates,
                 collaboratorType: users.collaboratorType,
+                groupId: users.groupId,
             })
             .from(users)
             .where(eq(users.id, id))
@@ -86,6 +87,7 @@ export const userRepository = {
                 updatedAt: users.updatedAt,
                 activityRates: users.activityRates,
                 collaboratorType: users.collaboratorType,
+                groupId: users.groupId,
             })
             .from(users)
             .where(eq(users.isSystem, false))
@@ -106,6 +108,7 @@ export const userRepository = {
                 archived: userData.archived,
                 activityRates: userData.activityRates || null,
                 collaboratorType: userData.collaboratorType ?? null,
+                groupId: userData.groupId ?? null,
                 createdAt: new Date(),
                 updatedAt: new Date(),
             })
@@ -121,6 +124,7 @@ export const userRepository = {
                 updatedAt: users.updatedAt,
                 activityRates: users.activityRates,
                 collaboratorType: users.collaboratorType,
+                groupId: users.groupId,
             })
 
         return newUser
@@ -140,6 +144,9 @@ export const userRepository = {
         }
         if (userData.collaboratorType !== undefined) {
             updateData.collaboratorType = userData.collaboratorType ?? null
+        }
+        if (userData.groupId !== undefined) {
+            updateData.groupId = userData.groupId ?? null
         }
         updateData.updatedAt = new Date()
         if (!updateData.createdAt) {
@@ -167,6 +174,7 @@ export const userRepository = {
                 updatedAt: users.updatedAt,
                 activityRates: users.activityRates,
                 collaboratorType: users.collaboratorType,
+                groupId: users.groupId,
             })
 
         return updatedUser

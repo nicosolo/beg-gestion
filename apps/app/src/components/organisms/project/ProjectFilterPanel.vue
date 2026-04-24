@@ -91,6 +91,17 @@
                     </div>
                 </div>
 
+                <!-- Row 3: Collaborator group filter -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                    <div class="form-group">
+                        <Label>{{ $t("collaboratorGroup.filter") }}</Label>
+                        <CollaboratorGroupSelect
+                            v-model="filterData.groupId"
+                            @update:model-value="emitChange"
+                        />
+                    </div>
+                </div>
+
                 <div class="mt-4">
                     <Button @click="resetFilters" variant="secondary">
                         {{ $t("projects.filters.reset") }}
@@ -147,6 +158,7 @@ export const getDefaultProjectFilter = (): ProjectFilterModel => {
         fromDate: undefined,
         toDate: undefined,
         referentUserId: undefined,
+        groupId: undefined,
         projectTypeIds: [],
         hasUnbilledTime: false,
     }
@@ -165,6 +177,7 @@ import FormField from "../../molecules/FormField.vue"
 import DateRange from "../../molecules/DateRange.vue"
 import UserSelect from "../../organisms/user/UserSelect.vue"
 import MultiProjectTypeSelect from "../../organisms/projectType/MultiProjectTypeSelect.vue"
+import CollaboratorGroupSelect from "@/components/organisms/collaboratorGroup/CollaboratorGroupSelect.vue"
 import Checkbox from "@/components/atoms/Checkbox.vue"
 import Input from "@/components/atoms/Input.vue"
 import { debounce } from "@/utils/debounce"
@@ -199,6 +212,7 @@ const filterData = reactive<ProjectFilterProps["filter"]>({
     fromDate: filter.fromDate,
     toDate: filter.toDate,
     referentUserId: filter.referentUserId || undefined,
+    groupId: filter.groupId || undefined,
     projectTypeIds: filter.projectTypeIds || [],
     hasUnbilledTime: filter.hasUnbilledTime || false,
 })
@@ -220,6 +234,7 @@ watch(
         filterData.fromDate = newFilter.fromDate
         filterData.toDate = newFilter.toDate
         filterData.referentUserId = newFilter.referentUserId
+        filterData.groupId = newFilter.groupId
         filterData.projectTypeIds = newFilter.projectTypeIds
         filterData.hasUnbilledTime = newFilter.hasUnbilledTime
     },
@@ -259,6 +274,7 @@ const resetFilters = () => {
     filterData.fromDate = defaultFilter.fromDate
     filterData.toDate = defaultFilter.toDate
     filterData.referentUserId = defaultFilter.referentUserId
+    filterData.groupId = defaultFilter.groupId
     filterData.projectTypeIds = defaultFilter.projectTypeIds
     filterData.hasUnbilledTime = defaultFilter.hasUnbilledTime
     emitChange()

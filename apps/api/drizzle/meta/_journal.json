@@ -50,6 +50,13 @@
       "when": 1774788566891,
       "tag": "0006_fresh_talon",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1777019119104,
+      "tag": "0007_hard_tyger_tiger",
+      "breakpoints": true
     }
   ]
 }

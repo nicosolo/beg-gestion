@@ -7,6 +7,7 @@ import EditInvoiceView from "@/views/invoice/EditInvoiceView.vue"
 import PreviewInvoiceView from "@/views/invoice/PreviewInvoiceView.vue"
 import CollaboratorListView from "../views/collaborator/CollaboratorListView.vue"
 import CollaboratorEditView from "../views/collaborator/CollaboratorEditView.vue"
+import CollaboratorGroupListView from "../views/collaboratorGroup/CollaboratorGroupListView.vue"
 import TimeListView from "../views/time/TimeListView.vue"
 import TariffListView from "../views/tariff/TariffListView.vue"
 import ProjectEditView from "../views/project/ProjectEditView.vue"
@@ -120,6 +121,12 @@ const router = createRouter({
             name: "collaborator-list",
             component: CollaboratorListView,
             meta: { requiresAuth: true },
+        },
+        {
+            path: "/collaborator-group",
+            name: "collaborator-group-list",
+            component: CollaboratorGroupListView,
+            meta: { requiresAuth: true, requiresAdmin: true },
         },
         // Activity routes
         {

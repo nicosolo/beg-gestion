@@ -122,6 +122,17 @@
                     </select>
                 </div>
 
+                <!-- Groupe -->
+                <div>
+                    <label for="groupId" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ $t("collaborator.group") }}
+                    </label>
+                    <CollaboratorGroupSelect
+                        v-model="collaborator.groupId"
+                        :placeholder="$t('collaborator.noGroup')"
+                    />
+                </div>
+
                 <!-- Archivé -->
                 <div>
                     <label class="flex items-center">
@@ -227,6 +238,7 @@ import FormLayout from "@/components/templates/FormLayout.vue"
 import { useFetchUser, useCreateUser, useUpdateUser } from "../../composables/api/useUser"
 import { useFetchActivityTypes } from "../../composables/api/useActivityType"
 import UserWorkloadList from "@/components/organisms/workload/UserWorkloadList.vue"
+import CollaboratorGroupSelect from "@/components/organisms/collaboratorGroup/CollaboratorGroupSelect.vue"
 import type {
     UserCreateInput,
     UserUpdateInput,
@@ -274,6 +286,7 @@ const collaborator = ref<UserCreateInput | UserUpdateInput>({
     archived: false,
     activityRates: [],
     collaboratorType: null,
+    groupId: null,
 })
 
 // Track selected activities and their classes
@@ -322,6 +335,7 @@ onMounted(async () => {
                 archived: userData.value.archived,
                 activityRates: userData.value.activityRates || [],
                 collaboratorType: userData.value.collaboratorType ?? null,
+                groupId: userData.value.groupId ?? null,
                 // Don't populate password for security
             }
 

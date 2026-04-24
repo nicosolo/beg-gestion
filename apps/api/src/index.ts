@@ -16,6 +16,7 @@ import unbilledRoutes from "@src/routes/unbilled"
 import { vatRateRoutes } from "@src/routes/vatRate"
 import { monthlyHoursRoutes } from "@src/routes/monthlyHours"
 import { auditLogRoutes } from "@src/routes/auditLog"
+import { collaboratorGroupRoutes } from "@src/routes/collaboratorGroup"
 import { PORT, DB_FILE_PATH } from "@src/config"
 import { mkdir } from "node:fs/promises"
 import { dirname } from "node:path"
@@ -54,6 +55,7 @@ const app = new Hono()
     .route("/vat-rate", vatRateRoutes)
     .route("/monthly-hours", monthlyHoursRoutes)
     .route("/audit-log", auditLogRoutes)
+    .route("/collaborator-group", collaboratorGroupRoutes)
 
 export type ApiRoutes = typeof app
 

@@ -13,6 +13,7 @@ const mockUser = {
 	updatedAt: new Date(),
 	activityRates: [],
 	collaboratorType: null,
+	groupId: null,
 }
 
 describe("hashPassword", () => {

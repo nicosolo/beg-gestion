@@ -45,6 +45,7 @@ export const projectRepository = {
             text,
             includeArchived = false,
             referentUserId,
+            groupId,
             projectTypeIds,
             fromDate,
             toDate,
@@ -127,6 +128,15 @@ export const projectRepository = {
             whereConditions.push(lte(projects.latitude, maxLat))
             whereConditions.push(gte(projects.longitude, minLng))
             whereConditions.push(lte(projects.longitude, maxLng))
+        }
+
+        // Collaborator group filter - projects with at least one manager/member in the given group
+        if (groupId) {
+            whereConditions.push(
+                sql`EXISTS (SELECT 1 FROM ${projectUsers} pu
+                    INNER JOIN ${users} u ON u.id = pu.userId
+                    WHERE pu.projectId = ${projects.id} AND u.groupId = ${groupId})`
+            )
         }
 
         // Project type filter - filter projects that have at least one of the specified types
