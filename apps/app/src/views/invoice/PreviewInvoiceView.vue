@@ -32,6 +32,16 @@
                     </Button>
 
                     <Button
+                        v-if="canOpenFolder"
+                        @click="openProjectFolder"
+                        size="lg"
+                        variant="secondary"
+                        class="w-full sm:w-auto"
+                    >
+                        {{ $t("projects.openFolder") }}
+                    </Button>
+
+                    <Button
                         @click="printInvoice"
                         size="lg"
                         variant="primary"
@@ -110,6 +120,8 @@ import { useAuthStore } from "@/stores/auth"
 import ConfirmDialog from "@/components/molecules/ConfirmDialog.vue"
 import { useAlert } from "@/composables/utils/useAlert"
 import { useI18n } from "vue-i18n"
+import { useOpenProjectFolder } from "@/composables/useOpenProjectFolder"
+import { useTauri } from "@/composables/useTauri"
 
 const route = useRoute()
 const router = useRouter()
@@ -117,6 +129,8 @@ const invoiceId = computed(() => route.params.id as string | undefined)
 const authStore = useAuthStore()
 const { successAlert } = useAlert()
 const { t } = useI18n()
+const { isTauri } = useTauri()
+const { fetchProjectFolder, canOpen: canOpenFolder, openProjectFolder } = useOpenProjectFolder()
 
 // API composable
 const { get: fetchInvoice, loading, error } = useFetchInvoice()
@@ -152,6 +166,9 @@ const loadInvoice = async () => {
             const data = await fetchInvoice({ params: { id: parseInt(invoiceId.value) } })
             if (data) {
                 invoice.value = data
+                if (isTauri.value && data.project?.id) {
+                    await fetchProjectFolder({ params: { id: data.project.id } })
+                }
             }
         } catch (err) {
             console.error("Failed to load invoice:", err)
