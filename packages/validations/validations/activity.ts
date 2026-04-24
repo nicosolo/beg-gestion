@@ -98,6 +98,7 @@ export const activityResponseSchema = z
                 id: z.number(),
                 name: z.string(),
                 projectNumber: z.string().nullable(),
+                subProjectName: z.string().nullable(),
             })
             .nullable(),
         activityType: z

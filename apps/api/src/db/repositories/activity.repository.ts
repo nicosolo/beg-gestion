@@ -78,6 +78,7 @@ const selectFields = (user: Variables["user"]) => ({
         id: projects.id,
         name: projects.name,
         projectNumber: projects.projectNumber,
+        subProjectName: projects.subProjectName,
     },
     activityType: {
         id: activityTypes.id,
@@ -298,6 +299,7 @@ export const activityRepository = {
                     id: projects.id,
                     name: projects.name,
                     projectNumber: projects.projectNumber,
+                    subProjectName: projects.subProjectName,
                 },
                 activityType: {
                     id: activityTypes.id,
