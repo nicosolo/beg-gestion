@@ -9,7 +9,8 @@ describe("InputNumber", () => {
         })
         const input = wrapper.find("input")
         expect(input.element.value).toBe("42")
-        expect(input.attributes("type")).toBe("number")
+        expect(input.attributes("type")).toBe("text")
+        expect(input.attributes("inputmode")).toBe("decimal")
     })
 
     it("renders with null value", () => {
@@ -117,5 +118,23 @@ describe("InputNumber", () => {
         await wrapper.find("input").trigger("keydown", { key: "ArrowUp" })
         // null → 0 + 1 = 1
         expect(wrapper.emitted("update:modelValue")![0]).toEqual([1])
+    })
+
+    it("accepts comma as decimal separator", async () => {
+        const wrapper = mount(InputNumber, {
+            props: { modelValue: 0 },
+        })
+        const input = wrapper.find("input")
+        await input.setValue("15,5")
+        expect(wrapper.emitted("update:modelValue")![0]).toEqual([15.5])
+    })
+
+    it("accepts dot as decimal separator", async () => {
+        const wrapper = mount(InputNumber, {
+            props: { modelValue: 0 },
+        })
+        const input = wrapper.find("input")
+        await input.setValue("15.5")
+        expect(wrapper.emitted("update:modelValue")![0]).toEqual([15.5])
     })
 })
